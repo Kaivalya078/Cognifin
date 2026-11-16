@@ -17,6 +17,7 @@ baseline cache.
 import argparse
 import bisect
 import json
+import pickle
 import sys
 import unicodedata
 from pathlib import Path
@@ -50,9 +51,17 @@ def page_of(starts, offset: int) -> int:
     return starts[max(i, 0)][1]
 
 
+class _LegacyChunk:
+    """Stand-in for the legacy pickled Chunk class (only .text is read)."""
+
+
+class _Unpickler(pickle.Unpickler):
+    def find_class(self, module, name):
+        return _LegacyChunk if name == "Chunk" else super().find_class(module, name)
+
+
 def main() -> None:
     import fitz
-    from core.retriever_pipeline import _cross_env_unpickle
 
     ap = argparse.ArgumentParser()
     ap.add_argument("--cache", required=True)
@@ -60,7 +69,7 @@ def main() -> None:
     cache = Path(args.cache)
 
     with open(cache / "chunks.pkl", "rb") as f:
-        chunks = _cross_env_unpickle(f)
+        chunks = _Unpickler(f).load()
     docs = json.loads((cache / "document_registry.json").read_text(encoding="utf-8"))["documents"]
 
     page_map, missing = {}, 0

@@ -34,7 +34,7 @@ from typing import Callable, Dict, List, Optional
 
 import numpy as np
 
-from .corpus_manager import CorpusManager
+from .corpus_manager import CorpusManager, discard
 from .metadata_schema import RetrievalResult
 from query.search_plan import SearchPlan, MergeStrategy
 
@@ -75,7 +75,7 @@ class CorpusRouter:
     def remove_session(self, session_id: str) -> None:
         """Remove a session corpus, freeing its memory."""
         if session_id in self.session_corpora:
-            del self.session_corpora[session_id]
+            discard(self.session_corpora.pop(session_id))
             del self._last_used[session_id]
             logger.info("Session removed: %s", session_id)
 

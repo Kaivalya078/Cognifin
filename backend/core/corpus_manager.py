@@ -11,7 +11,9 @@ the registry records. Citations use "chunk_<vector_id>".
 
 import os
 import json
+import shutil
 import logging
+import tempfile
 from dataclasses import asdict, replace as dc_replace
 from types import SimpleNamespace
 from typing import List, Dict, Callable, Optional
@@ -61,6 +63,8 @@ class CorpusManager:
     # False for /upload session corpora: their PDF is a deleted temp file,
     # so evidence from them must not advertise a PDF link.
     public_pdfs = True
+    # True when this corpus owns a temporary store directory (/upload sessions)
+    owns_store_dir = False
 
     def __init__(self, retriever: RetrieverPipeline, store: ChunkStore):
         self.retriever = retriever
@@ -310,6 +314,23 @@ class CorpusManager:
         while f"{company}_{document_type}_{year}_v{version}" in self.documents:
             version += 1
         return version
+
+
+def new_session_corpus(retriever: RetrieverPipeline) -> CorpusManager:
+    """An /upload corpus on its own temporary store; discard() deletes it."""
+    path = tempfile.mkdtemp(prefix="cognifin-session-")
+    cm = CorpusManager(retriever, ChunkStore(path, retriever.embedding_dim))
+    cm.public_pdfs = False  # its PDF is a temp file
+    cm.owns_store_dir = True
+    return cm
+
+
+def discard(corpus: CorpusManager) -> None:
+    """Delete a session corpus's temporary store (no-op for the global one)."""
+    if corpus.owns_store_dir:
+        path = corpus.store.path
+        corpus.store = corpus.chunk_metadata = None  # drop open table handles first
+        shutil.rmtree(path, ignore_errors=True)
 
 
 def _vector_id(chunk_id: str) -> Optional[int]:

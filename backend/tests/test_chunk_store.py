@@ -187,3 +187,49 @@ def test_orchestrator_keyword_hits_respect_scope(corpus, monkeypatch):
                                       embed_query=corpus.retriever.embed_query)
     assert parsed.companies == ["INFY"]
     assert merged and {r.document_label for r in merged} == {"INFY_Annual_Report_2024_v1"}
+
+
+def test_session_store_dir_removed_on_eviction(tmp_path, monkeypatch):
+    import os
+    from config import settings
+    from core.corpus_manager import new_session_corpus
+    from core.corpus_router import CorpusRouter
+    from core.retriever_pipeline import RetrieverPipeline
+    monkeypatch.setattr(settings, "SESSION_MAX", 1)
+    p = RetrieverPipeline()
+    router = CorpusRouter(global_corpus=None)
+    first, second = new_session_corpus(p), new_session_corpus(p)
+    first.add_document(_report(tmp_path, "s.pdf"), company="UPLOAD", document_type="Annual_Report", year="2024")
+    a_dir, b_dir = first.store.path, second.store.path
+    assert os.path.isdir(a_dir) and first.public_pdfs is False
+    router.register_session("a", first)
+    router.register_session("b", second)          # evicts "a"
+    assert not os.path.exists(a_dir) and os.path.isdir(b_dir)
+    router.remove_session("b")
+    assert not os.path.exists(b_dir)
+
+
+def test_open_for_ingest_resumes_and_drops_unregistered_rows(tmp_path):
+    from core.app_retrieval import open_for_ingest
+    cache = str(tmp_path / "cache")
+    cm = open_for_ingest(cache)
+    cm.add_document(_report(tmp_path, "a.pdf"), company="TCS", document_type="Annual_Report", year="2024")
+    cm.save_registry(cache)
+    n = cm.num_chunks
+    cm.add_document(_report(tmp_path, "b.pdf"), company="INFY", document_type="Annual_Report", year="2024")
+    # crash here: rows written, registry not saved
+    again = open_for_ingest(cache)
+    assert again.num_chunks == n and again.store.count() == n
+    assert list(again.documents) == ["TCS_Annual_Report_2024_v1"]
+
+
+def test_open_for_ingest_refuses_index_from_another_config(tmp_path, monkeypatch):
+    from core.app_retrieval import open_for_ingest
+    cache = str(tmp_path / "cache")
+    cm = open_for_ingest(cache)
+    cm.add_document(_report(tmp_path, "a.pdf"), company="TCS", document_type="Annual_Report", year="2024")
+    cm.save_registry(cache)
+    monkeypatch.setattr("core.retriever_pipeline.RetrieverPipeline.compute_config_fingerprint",
+                        staticmethod(lambda: "other"))
+    with pytest.raises(RuntimeError, match="different config"):
+        open_for_ingest(cache)

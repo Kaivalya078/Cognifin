@@ -122,8 +122,12 @@ def upload_ready(monkeypatch):
             seen["corpus"] = self
             return 3
 
+    def fake_session_corpus(_retriever):
+        seen["factory_called"] = True
+        return FakeCorpus()
+
     monkeypatch.setattr(main, "RetrieverPipeline", lambda: None)
-    monkeypatch.setattr(main, "CorpusManager", FakeCorpus)
+    monkeypatch.setattr(main, "new_session_corpus", fake_session_corpus)
     monkeypatch.setattr(main, "corpus_router", SimpleNamespace(register_session=lambda *a: None))
     main.limiter.reset()
     return TestClient(main.app), seen
@@ -249,15 +253,16 @@ def remote_assets(monkeypatch):
 
 def test_remote_index_lands_in_configured_dir(remote_assets, tmp_path):
     asset_manager, served = remote_assets
-    served["bytes"] = _tarball({"index_cache/faiss.index": b"idx", "index_cache/chunks.pkl": b"c"})
+    served["bytes"] = _tarball({"index_cache/document_registry.json": b"{}", "index_cache/lancedb/chunks.lance/x": b"c"})
     cache_dir = tmp_path / "data" / "index_cache"
     asset_manager.ensure_index_cache(str(cache_dir))
-    assert (cache_dir / "faiss.index").read_bytes() == b"idx"
+    assert (cache_dir / "document_registry.json").read_bytes() == b"{}"
+    assert (cache_dir / "lancedb" / "chunks.lance" / "x").exists()
 
 
 def test_tarball_cannot_write_outside_its_dir(remote_assets, tmp_path):
     asset_manager, served = remote_assets
-    served["bytes"] = _tarball({"../../evil.txt": b"pwned", "faiss.index": b"idx"})
+    served["bytes"] = _tarball({"../../evil.txt": b"pwned", "document_registry.json": b"{}"})
     cache_dir = tmp_path / "a" / "index_cache"
     with pytest.raises(tarfile.TarError):
         asset_manager.ensure_index_cache(str(cache_dir))
@@ -346,4 +351,10 @@ def test_uploaded_pdf_evidence_gets_no_dead_pdf_link(upload_ready):
     """The upload is a temp file deleted after ingestion: nothing to link to."""
     client, seen = upload_ready
     assert _upload(client, PDF, headers=_auth("alice")).status_code == 200
-    assert seen["corpus"].public_pdfs is False
+    assert seen["factory_called"]            # /upload builds its corpus via the session factory
+    from core.corpus_manager import new_session_corpus, discard
+    cm = new_session_corpus(SimpleNamespace(embedding_dim=4))
+    try:
+        assert cm.public_pdfs is False       # …which never advertises a PDF link
+    finally:
+        discard(cm)

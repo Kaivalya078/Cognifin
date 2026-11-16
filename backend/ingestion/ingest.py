@@ -7,13 +7,9 @@ without starting the server.
 Usage:
     python ingest.py --file data/report.pdf --company TCS --type Annual_Report --year 2024
 
-The ingestion follows a three-phase commit:
-    1. Save registry first   (metadata phase)
-    2. Save index last       (commit point)
-    3. Save LookupIndex      (post-commit, after FAISS is safe on disk)
-
-If a crash occurs between the two saves, startup validation
-detects the mismatch and triggers a safe rebuild.
+Chunks are written to the LanceDB store first; saving the registry is the
+commit point. Rows written after the last saved registry (a crash in
+between) are dropped on the next ingest run.
 
 Author: FinSight AI Team
 Stage: 2 (Manual Ingestion)
@@ -29,9 +25,7 @@ from datetime import datetime
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from config import settings
-from core.retriever_pipeline import RetrieverPipeline
-from core.corpus_manager import CorpusManager
-from core.cache_utils import has_leftover_tmp, clean_cache
+from core.app_retrieval import open_for_ingest
 
 
 def parse_args():
@@ -86,7 +80,7 @@ def main():
         4. Load existing index + registry (if exists)
         5. Validate cache integrity BEFORE append
         6. Ingest document (duplicate check inside add_document)
-        7. Three-phase commit: save registry → save index
+        7. Save the registry and rebuild the full-text index
     """
     args = parse_args()
     
@@ -114,57 +108,14 @@ def main():
     print(f"  Cache:   {cache_dir}")
     print()
     
-    # ── Step 2: Init pipeline + corpus manager ───────────────────────
-    print("🤖 Initializing pipeline...")
-    pipeline = RetrieverPipeline()
-    corpus = CorpusManager(pipeline)
-    
-    # ── Step 3: Load existing index + registry ───────────────────────
-    existing_index = False
-    
-    if os.path.exists(cache_dir):
-        # Check for leftover tmp files (crashed previous save)
-        if has_leftover_tmp(cache_dir):
-            print("⚠️  Found leftover temporary files — cleaning cache")
-            clean_cache(cache_dir)
-        
-        # Try loading existing index
-        print("📂 Loading existing index...")
-        index_loaded = pipeline.load_index(cache_dir)
-        
-        if index_loaded:
-            registry_loaded = corpus.load_registry(cache_dir)
-            
-            if registry_loaded:
-                # ── Step 4: Validate integrity BEFORE append ─────────
-                integrity_ok = corpus.validate_cache_integrity(
-                    pipeline.index.ntotal
-                )
-                
-                if integrity_ok:
-                    existing_index = True
-                    print(f"✅ Loaded existing corpus: "
-                          f"{pipeline.index.ntotal} vectors, "
-                          f"{len(corpus.documents)} documents")
-                    
-                    # Stage 3: Initialize LookupIndex after integrity confirmed
-                    corpus.init_lookup_index(cache_dir, pipeline.index.ntotal)
-                else:
-                    print("⚠️  Cache integrity check failed")
-                    print("   Cannot safely append to a corrupted cache.")
-                    print("   Please restart the server to trigger a clean rebuild,")
-                    print("   then re-run this ingestion command.")
-                    sys.exit(1)
-            else:
-                print("⚠️  Failed to load registry")
-                print("   Cannot safely append without registry.")
-                print("   Please restart the server to trigger a clean rebuild.")
-                sys.exit(1)
-        else:
-            print("📭 No valid existing index found — will create fresh corpus")
-    else:
-        print("📭 No cache directory found — will create fresh corpus")
-    
+    # ── Step 2: Open the store, resuming from the saved registry ─────
+    try:
+        corpus = open_for_ingest(cache_dir)
+    except RuntimeError as e:
+        print(f"❌ {e}")
+        sys.exit(1)
+    print(f"📂 {len(corpus.documents)} document(s) already indexed")
+
     # ── Step 5: Ingest document ──────────────────────────────────────
     doc_id_preview = f"{company}_{doc_type}_{year}"
     print(f"📄 Ingesting: {doc_id_preview}")
@@ -191,30 +142,18 @@ def main():
     t_elapsed = time.time() - t_start
     print(f"   ✅ Indexed {num_chunks} chunks in {t_elapsed:.1f}s")
     
-    # ── Step 6: Three-phase commit ─────────────────────────────────────
-    print("\n💾 Saving corpus (three-phase commit)...")
-    
-    # Phase 1: Save registry FIRST
-    print("   Phase 1: Saving registry...")
+    # ── Step 6: Commit (rows are on disk; the registry marks them saved) ──
     corpus.save_registry(cache_dir)
-    
-    # Phase 2: Save index (commit point)
-    print("   Phase 2: Saving index (commit point)...")
-    pipeline.save_index(cache_dir, pdf_path)
-
-    # Phase 3: Save LookupIndex (post-commit — after FAISS is safe on disk)
-    print("   Phase 3: Saving LookupIndex...")
-    corpus.save_lookup_index(cache_dir)
-
+    corpus.store.build_text_index()
     print("\n✅ Ingestion complete!")
-    
+
     # ── Summary ──────────────────────────────────────────────────────
     print("\n" + "=" * 60)
     print("Ingestion Summary")
     print("=" * 60)
     print(f"  Document:     {company}_{doc_type}_{year}")
     print(f"  Chunks added: {num_chunks}")
-    print(f"  Total vectors: {pipeline.index.ntotal}")
+    print(f"  Total chunks: {corpus.num_chunks}")
     print(f"  Total documents: {len(corpus.documents)}")
     print(f"  Cache dir:    {cache_dir}")
     print(f"  Timestamp:    {datetime.now().isoformat()}")

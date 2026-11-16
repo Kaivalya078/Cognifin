@@ -1,15 +1,3 @@
-import sys
-
-import core.retriever_pipeline as retriever_pipeline
-import core.corpus_manager as corpus_manager
-import core.cache_utils as cache_utils
-import core.metadata_schema as metadata_schema
-
-sys.modules['retriever_pipeline'] = retriever_pipeline
-sys.modules['corpus_manager'] = corpus_manager
-sys.modules['cache_utils'] = cache_utils
-sys.modules['metadata_schema'] = metadata_schema
-
 import os
 import re
 import time
@@ -56,7 +44,7 @@ from generation.openai_client import OpenAIClient
 from generation.prompt_builder import build_context, build_prompt, extract_citations
 
 # Phase 2.5: Corpus architecture
-from core.corpus_manager import CorpusManager
+from core.corpus_manager import CorpusManager, new_session_corpus, discard
 
 # Stage 6: Query orchestration (parse → plan → execute)
 from query.query_orchestrator import retrieve_context, intelligent_retrieve
@@ -302,11 +290,8 @@ async def lifespan(app: FastAPI):
     Read-only startup: loads pre-ingested corpus from index_cache/.
     Never ingests documents — use ingest.py or batch_ingest_annual_reports.py.
 
-    Load order:
-        1. load_index()
-        2. load_registry()
-        3. validate_cache_integrity()
-        4. init_lookup_index()
+    Opens index_cache/lancedb + document_registry.json (core.app_retrieval.
+    load_global_corpus), which refuses an index built with another config.
     """
     global pipeline, llm_client, corpus_manager, corpus_router
 
@@ -347,7 +332,7 @@ async def lifespan(app: FastAPI):
 
     elapsed = time.time() - start_time
     print(f"\n✅ Corpus loaded in {elapsed:.2f}s "
-          f"({pipeline.index.ntotal} vectors, "
+          f"({corpus_manager.num_chunks} chunks, "
           f"{len(corpus_manager.documents)} documents)")
 
     print("\n" + "="*60)
@@ -564,18 +549,19 @@ def upload_document(
                     )
                 f.write(chunk)
 
-        # Create isolated pipeline + corpus (shares embedding model weights)
-        session_pipeline = RetrieverPipeline()
-        session_corpus = CorpusManager(session_pipeline)
-        session_corpus.public_pdfs = False  # temp file, deleted below
-
-        # Ingest into session corpus (in-memory only)
-        num_chunks = session_corpus.add_document(
-            pdf_path=tmp_path,
-            company=company_name,
-            document_type=document_type,
-            year=year,
-        )
+        # Isolated corpus on a temporary store (shares embedding model weights);
+        # the router deletes the store when the session is evicted.
+        session_corpus = new_session_corpus(RetrieverPipeline())
+        try:
+            num_chunks = session_corpus.add_document(
+                pdf_path=tmp_path,
+                company=company_name,
+                document_type=document_type,
+                year=year,
+            )
+        except Exception:
+            discard(session_corpus)
+            raise
 
         # Generate session ID and register
         session_id = str(uuid4())

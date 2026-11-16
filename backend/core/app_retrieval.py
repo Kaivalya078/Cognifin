@@ -9,7 +9,7 @@ import logging
 import psutil
 
 from config import settings
-from core.cache_utils import has_leftover_tmp, clean_cache
+from core.chunk_store import ChunkStore
 from core.corpus_manager import CorpusManager
 from core.retriever_pipeline import RetrieverPipeline
 from core.reranker import init_reranker
@@ -19,47 +19,64 @@ from query.query_orchestrator import retrieve_context
 logger = logging.getLogger(__name__)
 
 
+STORE_SUBDIR = "lancedb"
+
+
+def open_global_corpus(cache_dir: str) -> CorpusManager:
+    """A CorpusManager on <cache_dir>/lancedb (created empty if absent)."""
+    pipeline = RetrieverPipeline()
+    store = ChunkStore(os.path.join(cache_dir, STORE_SUBDIR), pipeline.embedding_dim)
+    return CorpusManager(pipeline, store)
+
+
+def open_for_ingest(cache_dir: str) -> CorpusManager:
+    """Global corpus ready to append to: resumes from the saved registry and
+    drops store rows written after it (a crash between add and save).
+
+    Raises RuntimeError if the existing index was built with another config.
+    """
+    cm = open_global_corpus(cache_dir)
+    registry = os.path.join(cache_dir, "document_registry.json")
+    if os.path.exists(registry):
+        if not cm.load_registry(cache_dir):
+            if cm.store.count() > cm.num_chunks and cm.documents:
+                cm.store.truncate(cm.num_chunks)
+                if cm.validate_cache_integrity():
+                    print(f"↩️  Dropped rows past the last saved document; resuming at {cm.num_chunks}")
+                    return cm
+            raise RuntimeError(
+                f"Index in '{cache_dir}' was built with a different config or is inconsistent; "
+                f"delete it and re-run.")
+    elif cm.store.count():
+        cm.store.truncate(0)  # rows without any registry: start clean
+        cm._total_vectors = 0
+    return cm
+
+
 def load_global_corpus(cache_dir: str):
-    """Load the pre-built index + registry and the reranker/BM25 on top of it.
+    """Open the pre-built store + registry and load the reranker.
 
     Returns (pipeline, corpus_manager). Raises RuntimeError when the cache
-    is missing or inconsistent.
+    is missing, built with another config, or inconsistent.
     """
-    pipeline = RetrieverPipeline()
-    corpus_manager = CorpusManager(pipeline)
-
-    if not os.path.exists(cache_dir):
+    if not os.path.isdir(os.path.join(cache_dir, STORE_SUBDIR)):
         raise RuntimeError(
-            f"Cache directory '{cache_dir}' does not exist. "
-            f"Run batch_ingest_annual_reports.py first."
+            f"No index at '{cache_dir}/{STORE_SUBDIR}'. Run batch_ingest_annual_reports.py first."
         )
-    if has_leftover_tmp(cache_dir):
-        clean_cache(cache_dir)
-
-    if not pipeline.load_index(cache_dir):
-        raise RuntimeError(
-            f"Failed to load FAISS index from '{cache_dir}'. "
-            f"Run batch_ingest_annual_reports.py to rebuild."
-        )
+    corpus_manager = open_global_corpus(cache_dir)
     if not corpus_manager.load_registry(cache_dir):
         raise RuntimeError(
-            f"Failed to load document registry from '{cache_dir}'. "
+            f"Index in '{cache_dir}' is missing, stale or inconsistent. "
             f"Run batch_ingest_annual_reports.py to rebuild."
         )
-    if not corpus_manager.validate_cache_integrity(pipeline.index.ntotal):
-        raise RuntimeError(
-            "Cache integrity check failed. "
-            "Run batch_ingest_annual_reports.py to rebuild."
-        )
-    corpus_manager.init_lookup_index(cache_dir, pipeline.index.ntotal)
 
     if init_reranker():
         print("🔄 Reranker loaded: " + settings.RERANKER_MODEL)
     else:
-        print("⚠️  Reranker disabled or failed to load — using FAISS-only ranking")
+        print("⚠️  Reranker disabled or failed to load — using retrieval order")
 
     print(f"📈 RSS after corpus load: {rss_mb():.0f} MB")
-    return pipeline, corpus_manager
+    return corpus_manager.retriever, corpus_manager
 
 
 def rss_mb() -> float:

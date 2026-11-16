@@ -47,6 +47,7 @@ def scope_to_where(scope: RetrievalScope) -> str:
 
 class ChunkStore:
     def __init__(self, path: str, dim: int):
+        self.path = path
         self.db = lancedb.connect(path)
         self.dim = dim
         try:
@@ -63,6 +64,10 @@ class ChunkStore:
             row.update(vector=np.asarray(v, dtype=np.float32), text=c.text, chunk_seq=seq)
             rows.append(row)
         self.table.add(rows)
+
+    def truncate(self, n: int) -> None:
+        """Delete every row with vector_id >= n."""
+        self.table.delete(f"vector_id >= {int(n)}")
 
     def count(self) -> int:
         return self.table.count_rows()

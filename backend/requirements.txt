@@ -8,9 +8,8 @@ uvicorn>=0.24.0
 # PDF Processing
 pymupdf>=1.23.0
 
-# Embeddings & Vector Search
+# Embeddings
 sentence-transformers>=2.2.0
-faiss-cpu>=1.7.4
 
 # LLM Generation (Phase 2)
 openai>=1.0.0
