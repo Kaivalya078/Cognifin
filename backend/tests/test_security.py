@@ -281,15 +281,14 @@ def fake_pipeline(monkeypatch):
         sent["system"] = system_prompt
         return "Revenue rose 10% (chunk_7). Margins held at 20% (chunk_99)."
 
-    def retrieve_context(raw_query, **_):
-        intent = "comparison" if " vs " in raw_query else "single_entity"
-        return [chunk], SimpleNamespace(intent=intent)
+    def retrieve_global(question, **_):
+        intent = "comparison" if " vs " in question else "single_entity"
+        return [chunk], [chunk], SimpleNamespace(intent=intent)
 
     monkeypatch.setattr(main, "corpus_manager", SimpleNamespace(is_indexed=True, chunk_metadata={}))
     monkeypatch.setattr(main, "pipeline", SimpleNamespace(chunks=[]))
     monkeypatch.setattr(main, "llm_client", SimpleNamespace(is_configured=True, model="t", generate=generate))
-    monkeypatch.setattr(main, "retrieve_context", retrieve_context)
-    monkeypatch.setattr(main, "refine_results", lambda results, **_: results)
+    monkeypatch.setattr(main, "retrieve_global", retrieve_global)
     monkeypatch.setattr(main, "is_intelligent_parsing_enabled", lambda: False)
     main.response_cache.invalidate_all()
     yield main, sent

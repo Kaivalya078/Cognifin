@@ -40,3 +40,6 @@ requests>=2.31.0
 
 # Tests
 pytest>=8.0.0
+
+# Memory reporting (core/app_retrieval.py)
+psutil>=5.9

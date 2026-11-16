@@ -46,7 +46,6 @@ from auth import (
 )
 from bson import ObjectId
 
-from core.cache_utils import has_leftover_tmp, clean_cache
 
 # Our retrieval pipeline
 from core.retriever_pipeline import RetrieverPipeline
@@ -66,6 +65,7 @@ from query.search_plan_builder import build_plan
 
 # Stage 8B: Multi-corpus routing
 from core.corpus_router import CorpusRouter
+from core.app_retrieval import load_global_corpus, retrieve_global
 
 # Conversation persistence
 from routers.conversations import (
@@ -78,11 +78,11 @@ from routers.conversations import (
 from core.retrieval_logger import log_no_context_event
 
 # Phase 2: Reranking + refinement
-from core.reranker import init_reranker, is_reranker_ready
+from core.reranker import is_reranker_ready
 from core.retrieval_pipeline_v2 import refine_results
 
 # Phase 3: Recall improvement (multi-query, hybrid search, expansion)
-from core.bm25_retriever import init_bm25, is_bm25_ready
+from core.bm25_retriever import is_bm25_ready
 from query.multi_query import init_multi_query, is_multi_query_enabled
 from query.query_expander import get_synonym_count
 
@@ -319,67 +319,17 @@ async def lifespan(app: FastAPI):
 
     cache_dir = settings.INDEX_CACHE_DIR
 
-    # Initialize the retrieval pipeline
-    pipeline = RetrieverPipeline()
-
     # Initialize the OpenAI client
     llm_client = OpenAIClient()
 
-    # Wrap pipeline in CorpusManager
-    corpus_manager = CorpusManager(pipeline)
-
-    # --- Read-only cache load ---
     ensure_index_cache(cache_dir)  # remote mode: download before checking for it
-    if not os.path.exists(cache_dir):
-        raise RuntimeError(
-            f"Cache directory '{cache_dir}' does not exist. "
-            f"Run batch_ingest_annual_reports.py first."
-        )
-
-    if has_leftover_tmp(cache_dir):
-        clean_cache(cache_dir)
-
-    # Step 1: Load FAISS index
-    if not pipeline.load_index(cache_dir):
-        raise RuntimeError(
-            f"Failed to load FAISS index from '{cache_dir}'. "
-            f"Run batch_ingest_annual_reports.py to rebuild."
-        )
-
-    # Step 2: Load registry
-    if not corpus_manager.load_registry(cache_dir):
-        raise RuntimeError(
-            f"Failed to load document registry from '{cache_dir}'. "
-            f"Run batch_ingest_annual_reports.py to rebuild."
-        )
-
-    # Step 3: Validate integrity
-    if not corpus_manager.validate_cache_integrity(pipeline.index.ntotal):
-        raise RuntimeError(
-            "Cache integrity check failed. "
-            "Run batch_ingest_annual_reports.py to rebuild."
-        )
-
-    # Step 4: Initialize LookupIndex
-    corpus_manager.init_lookup_index(cache_dir, pipeline.index.ntotal)
+    pipeline, corpus_manager = load_global_corpus(cache_dir)
 
     # Stage 8B: Initialize corpus router with global corpus
     corpus_router = CorpusRouter(corpus_manager)
 
     # Ensure MongoDB indexes
     ensure_indexes()
-
-    # Phase 2: Initialize cross-encoder reranker
-    if init_reranker():
-        print("🔄 Reranker loaded: " + settings.RERANKER_MODEL)
-    else:
-        print("⚠️  Reranker disabled or failed to load — using FAISS-only ranking")
-
-    # Phase 3: Build BM25 sparse index from existing chunks
-    if init_bm25(pipeline.chunks):
-        print(f"🔍 BM25 index built: {len(pipeline.chunks)} documents")
-    else:
-        print("⚠️  BM25 disabled or failed — using dense search only")
 
     # Phase 3: Initialize multi-query generator
     if init_multi_query(llm_client):
@@ -860,25 +810,13 @@ def answer_question(question: str, session_id: Optional[str] = None,
         # Global-only path: use standard orchestrator
         print(f"\n💬 Chat request: '{question[:60]}...'")
         with tracker.track("retrieval"):
-            results, parsed = retrieve_context(
-                raw_query=question,
-                corpus_manager=corpus_manager,
-                embed_query=lambda q: pipeline.embed_query(q),
-                default_top_k=top_k,
+            _, results, parsed = retrieve_global(
+                question, pipeline=pipeline, corpus_manager=corpus_manager,
+                top_k=top_k, final_k=final_k,
             )
 
         if parsed:
             intent = parsed.get("intent", "lookup") if isinstance(parsed, dict) else getattr(parsed, "intent", "lookup")
-
-        with tracker.track("reranking"):
-            results = refine_results(
-                results=results,
-                query=question,
-                parsed_query=parsed,
-                all_chunks=pipeline.chunks,
-                chunk_metadata=corpus_manager.chunk_metadata,
-                final_k=final_k,
-            )
 
         context, chunk_ids = build_context(results)
 
