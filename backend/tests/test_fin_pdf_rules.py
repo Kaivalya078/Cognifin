@@ -194,3 +194,148 @@ def test_conflicting_unit_words_yield_nothing(tmp_path):
     head = _head(unit="(Rs. in Lakhs)")
     head.insert(1, [(3, "£ Cr /")])
     assert extract_rules(_pdf(tmp_path, [head + BODY]))[0] == []
+
+
+def test_numbers_in_one_wide_spaced_span(tmp_path):
+    """SBILIFE prints a row's numbers as one span padded with spaces."""
+    nums = ["1,234.50", "1,100.00", "1,000.00", "4,400.00"]
+    text, x = "", float(X[1])
+    for i, n in enumerate(nums):
+        text += n
+        if i + 1 < len(nums):
+            while x + fitz.get_text_length(text, "helv", 8) < X[i + 2]:
+                text += " "
+    body = [[(0, "1 Revenue from operations"), (float(X[1]), text)]] + BODY[1:]
+    v = _vals(extract_rules(_pdf(tmp_path, [_head() + body]))[0])
+    assert v["revenue_from_operations"].value == 1234.5e7
+
+
+def test_refused_row_blocks_later_same_label(tmp_path):
+    """BAJFINANCE: the profit-attributable 'Owners' row is unreadable; the later OCI 'Owners'
+    row must not stand in for it."""
+    body = BODY[:6] + [
+        [(0, "Owners of the Company"), (1, "140.00"), (float(X[1]) + 30, "1.71"), (2, "130.00"),
+         (3, "100.00"), (4, "500.00")],
+        [(0, "Other comprehensive income attributable to")],
+        [(0, "Owners of the Company"), (1, "(19.00)"), (2, "1.00"), (3, "1.00"), (4, "1.00")],
+    ] + BODY[6:]
+    v = _vals(extract_rules(_pdf(tmp_path, [_head() + body]))[0])
+    assert "net_profit_owners" not in v
+
+
+def test_profit_after_associates_wins(tmp_path):
+    """RELIANCE: 'Profit After Tax' is before the share of associates; the later row is the
+    profit for the period."""
+    body = BODY[:5] + [
+        [(0, "Profit After Tax"), (1, "150.00"), (2, "135.00"), (3, "110.00"), (4, "525.00")],
+        [(0, "Share of Profit/(Loss) of Associates"), (1, "2.00"), (2, "1.00"), (3, "1.00"), (4, "4.00")],
+        [(0, "Profit After Tax and Share of Profit/(Loss) of Associates"), (1, "152.00"),
+         (2, "136.00"), (3, "111.00"), (4, "529.00")],
+    ] + BODY[6:]
+    v = _vals(extract_rules(_pdf(tmp_path, [_head() + body]))[0])
+    assert v["net_profit"].value == 152e7
+
+
+def test_llm_value_from_wrong_column_rejected(tmp_path):
+    from financials.pdf_rules import check_columns
+    from financials.store import Candidate
+    src = _pdf(tmp_path, [_head() + BODY])
+
+    def c(printed):
+        return Candidate("TCS", "consolidated", "Q", date(2025, 4, 1), END, "revenue_from_operations",
+                         1.0, "INR", printed, 1, "llm", "bse_pdf", "TCS/x.pdf", "u", None)
+    ok, bad = check_columns(src, [c("1,234.50"), c("1,100.00")])
+    assert [x.printed for x in ok] == ["1,234.50"]
+    assert len(bad) == 1 and bad[0]["reason"].startswith("column")
+
+
+def test_undated_column_explains_its_numbers(tmp_path):
+    """TMPV: one header reads 'March 31,' with no year under it. Its numbers must not make
+    every row look unexplained."""
+    head = _head()
+    head[3] = [(1, "30.06.2025"), (2, "31.03.2025"), (3, "June 30,"), (4, "31.03.2025")]
+    v = _vals(extract_rules(_pdf(tmp_path, [head + BODY]))[0])
+    assert v["revenue_from_operations"].value == 1234.5e7
+
+
+def test_policyholders_tax_is_not_company_tax(tmp_path):
+    """Insurers: the policyholders' account has its own 'Provision for taxes' row."""
+    body = [[(0, "POLICYHOLDERS' A/C")],
+            [(0, "Provision for taxes"), (1, "36.14"), (2, "1.00"), (3, "1.00"), (4, "1.00")],
+            [(0, "SHAREHOLDERS' A/C")]] + BODY
+    v = _vals(extract_rules(_pdf(tmp_path, [_head() + body]))[0])
+    assert v["tax_expense"].value == 50e7
+
+
+def test_ocr_space_beside_separator_read():
+    from financials.pdf_rules import _num
+    assert _num("35 .27") == 35.27 and _num("16 ,637.82") == 16637.82
+    assert _num("4,875 .3 6") is None
+
+
+def test_eps_under_earnings_per_share_prefix():
+    from financials.pdf_rules import match_metrics
+    assert match_metrics("Earnings per equity share:- Basic and diluted (f)") == ("eps_basic", "eps_diluted")
+
+
+def test_wrapped_label_joins_line_above(tmp_path):
+    """RELIANCE: the numbers sit on the label's second line, 'and Joint Ventures'."""
+    body = BODY[:5] + [
+        [(0, "Profit After Tax"), (1, "150.00"), (2, "135.00"), (3, "110.00"), (4, "525.00")],
+        [(0, "Profit After Tax and Share of Profit/ (Loss) of Associates")],
+        [(0, "and Joint Ventures"), (1, "152.00"), (2, "136.00"), (3, "111.00"), (4, "529.00")],
+    ] + BODY[6:]
+    v = _vals(extract_rules(_pdf(tmp_path, [_head() + body]))[0])
+    assert v["net_profit"].value == 152e7
+
+
+def test_image_only_page_read_by_ocr(tmp_path):
+    """SBIN-style scans: no text layer. OCR cells feed the same rules."""
+    src = _pdf(tmp_path, [_head() + BODY], "text.pdf")
+    with fitz.open(str(src.path)) as d:
+        pix = d[0].get_pixmap(dpi=200)
+    scan = fitz.open()
+    scan.new_page(width=595, height=842).insert_image(fitz.Rect(0, 0, 595, 842), pixmap=pix)
+    scan.save(str(tmp_path / "scan.pdf"))
+    src.path, src.sha256 = tmp_path / "scan.pdf", "scan"
+    v = _vals(extract_rules(src, ocr_cache=tmp_path / "ocr")[0])
+    assert v["revenue_from_operations"].value == 1234.5e7 and v["eps_basic"].value == 12.34
+    assert list((tmp_path / "ocr").glob("scan_*.json"))   # cached for the next build
+
+
+def test_item_marker_is_not_a_wrapped_label(tmp_path):
+    """JSWSTEEL: 'Tax expense/ (credit)' heading, then 'a) Current tax' is not the total."""
+    body = BODY[:4] + [[(0, "Tax expense/ (credit)")],
+                       [(0, "a) Current tax"), (1, "41.00"), (2, "1.00"), (3, "1.00"), (4, "1.00")]] + BODY[4:]
+    v = _vals(extract_rules(_pdf(tmp_path, [_head() + body]))[0])
+    assert v["tax_expense"].value == 50e7
+
+
+def test_owners_after_discontinued_block_wins(tmp_path):
+    """TMPV: owners' share of continuing profit comes first; the total after the discontinued
+    block is the figure."""
+    own = lambda v: [(0, "Shareholders of the Company"), (1, v), (2, "1.00"), (3, "1.00"), (4, "1.00")]
+    body = BODY[:6] + [own("120.00"),
+                       [(0, "Profit before tax from discontinued operation"), (1, "30.00"), (2, "1.00"),
+                        (3, "1.00"), (4, "1.00")], own("140.00")] + BODY[6:]
+    v = _vals(extract_rules(_pdf(tmp_path, [_head() + body]))[0])
+    assert v["net_profit_owners"].value == 140e7
+
+
+def test_skewed_scan_rows_stay_aligned(tmp_path):
+    """SBILIFE p.3: a scan tilted ~1.5 deg. Without deskew, labels pair with the next row."""
+    import cv2
+    import numpy as np
+    src = _pdf(tmp_path, [_head() + BODY], "text.pdf")
+    with fitz.open(str(src.path)) as d:
+        pix = d[0].get_pixmap(dpi=200)
+    img = np.frombuffer(pix.samples, np.uint8).reshape(pix.h, pix.w, pix.n)
+    m = cv2.getRotationMatrix2D((pix.w / 2, pix.h / 2), -1.5, 1.0)
+    img = cv2.warpAffine(img, m, (pix.w, pix.h), borderValue=(255, 255, 255))
+    ok, png = cv2.imencode(".png", img)
+    scan = fitz.open()
+    scan.new_page(width=595, height=842).insert_image(fitz.Rect(0, 0, 595, 842), stream=png.tobytes())
+    scan.save(str(tmp_path / "scan.pdf"))
+    src.path, src.sha256 = tmp_path / "scan.pdf", "skew"
+    v = _vals(extract_rules(src, ocr_cache=tmp_path / "ocr")[0])
+    assert v["other_income"].value == 10.5e7 and v["total_income"].value == 1245e7

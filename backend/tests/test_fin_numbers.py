@@ -48,3 +48,8 @@ def test_malformed_grouping_rejected():
     assert parse_number("19,245,56") is None and parse_number("995,36") is None
     assert parse_number("1,33,408") == 133408 and parse_number("255,324") == 255324
     assert parse_number("146691.68") == 146691.68
+
+
+def test_ocr_suffixed_crores_unit():
+    from financials.numbers import unit_multiplier
+    assert unit_multiplier("('l' in croresl") == 1e7

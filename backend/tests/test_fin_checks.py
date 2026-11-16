@@ -48,3 +48,13 @@ def test_plausible_unit_error():
     assert check_plausible(_c(value=1e14), [1e9, 1.1e9, 0.9e9]) is not None
     assert check_plausible(_c(value=1.2e9), [1e9, 1.1e9, 0.9e9]) is None
     assert check_plausible(_c(value=1e14), []) is None
+
+
+def test_verbatim_tolerates_ocr_spacing():
+    from financials.checks import check_verbatim
+    from financials.store import Candidate
+    c = Candidate("X", "consolidated", "Q", None, None, "total_expenses", 1.0, "INR", "13,575.93",
+                  14, "llm", "bse_pdf", "x", "u", None)
+    assert check_verbatim(c, "Total expenses 13 575.93 13 160.90") is None
+    assert check_verbatim(c, "Total expenses 13, 575 .93") is None
+    assert check_verbatim(c, "Total expenses 113,575.93") is not None

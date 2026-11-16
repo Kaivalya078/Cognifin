@@ -13,7 +13,9 @@ def check_verbatim(c: Candidate, page_text: str) -> str | None:
     """The printed string occurs on the page as a whole token (not inside a longer number)."""
     if c.method == "xbrl":
         return None
-    p = re.escape(_norm(c.printed)).replace(r"\ ", r"\s*")
+    # OCR spacing: a space beside a separator, or a space in place of a comma ("13 575.93")
+    sep = {",": r"(?:\s*,\s*|\s)", ".": r"\s*\.\s*", " ": r"\s*"}
+    p = "".join(sep.get(ch, re.escape(ch)) for ch in _norm(c.printed))
     if re.search(rf"(?<![\d.,]){p}(?![\d]|[.,]\d)", _norm(page_text)):
         return None
     return f"verbatim: {c.printed!r} not on page {c.page}"
@@ -42,6 +44,8 @@ def check_arithmetic(group: list[Candidate], rounding: float,
 def check_ratio(c: Candidate) -> str | None:
     if c.unit == "pct" and not 0 <= c.value <= 100:
         return f"ratio: {c.value} outside 0-100"
+    if c.metric == "solvency_ratio" and not 0.5 <= c.value <= 10:
+        return f"ratio: solvency {c.value}x outside 0.5-10"
     return None
 
 

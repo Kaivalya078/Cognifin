@@ -84,9 +84,34 @@ def _rows(segs) -> List[List[Dict]]:
     return [sorted(r, key=lambda g: g["x0"]) for r in rows]
 
 
+def _split_span(sp) -> List[Dict]:
+    """A rawdict span cut at runs of 2+ spaces (some PDFs print a whole row of numbers as one
+    space-padded span); single spaces stay inside a piece."""
+    pieces, cur, gap = [], [], 0
+    for ch in sp["chars"] + [{"c": " "}, {"c": " "}]:
+        if ch["c"].isspace():
+            gap += 1
+            continue
+        if cur and gap >= 2:
+            pieces.append(cur)
+            cur = []
+        if cur and gap == 1:
+            cur.append(None)
+        cur.append(ch)
+        gap = 0
+    if cur:
+        pieces.append(cur)
+    y0, y1 = sp["bbox"][1], sp["bbox"][3]
+    return [{"text": "".join(" " if c is None else c["c"] for c in pc), "size": sp["size"],
+             "bbox": (pc[0]["bbox"][0], y0, pc[-1]["bbox"][2], y1)} for pc in pieces]
+
+
 def page_rows(page) -> List[List[Dict]]:
     """Visual rows of a PyMuPDF page, each left to right; cells have text, x0, x1, y0, y1."""
-    blocks = [b for b in page.get_text("dict")["blocks"] if b.get("type") == 0]
+    blocks = [b for b in page.get_text("rawdict")["blocks"] if b.get("type") == 0]
+    for b in blocks:
+        for line in b["lines"]:
+            line["spans"] = [pc for sp in line["spans"] for pc in _split_span(sp)]
     return _rows([g for g in _segments(blocks) if g["text"]])
 
 

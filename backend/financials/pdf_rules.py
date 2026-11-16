@@ -15,6 +15,7 @@ from pathlib import Path
 import fitz
 
 from core.pdf_chunker import page_rows
+from financials.ocr import read_pages
 from financials.metrics import METRICS
 from financials.numbers import parse_number, to_value, unit_multiplier
 from financials.sources import Source
@@ -125,8 +126,13 @@ def _xc(c) -> float:
     return (c["x0"] + c["x1"]) / 2
 
 
+def _clean(text: str) -> str:
+    """Trailing footnote marks off; OCR spaces beside a separator closed ("35 .27")."""
+    return re.sub(r"(?<=\d)\s*([.,])\s*(?=\d)", r"\1", re.sub(r"[%*#^]+$", "", text.strip()))
+
+
 def _num(text: str) -> float | None:
-    return parse_number(re.sub(r"[%*#^]+$", "", text.strip()))
+    return parse_number(_clean(text))
 
 
 def _norm_label(s: str) -> str:
@@ -136,7 +142,7 @@ def _norm_label(s: str) -> str:
     t = re.sub(r"\s+", " ", t).strip()
     for _ in range(3):
         t = re.sub(r"^(\(?(\d{1,2}|[ivx]{1,5}|[a-h])[).]?|less|add)\s+", "", t)
-    return t
+    return re.sub(r"^earnings per (equity )?share (?=basic|diluted)", "", t)
 
 
 def match_metrics(label: str) -> tuple[str, ...]:
@@ -189,7 +195,11 @@ def _layout(rows, period_end: date, prev):
     cells = [c for r in head for c in r]
     if any("segment" in c["text"].lower() for c in cells):
         return None   # segment tables repeat headline labels with segment-level numbers
-    dated = [s for s in _stacks(cells) if find_date(s["text"])]
+    stacks = _stacks(cells)
+    dated = [s for s in stacks if find_date(s["text"])]
+    # a header that reads only "March 31," still marks a column: it explains the numbers
+    # under it, but having no date it is never a target
+    undated = [s for s in stacks if not find_date(s["text"])]
     if not dated:
         return dict(prev, start=0) if prev else None
     units = {m for m in (unit_multiplier(c["text"]) for c in cells) if m}
@@ -230,6 +240,7 @@ def _layout(rows, period_end: date, prev):
             bc = nearest_above(bcells, c)
             b = _basis_word(bc["text"]) if bc else page_basis
         cols.append({"x": _xc(c), "date": find_date(c["text"]), "phrase": phrase_of(c), "basis": b})
+    cols += [{"x": _xc(c), "date": None, "phrase": None, "basis": page_basis} for c in undated]
     xs = sorted(c["x"] for c in cols)
     gap = min([b - a for a, b in zip(xs, xs[1:]) if b - a > 5] or [80])
     return {"cols": cols, "unit": unit, "start": first, "tol": max(25.0, 0.6 * gap)}
@@ -251,13 +262,12 @@ def _targets(layout, period_end: date):
 
 
 def find_statement_pages(doc, period_end: date) -> list[tuple[int, str]]:
-    return [(p, b) for p, b, _ in _statement_layouts(doc, period_end)]
+    return [(p, b) for p, b, _ in _statement_layouts(read_pages(doc), period_end)]
 
 
-def _statement_layouts(doc, period_end: date):
+def _statement_layouts(pages_rt, period_end: date):
     out, prev = [], None
-    for i, page in enumerate(doc):
-        rows = page_rows(page)
+    for i, (rows, *_) in enumerate(pages_rt):
         lay = _layout(rows, period_end, prev)
         if lay and lay["unit"] and _targets(lay, period_end):
             bases = sorted({c["basis"] for c, _ in _targets(lay, period_end)})
@@ -268,53 +278,123 @@ def _statement_layouts(doc, period_end: date):
     return out
 
 
+def _section(row, policyholders: bool) -> bool:
+    """Insurer statements: a "POLICYHOLDERS' A/C" / "SHAREHOLDERS' A/C" heading row."""
+    txt = " ".join(c["text"] for c in row)
+    if len(txt) < 40 and re.search(r"(?i)holders\W*(a/c|account)", txt):
+        return "policy" in txt.lower()
+    return policyholders
+
+
+_SHAREHOLDERS_ONLY = {"profit_before_tax", "tax_expense", "net_profit"}
 _KEY = re.compile(r"revenue from operations|total income|profit before tax|interest earned|premium")
 
 
-def extract_rules(src: Source) -> tuple[list[Candidate], dict[int, str]]:
+_OCR_CACHE = Path(__file__).resolve().parents[1] / "index_cache" / "financials_ocr_cache"
+
+
+def extract_rules(src: Source, ocr_cache: Path = _OCR_CACHE) -> tuple[list[Candidate], dict[int, str]]:
     found: dict[tuple, Candidate] = {}
+    blocked: set[tuple] = set()
+    late_keys: set[tuple] = set()
+    policyholders = False
+    above = ""
+    discontinued = False
     pages: dict[int, str] = {}
     with fitz.open(str(src.path)) as doc:
-        for pno, _, (lay, rows) in _statement_layouts(doc, src.period_end):
-            pages[pno] = doc[pno - 1].get_text()
-            targets = _targets(lay, src.period_end)
-            for r in rows[lay["start"]:]:
-                left = min(k["x"] for k in lay["cols"]) - 1.5 * lay["tol"]
-                area = [c for c in r if _num(c["text"]) is not None and _xc(c) >= left]
-                nums = [c for c in area
-                        if min(abs(_xc(c) - k["x"]) for k in lay["cols"]) <= lay["tol"]]
-                if not nums or len(nums) < len(area):
-                    continue   # a number in the value area that no column explains
-                label = " ".join(c["text"] for c in r if c["x1"] <= min(n["x0"] for n in nums) + 1
-                                 and _num(c["text"]) is None)
-                metrics = match_metrics(label)
-                owners = [id(min(lay["cols"], key=lambda k: abs(_xc(n) - k["x"]))) for n in nums]
-                if len(set(owners)) < len(owners):
-                    continue   # two numbers under one column: the columns do not fit this row
-                for col, ptype in targets:
-                    cell = min(nums, key=lambda c: abs(_xc(c) - col["x"]))
-                    if owners[nums.index(cell)] != id(col):
+        rt = read_pages(doc, src.sha256, ocr_cache)
+    # text-layer pages first: a scanned copy of a statement only fills what they miss
+    layouts = sorted(_statement_layouts(rt, src.period_end), key=lambda t: rt[t[0] - 1][2])
+    for pno, _, (lay, rows) in layouts:
+        pages[pno] = rt[pno - 1][1]
+        targets = _targets(lay, src.period_end)
+        discontinued = False   # per page: the standalone page's block says nothing of the next
+        for r in rows[:lay["start"]]:
+            policyholders = _section(r, policyholders)
+        for r in rows[lay["start"]:]:
+            left = min(k["x"] for k in lay["cols"]) - 1.5 * lay["tol"]
+            area = [c for c in r if _num(c["text"]) is not None and _xc(c) >= left]
+            nums = [c for c in area
+                    if min(abs(_xc(c) - k["x"]) for k in lay["cols"]) <= lay["tol"]]
+            if not nums:
+                policyholders = _section(r, policyholders)
+                above = " ".join(c["text"] for c in r)
+                continue
+            label = " ".join(c["text"] for c in r if c["x1"] <= min(n["x0"] for n in nums) + 1
+                             and _num(c["text"]) is None)
+            # "and Joint Ventures": a wrapped label ("a) Current tax" is an item, not a wrap)
+            if label[:1].islower() and above and not re.match(r"[a-z]{1,3}[).]\s", label):
+                label = above + " " + label
+            above = ""
+            metrics = match_metrics(label)
+            discontinued = discontinued or "discontinued" in label.lower()
+            if policyholders:   # insurers: the company's PBT/tax/profit are shareholders'
+                metrics = tuple(m for m in metrics if m not in _SHAREHOLDERS_ONLY)
+            # The first row carrying a label settles it: when that row cannot be read, a
+            # later row with the same label (e.g. the OCI "Owners of the Company") must
+            # not stand in for it.
+            unread = {(col["basis"], p, m) for col, p in targets for m in metrics}
+            owners = [id(min(lay["cols"], key=lambda k: abs(_xc(n) - k["x"]))) for n in nums]
+            if len(nums) < len(area) or len(set(owners)) < len(owners):
+                blocked |= unread   # a stray number, or two under one column: misfit row
+                continue
+            for col, ptype in targets:
+                cell = min(nums, key=lambda c: abs(_xc(c) - col["x"]))
+                if owners[nums.index(cell)] != id(col):
+                    continue
+                for m in metrics:
+                    if m == "net_profit_owners" and col["basis"] != "consolidated":
                         continue
-                    for m in metrics:
-                        if m == "net_profit_owners" and col["basis"] != "consolidated":
-                            continue
-                        key = (col["basis"], ptype, m)
-                        if key in found:
-                            continue
-                        start = _q_start(src.period_end) if ptype == "Q" else date(src.period_end.year - 1, 4, 1)
-                        found[key] = Candidate(
-                            src.symbol, col["basis"], ptype, start, src.period_end, m,
-                            to_value(re.sub(r"[%*#^]+$", "", cell["text"].strip()), m, lay["unit"]),
-                            METRICS[m][1], cell["text"].strip(), pno, "rule", "bse_pdf", src.rel,
-                            src.url, None)
-        # pages the rules could not lay out, for the LLM fallback
-        for i, page in enumerate(doc):
-            if len(pages) >= 6:
-                break
-            t = re.sub(r"\s+", " ", page.get_text().lower())
-            if i + 1 not in pages and len(set(_KEY.findall(t))) >= 2 and find_date(t):
-                pages[i + 1] = page.get_text()
+                    key = (col["basis"], ptype, m)
+                    unread.discard(key)
+                    # profit after the share of associates replaces a plain PAT row; owners'
+                    # share after a discontinued block replaces their continuing-only share
+                    late = (m == "net_profit" and re.search(r"associate|joint venture", label, re.I)
+                            or m == "net_profit_owners" and discontinued)
+                    if key in blocked or (key in found and not (late and key not in late_keys)):
+                        continue
+                    if late:
+                        late_keys.add(key)
+                    start = _q_start(src.period_end) if ptype == "Q" else date(src.period_end.year - 1, 4, 1)
+                    found[key] = Candidate(
+                        src.symbol, col["basis"], ptype, start, src.period_end, m,
+                        to_value(_clean(cell["text"]), m, lay["unit"]),
+                        METRICS[m][1], cell["text"].strip(), pno, "rule", "bse_pdf", src.rel,
+                        src.url, None)
+            blocked |= unread - set(found)
+    # pages the rules could not lay out, for the LLM fallback
+    for i, (_, text, _) in enumerate(rt):
+        if len(pages) >= 6:
+            break
+        t = re.sub(r"\s+", " ", text.lower())
+        if i + 1 not in pages and len(set(_KEY.findall(t))) >= 2 and find_date(t):
+            pages[i + 1] = text
     return list(found.values()), dict(sorted(pages.items()))
+
+
+def check_columns(src: Source, cands: list[Candidate],
+                  ocr_cache: Path = _OCR_CACHE) -> tuple[list[Candidate], list[dict]]:
+    """LLM values on a page the rules laid out must sit under a column of the claimed period.
+    A value not found as a cell, or on a page without a layout, passes (verbatim judges it)."""
+    from financials.store import review_row
+    ok, bad = [], []
+    with fitz.open(str(src.path)) as doc:
+        rt = read_pages(doc, src.sha256, ocr_cache)
+    lays = {pno: lay for pno, _, (lay, _) in _statement_layouts(rt, src.period_end)}
+    rows = {pno: rt[pno - 1][0] for pno in lays}
+    for c in cands:
+        lay = lays.get(c.page)
+        cells = [g for r in rows.get(c.page, []) for g in r
+                 if g["text"].strip() == c.printed.strip()] if lay else []
+        good = {(k["basis"], p) for k, p in _targets(lay, src.period_end)} if lay else set()
+        hits = [min(lay["cols"], key=lambda k: abs(_xc(g) - k["x"])) for g in cells]
+        if hits and not any((k["basis"], c.period_type) in good and k["date"] == src.period_end
+                            and k["phrase"] == c.period_type for k in hits):
+            bad.append(review_row(c, f"column: '{c.printed}' is not under a "
+                                     f"{c.basis} {c.period_type} {src.period_end} column"))
+        else:
+            ok.append(c)
+    return ok, bad
 
 
 def _probe(root: Path) -> None:

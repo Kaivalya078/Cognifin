@@ -22,7 +22,7 @@ def parse_number(s: str) -> float | None:
 
 
 _UNITS = [
-    (re.compile(r"\bcrores?\b|\bcr\b\.?", re.I), 1e7),
+    (re.compile(r"\bcrores?[a-z]?\b|\bcr\b\.?", re.I), 1e7),   # "croresl": OCR
     (re.compile(r"\blakhs?\b|\blacs?\b", re.I), 1e5),
     (re.compile(r"\bmillions?\b|\bmn\b", re.I), 1e6),
     (re.compile(r"\bin\s+actuals?\b", re.I), 1.0),

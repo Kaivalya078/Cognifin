@@ -35,6 +35,9 @@ slowapi>=0.1.9
 # Vector + full-text store (core/chunk_store.py)
 lancedb>=0.41
 duckdb>=1.1
+# OCR for scanned results PDFs (financials/ocr.py)
+rapidocr>=3.10
+onnxruntime>=1.20
 pyarrow>=15
 # Index bootstrap (asset_manager.py)
 requests>=2.31.0

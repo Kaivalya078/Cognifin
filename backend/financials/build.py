@@ -13,7 +13,7 @@ from financials.ixbrl import parse_ixbrl
 from financials.metrics import metrics_for
 from financials.numbers import parse_number
 from financials.pdf_llm import extract_llm
-from financials.pdf_rules import extract_rules
+from financials.pdf_rules import check_columns, extract_rules
 from financials.sources import load_sources
 from financials.store import Candidate, review_row, write_db
 
@@ -44,10 +44,13 @@ class _Counting:
 
 
 def normalise(c: Candidate) -> Candidate:
-    """Solvency is printed as a multiple (1.97) or a percent (180.0); store it as a multiple.
-    The regulatory floor is 1.5x, so a multiple above 10 is always a percent."""
+    """Solvency is printed as a multiple (1.97), a percent (180.0) or, in one SBILIFE filing,
+    a hundredth (0.0196); store it as a multiple. The regulatory floor is 1.5x, so a multiple
+    above 10 is a percent and one below 0.1 a hundredth."""
     if c.metric == "solvency_ratio" and c.value > 10:
         return replace(c, value=round(c.value / 100, 4))
+    if c.metric == "solvency_ratio" and 0 < c.value < 0.1:
+        return replace(c, value=round(c.value * 100, 4))
     return c
 
 
@@ -68,6 +71,10 @@ def _check_pdf(cands: list[Candidate], pages: dict[int, str],
     passed alone: they take part in the arithmetic but are never rejected by it."""
     ok, bad = [], []
     for c in cands:
+        if c.method == "llm" and check_verbatim(c, pages.get(c.page, "")):
+            # the LLM cited the wrong page: take the one sent page that prints the value
+            hits = [p for p, t in pages.items() if not check_verbatim(replace(c, page=p), t)]
+            c = replace(c, page=hits[0]) if len(hits) == 1 else c
         reason = check_verbatim(c, pages.get(c.page, "")) or check_ratio(c)
         (bad.append(review_row(c, reason)) if reason else ok.append(c))
     groups = defaultdict(list)
@@ -114,6 +121,7 @@ def build(sources_dir: Path, out_db: Path, use_llm: bool = True, client=None,
         try:
             if s.kind != "PDF":
                 cands, filing = parse_ixbrl(s)
+                cands = [normalise(c) for c in cands]
                 for c in cands:
                     reason = check_ratio(c)
                     (review.append(review_row(c, reason)) if reason else rows.append(c))
@@ -122,11 +130,15 @@ def build(sources_dir: Path, out_db: Path, use_llm: bool = True, client=None,
             kind = kind_of.get(s.symbol, "INDAS")
             want_m = set(wanted(kind))
             cands, pages = extract_rules(s)
-            cands = [c for c in cands if c.metric in want_m]
+            cands = [normalise(c) for c in cands if c.metric in want_m]
             ok, bad = _check_pdf(cands, pages)
             review += bad
             if use_llm and pages:
-                bases = sorted({c.basis for c in cands}) or ["consolidated", "standalone"]
+                # bases the rules read, plus any a page title names (a page the rules could
+                # not lay out may be the only consolidated one)
+                titled = {b for b in ("consolidated", "standalone")
+                          for t in pages.values() if b in t[:1500].lower()}
+                bases = sorted({c.basis for c in cands} | titled) or ["consolidated", "standalone"]
                 ptypes = ["Q", "FY"] if s.period_end.month == 3 else ["Q"]
                 have = {(c.basis, c.period_type, c.metric) for c in ok}
                 missing = [(b, p, m) for b in bases for p in ptypes for m in sorted(want_m)
@@ -134,7 +146,9 @@ def build(sources_dir: Path, out_db: Path, use_llm: bool = True, client=None,
                            and not (m == "net_profit_owners" and b != "consolidated")]
                 if missing:
                     llm_files += 1
-                    got = extract_llm(s, pages, missing, cache_dir, client=llm)
+                    got = [normalise(c) for c in extract_llm(s, pages, missing, cache_dir, client=llm)]
+                    got, col_bad = check_columns(s, got)
+                    review += col_bad
                     got_ok, got_bad = _check_pdf(got, pages, trusted=ok)
                     ok, review = ok + got_ok, review + got_bad
             rows += ok
@@ -146,7 +160,6 @@ def build(sources_dir: Path, out_db: Path, use_llm: bool = True, client=None,
         filings.append(filing)
 
     # plausibility across periods of the same company/basis/metric
-    rows = [normalise(c) for c in rows]
     series = defaultdict(list)
     for c in rows:
         series[c.company, c.basis, c.period_type, c.metric].append(c)

@@ -127,3 +127,38 @@ def test_regulatory_deferral_skips_pbt_minus_tax_rule():
             "Net movement in regulatory deferral account balances 1258.98 Profit 4774.68")
     keep, bad = _check_pdf(g, {3: page})
     assert len(keep) == 3 and not bad
+
+
+def test_llm_asked_for_basis_the_rules_missed(tmp_path):
+    """Standalone page laid out by rules; the consolidated page has no unit row, so only the
+    LLM can read it. It must still be asked for consolidated."""
+    root = tmp_path / "q"
+    (root / "TCS").mkdir(parents=True)
+    src = _pdf(tmp_path, [_head("Standalone") + BODY, _head("Consolidated", unit=None) + BODY], "s.pdf")
+    shutil.copyfile(src.path, root / "TCS" / "2025-06.pdf")
+    with open(root / "sources.csv", "w", newline="") as f:
+        w = csv.writer(f)
+        w.writerow(["symbol", "period_end", "kind", "basis", "file", "url", "sha256"])
+        w.writerow(["TCS", "2025-06-30", "PDF", "", "TCS/2025-06.pdf", "https://x",
+                    hashlib.sha256((root / "TCS" / "2025-06.pdf").read_bytes()).hexdigest()])
+    item = {"basis": "consolidated", "period_type": "Q", "metric": "other_income", "printed": "10.50",
+            "column_header": "30.06.2025", "unit_header": "(Rs. in crore)", "page": 2}
+    build(root, tmp_path / "f.duckdb", client=FakeClient([item]), cache_dir=tmp_path / "c")
+    with _db(tmp_path / "f.duckdb") as con:
+        assert con.execute("SELECT count(*) FROM financials WHERE basis='consolidated'").fetchone()[0] == 1
+
+
+def test_llm_value_on_other_sent_page_is_moved_there():
+    from financials.build import _check_pdf
+    c = _cand("profit_before_tax", 486.21e7, "486.21")
+    c.method = "llm"
+    keep, bad = _check_pdf([c], {21: "PBT 485.94", 22: "Profit before tax 486.21"})
+    assert not bad and keep[0].page == 22
+
+
+def test_solvency_fraction_and_impossible_values():
+    from financials.build import normalise
+    from financials.checks import check_ratio
+    assert normalise(_cand("solvency_ratio", 0.0196, "0.0196")).value == 1.96
+    assert check_ratio(normalise(_cand("solvency_ratio", 14500.0, "14,500")))
+    assert check_ratio(normalise(_cand("solvency_ratio", 194.0, "194%"))) is None
