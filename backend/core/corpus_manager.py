@@ -135,8 +135,7 @@ class CorpusManager:
         Ingest a document into the corpus with metadata.
         
         Two execution paths:
-          Cold start (no index): delegates to RetrieverPipeline.index_document()
-          Append (index exists): uses prepare_document → embed_texts → append_vectors
+          prepare_document → embed_texts → append_vectors (also for the first document)
         
         Stage 2 additions:
           - Duplicate protection: aborts if company+type+year already exists
@@ -179,38 +178,14 @@ class CorpusManager:
         
         logger.info("Adding document to corpus: %s", document_id)
         
-        # --- Choose execution path ---
-        if self.retriever.index is not None:
-            # APPEND PATH: index already exists
-            # 1. Prepare document (load → normalize → chunk) — returns (texts, page_numbers)
-            texts, page_numbers = self.retriever.prepare_document(pdf_path)
-
-            # 2. Embed texts
-            embeddings = self.retriever.embed_texts(texts)
-
-            # 3. Read start position from FAISS (sole ordering authority)
-            vector_id_start = self.retriever.index.ntotal
-
-            # 4. Append vectors (memory only) — pass page_numbers
-            self.retriever.append_vectors(embeddings, texts, page_numbers)
-
-            # 5. Read end position from FAISS AFTER append
-            vector_id_end = self.retriever.index.ntotal
-            num_chunks = vector_id_end - vector_id_start
-        else:
-            # COLD START PATH: no index exists yet
-            vector_id_start = 0
-
-            # Delegate to RetrieverPipeline (unchanged Phase 1 logic)
-            num_chunks = self.retriever.index_document(pdf_path)
-
-            # Read end position from FAISS AFTER index creation
-            vector_id_end = self.retriever.index.ntotal
-            # For cold-start, page_numbers come from the chunks already stored
-            page_numbers = [
-                self.retriever.chunks[i].page_number
-                for i in range(vector_id_start, vector_id_end)
-            ]
+        # One path for the first document and every later one: the FAISS
+        # index is created by append_vectors when it doesn't exist yet.
+        chunks = self.retriever.prepare_document(pdf_path)
+        embeddings = self.retriever.embed_texts([c.text for c in chunks])
+        vector_id_start = self.retriever.index.ntotal if self.retriever.index is not None else 0
+        self.retriever.append_vectors(embeddings, chunks)
+        vector_id_end = self.retriever.index.ntotal
+        num_chunks = vector_id_end - vector_id_start
 
         # --- Create metadata for each chunk ---
         for i in range(vector_id_start, vector_id_end):
@@ -231,8 +206,10 @@ class CorpusManager:
             metadata.authority = authority
             metadata.source_class = source_class
             metadata.version = version
-            # Store page number for this chunk
-            metadata.page_number = page_numbers[local_index] if local_index < len(page_numbers) else 1
+            chunk = chunks[local_index]
+            metadata.page_number = chunk.page_number
+            metadata.section_hint = chunk.heading[:120] or None
+            metadata.content_form = chunk.content_form
 
             self.chunk_metadata[i] = metadata
 

@@ -51,7 +51,7 @@ from .metadata_schema import RetrievalResult
 NORMALIZATION_VERSION = "2"       # bump when normalize_text() logic changes
 METADATA_SCHEMA_VERSION = "1"     # bump when ChunkMetadata fields change
 CACHE_FORMAT_VERSION = 2          # Phase 1: dimension 384→768, chunk 500→1000
-CODE_VERSION = "2.0.0-retrieval"  # Phase 1: Core Retrieval Fixes
+CODE_VERSION = "3.0.0-structured-chunks"  # Phase 2: pdf_chunker
 EMBEDDING_BATCH_SIZE = 32         # fixed across all paths for float stability
 
 # Stage 3: search_scoped() tuning constants
@@ -135,162 +135,6 @@ def normalize_text(text: str) -> str:
 
 
 # =============================================================================
-# STAGE 1: PDF LOADING
-# =============================================================================
-
-def load_pdf_pages(pdf_path: str) -> List[Tuple[int, str]]:
-    """
-    Extract text from a PDF file, returning a list of (page_number, text) tuples.
-
-    page_number is 1-based (page 1, 2, 3 ...).
-    Empty pages are included as empty strings so page indices stay correct.
-
-    Args:
-        pdf_path: Path to the PDF file
-
-    Returns:
-        List of (page_number, page_text) tuples
-
-    Raises:
-        FileNotFoundError: If PDF doesn't exist
-        Exception: If PDF is corrupted or password-protected
-    """
-    if not os.path.exists(pdf_path):
-        raise FileNotFoundError(f"PDF not found: {pdf_path}")
-
-    pages: List[Tuple[int, str]] = []
-    with fitz.open(pdf_path) as doc:
-        print(f"📄 Loading PDF: {pdf_path}")
-        print(f"   Pages: {len(doc)}")
-        for i, page in enumerate(doc):
-            pages.append((i + 1, page.get_text()))
-
-    total_chars = sum(len(t) for _, t in pages)
-    print(f"   Total characters: {total_chars:,}")
-    return pages
-
-
-def load_pdf(pdf_path: str) -> str:
-    """
-    Extract all text from a PDF file as a single string.
-
-    Kept for backward compatibility — internally calls load_pdf_pages().
-
-    Args:
-        pdf_path: Path to the PDF file
-
-    Returns:
-        Full text content of the PDF
-    """
-    pages = load_pdf_pages(pdf_path)
-    full_text = "\n\n".join(text for _, text in pages)
-    return full_text
-
-
-# =============================================================================
-# STAGE 2: CHUNKING
-# =============================================================================
-
-def chunk_text(
-    text: str,
-    chunk_size: int = 500,
-    chunk_overlap: int = 50,
-    page_boundaries: Optional[List[Tuple[int, int]]] = None,
-) -> List[Chunk]:
-    """
-    Split text into overlapping chunks, tracking page numbers.
-
-    page_boundaries is a list of (page_number, char_end) pairs (sorted by
-    char_end ascending) that map character positions back to PDF pages.
-    When provided, each Chunk gets the page_number of the page that contains
-    the majority of its start position.
-
-    Args:
-        text:             The full document text (pre-concatenated across pages)
-        chunk_size:       Maximum characters per chunk (default: 500)
-        chunk_overlap:    Overlapping characters between chunks (default: 50)
-        page_boundaries:  Optional list of (page_num, cumulative_char_end)
-
-    Returns:
-        List of Chunk objects
-    """
-    chunks = []
-    start = 0
-    chunk_index = 0
-
-    # Normalize text (deterministic cleaning)
-    text = normalize_text(text)
-
-    def _page_for_char(pos: int) -> int:
-        """Return 1-based page number for a character position."""
-        if not page_boundaries:
-            return 1
-        for page_num, boundary in page_boundaries:
-            if pos < boundary:
-                return page_num
-        return page_boundaries[-1][0]
-
-    while start < len(text):
-        end = min(start + chunk_size, len(text))
-        chunk_text_str = text[start:end]
-
-        chunk = Chunk(
-            chunk_id=f"chunk_{chunk_index}",
-            text=chunk_text_str,
-            start_char=start,
-            end_char=end,
-            page_number=_page_for_char(start),
-        )
-        chunks.append(chunk)
-
-        if end >= len(text):
-            break
-
-        start = end - chunk_overlap
-        chunk_index += 1
-
-    print(f"📦 Created {len(chunks)} chunks (size={chunk_size}, overlap={chunk_overlap})")
-    return chunks
-
-
-def chunk_text_from_pages(
-    pages: List[Tuple[int, str]],
-    chunk_size: int = 500,
-    chunk_overlap: int = 50,
-) -> List[Chunk]:
-    """
-    Chunk a page-aware PDF into Chunks with correct page_number fields.
-
-    Concatenates page texts with double-newlines, builds a page boundary
-    table, then delegates to chunk_text().
-
-    Args:
-        pages:         List of (page_number, page_text) from load_pdf_pages()
-        chunk_size:    Characters per chunk
-        chunk_overlap: Overlap between chunks
-
-    Returns:
-        List of Chunk objects, each with page_number set
-    """
-    # Build concatenated text and boundary table simultaneously
-    parts: List[str] = []
-    page_boundaries: List[Tuple[int, int]] = []  # (page_num, cumulative_end)
-    cumulative = 0
-
-    for page_num, raw_text in pages:
-        normalized = normalize_text(raw_text)
-        # Account for the "\n\n" separator between pages
-        separator = "\n\n" if parts else ""
-        seg_len = len(separator) + len(normalized)
-        cumulative += seg_len
-        parts.append(normalized)
-        page_boundaries.append((page_num, cumulative))
-
-    full_text = "\n\n".join(parts)
-    return chunk_text(full_text, chunk_size, chunk_overlap, page_boundaries)
-
-
-# =============================================================================
 # STAGE 3, 4, 5: RETRIEVER PIPELINE CLASS
 # =============================================================================
 
@@ -342,84 +186,12 @@ class RetrieverPipeline:
         self.is_indexed = False
         
     def index_document(self, pdf_path: str) -> int:
-        """
-        Process a PDF document and build the search index.
-        
-        Steps:
-        1. Load PDF → extract text
-        2. Chunk text → create smaller pieces
-        3. Embed chunks → convert to vectors
-        4. Build FAISS index → enable fast search
-        
-        Args:
-            pdf_path: Path to the PDF file
-            
-        Returns:
-            Number of chunks indexed
-        """
-        # Get chunking parameters from environment
-        chunk_size = settings.CHUNK_SIZE
-        chunk_overlap = settings.CHUNK_OVERLAP
-        
-        # STAGE 1: Load PDF
-        print("\n" + "="*50)
-        print("STAGE 1: Loading PDF")
-        print("="*50)
-        text = load_pdf(pdf_path)
-        
-        if not text.strip():
-            raise ValueError("PDF appears to be empty or contains no extractable text")
-        
-        # STAGE 2: Chunk text
-        print("\n" + "="*50)
-        print("STAGE 2: Chunking Text")
-        print("="*50)
-        self.chunks = chunk_text(text, chunk_size, chunk_overlap)
-        
-        if len(self.chunks) == 0:
-            raise ValueError("No chunks created from document")
-        
-        # STAGE 3: Generate embeddings
-        print("\n" + "="*50)
-        print("STAGE 3: Generating Embeddings")
-        print("="*50)
-        print(f"🔢 Embedding {len(self.chunks)} chunks...")
-        
-        # Extract just the text from each chunk for embedding
-        chunk_texts = [chunk.text for chunk in self.chunks]
-        
-        # Generate embeddings for all chunks at once (batch processing = faster)
-        # This returns a numpy array of shape (num_chunks, embedding_dim)
-        embeddings = self.model.encode(
-            chunk_texts,
-            show_progress_bar=True,  # Nice progress bar
-            convert_to_numpy=True     # Return numpy array for FAISS
-        )
-        
-        print(f"   Embeddings shape: {embeddings.shape}")
-        
-        # STAGE 4: Build FAISS index
-        print("\n" + "="*50)
-        print("STAGE 4: Building FAISS Index")
-        print("="*50)
-        
-        # Normalize embeddings for cosine similarity
-        # FAISS IndexFlatIP uses inner product, which equals cosine similarity
-        # when vectors are normalized
-        faiss.normalize_L2(embeddings)
-        
-        # Create FAISS index
-        # IndexFlatIP = Flat index with Inner Product (cosine similarity when normalized)
-        self.index = faiss.IndexFlatIP(self.embedding_dim)
-        
-        # Add embeddings to index
-        self.index.add(embeddings)
-        
-        print(f"✅ Indexed {self.index.ntotal} chunks successfully!")
-        
-        self.is_indexed = True
-        return len(self.chunks)
-    
+        """Build a fresh index from one PDF (prepare → embed → append)."""
+        self.index, self.chunks = None, []
+        chunks = self.prepare_document(pdf_path)
+        self.append_vectors(self.embed_texts([c.text for c in chunks]), chunks)
+        return len(chunks)
+
     def retrieve(self, query: str, top_k: int = None) -> List[RetrievalResult]:
         """
         Retrieve the most relevant chunks for a query.
@@ -498,40 +270,24 @@ class RetrieverPipeline:
     # STAGE 2: INGESTION SUPPORT (Append-Only)
     # =================================================================
     
-    def prepare_document(self, pdf_path: str) -> Tuple[List[str], List[int]]:
-        """
-        Prepare a PDF document for ingestion.
-
-        Encapsulates the full document preparation pipeline:
-          1. Load PDF per-page (preserving page numbers)
-          2. Chunk text using page-aware chunking
-
-        Returns:
-            Tuple of (texts, page_numbers) — parallel lists, one entry per chunk.
+    def prepare_document(self, pdf_path: str) -> List[Chunk]:
+        """Load and chunk a PDF (core.pdf_chunker.chunk_pdf).
 
         Raises:
-            FileNotFoundError: If PDF doesn't exist
-            ValueError: If PDF is empty or produces no chunks
+            FileNotFoundError: If the PDF doesn't exist
+            ValueError: If the PDF yields no text (e.g. image-only scans)
         """
-        chunk_size = settings.CHUNK_SIZE
-        chunk_overlap = settings.CHUNK_OVERLAP
+        from .pdf_chunker import chunk_pdf  # imports Chunk from this module
 
+        if not os.path.exists(pdf_path):
+            raise FileNotFoundError(f"PDF not found: {pdf_path}")
         logger.info("Preparing document: %s", pdf_path)
-        pages = load_pdf_pages(pdf_path)
-
-        if not any(t.strip() for _, t in pages):
+        chunks = chunk_pdf(pdf_path)
+        if not chunks:
             raise ValueError("PDF appears to be empty or contains no extractable text")
+        logger.info("Prepared %d chunks", len(chunks))
+        return chunks
 
-        chunks = chunk_text_from_pages(pages, chunk_size, chunk_overlap)
-
-        if len(chunks) == 0:
-            raise ValueError("No chunks created from document")
-
-        texts = [c.text for c in chunks]
-        page_numbers = [c.page_number for c in chunks]
-        logger.info("Prepared %d text chunks", len(texts))
-        return texts, page_numbers
-    
     def embed_texts(self, texts: List[str], instruction: str = None) -> np.ndarray:
         """
         Embed raw text strings into normalized vectors.
@@ -589,31 +345,12 @@ class RetrieverPipeline:
         instruction = settings.QUERY_INSTRUCTION
         return self.embed_texts([query], instruction=instruction if instruction else None)
     
-    def append_vectors(
-        self,
-        embeddings: np.ndarray,
-        texts: List[str],
-        page_numbers: Optional[List[int]] = None,
-    ) -> None:
-        """
-        Append new vectors and texts to the existing index.
-
-        Args:
-            embeddings:   Normalized numpy array from embed_texts()
-            texts:        Corresponding text strings (same order as embeddings)
-            page_numbers: Optional per-chunk page numbers (same order). Defaults to 1.
-
-        Raises:
-            ValueError: If embeddings and texts have mismatched lengths
-        """
-        if len(embeddings) != len(texts):
+    def append_vectors(self, embeddings: np.ndarray, chunks: List[Chunk]) -> None:
+        """Append vectors and their chunks; chunk_id becomes chunk_<global position>."""
+        if len(embeddings) != len(chunks):
             raise ValueError(
-                f"Embeddings ({len(embeddings)}) and texts ({len(texts)}) "
-                f"count mismatch"
+                f"Embeddings ({len(embeddings)}) and chunks ({len(chunks)}) count mismatch"
             )
-
-        if page_numbers is None:
-            page_numbers = [1] * len(texts)
 
         if self.index is None:
             self.index = faiss.IndexFlatIP(self.embedding_dim)
@@ -621,22 +358,14 @@ class RetrieverPipeline:
 
         start_pos = self.index.ntotal
         self.index.add(embeddings)
-
-        for i, (text, page_num) in enumerate(zip(texts, page_numbers)):
-            global_idx = start_pos + i
-            chunk = Chunk(
-                chunk_id=f"chunk_{global_idx}",
-                text=text,
-                start_char=0,
-                end_char=len(text),
-                page_number=page_num,
-            )
-            self.chunks.append(chunk)
+        for i, c in enumerate(chunks):
+            c.chunk_id = f"chunk_{start_pos + i}"
+            self.chunks.append(c)
 
         self.is_indexed = True
         logger.info(
             "Appended %d vectors (positions %d-%d), total: %d",
-            len(texts), start_pos, start_pos + len(texts),
+            len(chunks), start_pos, start_pos + len(chunks),
             self.index.ntotal,
         )
 

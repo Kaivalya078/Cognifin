@@ -155,3 +155,55 @@ def test_repeated_heading_text_not_stacked_twice(tmp_path):
     pdf = make_pdf(tmp_path / "t.pdf", [[("heading", "Board of Directors"), ("heading", "Board of Directors"),
                                          ("para", sentences(2))]])
     assert chunk_pdf(pdf)[0].heading == "Board of Directors"
+
+
+# =============================================================================
+# Ingestion wiring (RetrieverPipeline / CorpusManager)
+# =============================================================================
+
+def _three_page_pdf(tmp_path, name="r.pdf"):
+    return make_pdf(tmp_path / name, [
+        [("heading", "Directors Report"), ("para", sentences(3))],
+        [("heading", "Segment Revenue"), ("table", TABLE)],
+        [("para", sentences(3, 30))],
+    ])
+
+
+def _corpus():
+    from core.corpus_manager import CorpusManager
+    from core.retriever_pipeline import RetrieverPipeline
+    return CorpusManager(RetrieverPipeline())
+
+
+def test_cold_start_add_document_has_real_page_numbers(tmp_path):
+    cm = _corpus()
+    cm.add_document(_three_page_pdf(tmp_path), company="ACME", document_type="Annual_Report", year="2024")
+    assert {m.page_number for m in cm.chunk_metadata.values()} == {1, 2, 3}
+
+
+def test_metadata_gets_heading_and_content_form(tmp_path):
+    cm = _corpus()
+    cm.add_document(_three_page_pdf(tmp_path), company="ACME", document_type="Annual_Report", year="2024")
+    tab = [m for m in cm.chunk_metadata.values() if m.content_form == "tabular"]
+    assert len(tab) == 1 and tab[0].section_hint == "Segment Revenue" and tab[0].page_number == 2
+    assert all(m.content_form == "narrative" for m in cm.chunk_metadata.values() if m not in tab)
+
+
+def test_append_path_matches_cold_start_path(tmp_path):
+    cm = _corpus()
+    pdf = _three_page_pdf(tmp_path)
+    cm.add_document(pdf, company="ACME", document_type="Annual_Report", year="2023")
+    n = cm.retriever.index.ntotal
+    cm.add_document(pdf, company="ACME", document_type="Annual_Report", year="2024")  # append path
+    first = [(c.text, c.page_number) for c in cm.retriever.chunks[:n]]
+    second = [(c.text, c.page_number) for c in cm.retriever.chunks[n:]]
+    assert first == second
+    assert [c.chunk_id for c in cm.retriever.chunks] == [f"chunk_{i}" for i in range(2 * n)]
+
+
+def test_image_only_pdf_is_rejected(tmp_path):
+    import fitz
+    path = tmp_path / "img.pdf"
+    doc = fitz.open(); doc.new_page(); doc.save(str(path))
+    with pytest.raises(ValueError, match="no extractable text"):
+        _corpus().add_document(str(path), company="ACME", document_type="Annual_Report", year="2024")
