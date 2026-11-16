@@ -49,6 +49,9 @@ def main():
     # ── Step 2: Init pipeline + corpus manager ───────────────────────
     pipeline = RetrieverPipeline()
     corpus = CorpusManager(pipeline)
+    if pipeline.model.device.type == "cuda":
+        pipeline.model.half()  # document vectors only; queries embed on CPU at serve time
+    print(f"🖥️  Embedding device: {pipeline.model.device}")
 
     # ── Step 3: Load existing index + registry (if any) ──────────────
     if os.path.exists(CACHE_DIR):

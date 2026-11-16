@@ -207,3 +207,12 @@ def test_image_only_pdf_is_rejected(tmp_path):
     doc = fitz.open(); doc.new_page(); doc.save(str(path))
     with pytest.raises(ValueError, match="no extractable text"):
         _corpus().add_document(str(path), company="ACME", document_type="Annual_Report", year="2024")
+
+
+def test_embed_texts_returns_float32_from_fp16_model(monkeypatch):
+    import numpy as np
+    from core.retriever_pipeline import RetrieverPipeline
+    p = RetrieverPipeline()
+    monkeypatch.setattr(p.model, "encode", lambda texts, **_: np.ones((len(texts), 4), dtype=np.float16))
+    out = p.embed_texts(["a", "b"])
+    assert out.dtype == np.float32 and abs(float((out[0] ** 2).sum()) - 1.0) < 1e-5

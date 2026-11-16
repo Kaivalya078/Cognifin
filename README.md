@@ -37,6 +37,15 @@ python ingestion/batch_ingest_annual_reports.py
 
 The FAISS index is cached in `backend/index_cache/` (git-ignored). You can also upload a PDF at runtime via `POST /upload`.
 
+**Re-indexing on a local GPU.** Embedding the full corpus with `bge-base-en-v1.5` is hours on CPU and minutes on an NVIDIA GPU. `requirements.txt` stays CPU-only (the server has no GPU), so install the CUDA build of PyTorch into your local venv only:
+
+```bash
+pip install --force-reinstall --no-deps torch==2.10.0 --index-url https://download.pytorch.org/whl/cu128
+python -c "import torch; print(torch.cuda.is_available())"   # True
+```
+
+The batch script then embeds in fp16 on the GPU automatically. Start from an empty `backend/index_cache/`; changing the chunker, `EMBEDDING_MODEL` or `QUERY_INSTRUCTION` always needs a full re-index.
+
 ### Frontend
 
 ```bash

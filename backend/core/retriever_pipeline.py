@@ -322,7 +322,8 @@ class RetrieverPipeline:
             convert_to_numpy=True,
         )
         
-        # Normalize for cosine similarity (same as index_document)
+        # FAISS needs float32; an fp16 model (GPU ingestion) returns float16.
+        embeddings = np.ascontiguousarray(embeddings, dtype=np.float32)
         faiss.normalize_L2(embeddings)
         
         logger.info("Embeddings shape: %s", embeddings.shape)

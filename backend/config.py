@@ -34,8 +34,8 @@ class Settings(BaseSettings):
     # Chunking + embedding [RE-INGEST] — must match index_cache/index_manifest.json
     CHUNK_SIZE: int = 900
     CHUNK_OVERLAP: int = 150
-    EMBEDDING_MODEL: str = "all-MiniLM-L6-v2"
-    QUERY_INSTRUCTION: str = ""
+    EMBEDDING_MODEL: str = "BAAI/bge-base-en-v1.5"
+    QUERY_INSTRUCTION: str = "Represent this sentence for searching relevant passages:"
 
     # Retrieval
     RETRIEVAL_K: int = 60
