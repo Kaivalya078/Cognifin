@@ -9,8 +9,8 @@ _NUM = re.compile(r"^\(?[-–−]?\(?\d[\d,]*(\.\d+)?\)?$")
 
 def parse_number(s: str) -> float | None:
     """'1,08,532.40' -> 108532.4; '(625.30)' / '-625.30' -> -625.3; '', '-', '—' -> None."""
-    t = (s or "").strip().replace(" ", "")
-    if not t or not _NUM.match(t):
+    t = re.sub(r"(?<=[(\-–−])\s+|\s+(?=\))", "", (s or "").strip())
+    if not t or not _NUM.match(t):   # internal spaces (OCR "3 4 . 2 2") never match
         return None
     neg = t.startswith("(") or t.lstrip("(")[:1] in "-–−"
     v = float(re.sub(r"[^\d.]", "", t))

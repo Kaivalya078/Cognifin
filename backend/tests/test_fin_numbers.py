@@ -37,3 +37,8 @@ def test_dates():
     for s in ["31-03-2026", "31-Mar-2026", "31.03.2026", "31/03/2026", "March 31, 2026",
               "31st March, 2026"]:
         assert parse_date(s) == date(2026, 3, 31), s
+
+
+def test_spaced_ocr_digits_rejected():
+    assert parse_number("3 4 . 2 2 8 3 4") is None
+    assert parse_number("( 625.30 )") == -625.30
