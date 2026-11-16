@@ -13,6 +13,7 @@ Phase: 1 (Retrieval Only)
 """
 
 import os
+import re
 
 from config import settings
 import json
@@ -47,7 +48,7 @@ from .metadata_schema import RetrievalResult
 # VERSION CONSTANTS (bump when the corresponding logic changes)
 # =============================================================================
 
-NORMALIZATION_VERSION = "1"       # bump when normalize_text() logic changes
+NORMALIZATION_VERSION = "2"       # bump when normalize_text() logic changes
 METADATA_SCHEMA_VERSION = "1"     # bump when ChunkMetadata fields change
 CACHE_FORMAT_VERSION = 2          # Phase 1: dimension 384→768, chunk 500→1000
 CODE_VERSION = "2.0.0-retrieval"  # Phase 1: Core Retrieval Fixes
@@ -115,36 +116,20 @@ class Chunk:
 
 def normalize_text(text: str) -> str:
     """
-    Normalize document text before chunking.
-    
-    This ensures deterministic chunking regardless of PDF extraction quirks:
-    1. Normalize Unicode to NFC form (canonical decomposition + composition)
-    2. Strip non-printable characters (keeps spaces, newlines, tabs)
-    3. Collapse multiple whitespace/newlines to single spaces
-    4. Strip leading/trailing whitespace
-    
-    Args:
-        text: Raw text extracted from PDF
-        
-    Returns:
-        Cleaned, normalized text
+    Normalize extracted PDF text before chunking, keeping line structure.
+
+    1. Unicode NFC
+    2. Drop non-printable characters (keeps newline, tab, space)
+    3. Collapse runs of spaces/tabs within a line; strip each line
+    4. Collapse 3+ newlines to a blank line; strip the whole text
+
+    Newlines are kept because they carry table rows and paragraph breaks.
     """
-    # Step 1: Unicode NFC normalization
     text = unicodedata.normalize("NFC", text)
-    
-    # Step 2: Remove non-printable characters (keep printable + whitespace)
-    text = "".join(
-        ch for ch in text
-        if ch.isprintable() or ch in ("\n", "\r", "\t", " ")
-    )
-    
-    # Step 3: Collapse all whitespace to single spaces
-    text = " ".join(text.split())
-    
-    # Step 4: Strip
-    text = text.strip()
-    
-    return text
+    text = "".join(ch for ch in text if ch.isprintable() or ch in "\n\t ")
+    text = "\n".join(re.sub(r"[ \t]+", " ", line).strip() for line in text.split("\n"))
+    text = re.sub(r"\n{3,}", "\n\n", text)
+    return text.strip()
 
 
 # =============================================================================
