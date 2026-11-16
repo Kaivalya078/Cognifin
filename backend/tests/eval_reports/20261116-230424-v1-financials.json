@@ -1,0 +1,369 @@
+{
+ "report": {
+  "group:all": {
+   "total": 207,
+   "stored": 160,
+   "correct": 155,
+   "precision": 0.96875,
+   "coverage": 0.7729468599033816
+  },
+  "group:bank": {
+   "total": 19,
+   "stored": 10,
+   "correct": 9,
+   "precision": 0.9,
+   "coverage": 0.5263157894736842
+  },
+  "group:insurer": {
+   "total": 19,
+   "stored": 18,
+   "correct": 14,
+   "precision": 0.7777777777777778,
+   "coverage": 0.9473684210526315
+  },
+  "method:llm": {
+   "total": 35,
+   "stored": 35,
+   "correct": 27,
+   "precision": 0.7714285714285715,
+   "coverage": 1.0
+  },
+  "method:rule": {
+   "total": 90,
+   "stored": 90,
+   "correct": 88,
+   "precision": 0.9777777777777777,
+   "coverage": 1.0
+  },
+  "method:xbrl": {
+   "total": 63,
+   "stored": 63,
+   "correct": 63,
+   "precision": 1.0,
+   "coverage": 1.0
+  },
+  "overall": {
+   "total": 245,
+   "stored": 188,
+   "correct": 178,
+   "precision": 0.9468085106382979,
+   "coverage": 0.7673469387755102
+  },
+  "source:ixbrl": {
+   "total": 63,
+   "stored": 63,
+   "correct": 63,
+   "precision": 1.0,
+   "coverage": 1.0
+  },
+  "source:pdf": {
+   "total": 182,
+   "stored": 125,
+   "correct": 115,
+   "precision": 0.92,
+   "coverage": 0.6868131868131868
+  }
+ },
+ "wrong": [
+  [
+   "reliance-2025q1-c",
+   "net_profit",
+   "rule",
+   306810000000.0,
+   307830000000.0
+  ],
+  [
+   "kotakbank-2026q1-s",
+   "interest_earned",
+   "llm",
+   141747700000.0,
+   144774900000.0
+  ],
+  [
+   "kotakbank-2026q1-s",
+   "total_expenses",
+   "llm",
+   114359300000.0,
+   116843400000.0
+  ],
+  [
+   "sbilife-2026q2-s",
+   "first_year_premium",
+   "llm",
+   8745500000.0,
+   57558600000.0
+  ],
+  [
+   "sbilife-2026q2-s",
+   "renewal_premium",
+   "llm",
+   4112900000.0,
+   157636400000.0
+  ],
+  [
+   "sbilife-2026q2-s",
+   "single_premium",
+   "llm",
+   841500000.0,
+   55956300000.0
+  ],
+  [
+   "sbilife-2026q2-s",
+   "net_premium",
+   "llm",
+   193903200000.0,
+   268777000000.0
+  ],
+  [
+   "sbilife-2026q2-s",
+   "eps_basic",
+   "llm",
+   2.7,
+   5.47
+  ],
+  [
+   "sbilife-2026q2-s",
+   "eps_diluted",
+   "llm",
+   2.7,
+   5.47
+  ],
+  [
+   "bajfinance-2025q2-c",
+   "net_profit_owners",
+   "rule",
+   -1933800000.0,
+   48753600000.0
+  ]
+ ],
+ "missing": [
+  [
+   "tcs-2025q1-c",
+   "eps_basic"
+  ],
+  [
+   "tcs-2025q1-c",
+   "eps_diluted"
+  ],
+  [
+   "adaniports-2025q1-c",
+   "eps_basic"
+  ],
+  [
+   "adaniports-2025q1-c",
+   "eps_diluted"
+  ],
+  [
+   "tmpv-2025q4-c",
+   "revenue_from_operations"
+  ],
+  [
+   "tmpv-2025q4-c",
+   "other_income"
+  ],
+  [
+   "tmpv-2025q4-c",
+   "total_income"
+  ],
+  [
+   "tmpv-2025q4-c",
+   "total_expenses"
+  ],
+  [
+   "tmpv-2025q4-c",
+   "profit_before_tax"
+  ],
+  [
+   "tmpv-2025q4-c",
+   "tax_expense"
+  ],
+  [
+   "tmpv-2025q4-c",
+   "net_profit"
+  ],
+  [
+   "tmpv-2025q4-c",
+   "net_profit_owners"
+  ],
+  [
+   "tmpv-2025q4-c",
+   "eps_basic"
+  ],
+  [
+   "tmpv-2025q4-c",
+   "eps_diluted"
+  ],
+  [
+   "tmpv-fy2025-c",
+   "revenue_from_operations"
+  ],
+  [
+   "tmpv-fy2025-c",
+   "other_income"
+  ],
+  [
+   "tmpv-fy2025-c",
+   "total_income"
+  ],
+  [
+   "tmpv-fy2025-c",
+   "total_expenses"
+  ],
+  [
+   "tmpv-fy2025-c",
+   "net_profit"
+  ],
+  [
+   "tmpv-fy2025-c",
+   "net_profit_owners"
+  ],
+  [
+   "tmpv-fy2025-c",
+   "eps_basic"
+  ],
+  [
+   "tmpv-fy2025-c",
+   "eps_diluted"
+  ],
+  [
+   "axisbank-2025q3-s",
+   "interest_earned"
+  ],
+  [
+   "axisbank-2025q3-s",
+   "other_income"
+  ],
+  [
+   "axisbank-2025q3-s",
+   "total_income"
+  ],
+  [
+   "axisbank-2025q3-s",
+   "total_expenses"
+  ],
+  [
+   "axisbank-2025q3-s",
+   "profit_before_tax"
+  ],
+  [
+   "axisbank-2025q3-s",
+   "tax_expense"
+  ],
+  [
+   "axisbank-2025q3-s",
+   "net_profit"
+  ],
+  [
+   "axisbank-2025q3-s",
+   "eps_basic"
+  ],
+  [
+   "axisbank-2025q3-s",
+   "eps_diluted"
+  ],
+  [
+   "axisbank-2025q3-s",
+   "capital_adequacy_pct"
+  ],
+  [
+   "axisbank-2025q3-s",
+   "gross_npa_pct"
+  ],
+  [
+   "axisbank-2025q3-s",
+   "net_npa_pct"
+  ],
+  [
+   "axisbank-2025q3-s",
+   "return_on_assets_pct"
+  ],
+  [
+   "kotakbank-2026q1-s",
+   "eps_diluted"
+  ],
+  [
+   "hdfcbank-2026q2-s",
+   "profit_before_tax"
+  ],
+  [
+   "hdfcbank-2026q2-s",
+   "tax_expense"
+  ],
+  [
+   "hdfcbank-2026q2-s",
+   "net_profit"
+  ],
+  [
+   "hdfcbank-2026q2-s",
+   "eps_basic"
+  ],
+  [
+   "hdfcbank-2026q2-s",
+   "eps_diluted"
+  ],
+  [
+   "hdfcbank-2026q2-s",
+   "capital_adequacy_pct"
+  ],
+  [
+   "hdfcbank-2026q2-s",
+   "gross_npa_pct"
+  ],
+  [
+   "hdfcbank-2026q2-s",
+   "net_npa_pct"
+  ],
+  [
+   "hdfcbank-2026q2-s",
+   "return_on_assets_pct"
+  ],
+  [
+   "sbilife-2026q2-s",
+   "solvency_ratio"
+  ],
+  [
+   "hdfclife-2025q4-s",
+   "profit_before_tax"
+  ],
+  [
+   "hdfclife-2025q4-s",
+   "net_profit"
+  ],
+  [
+   "hdfclife-fy2025-s",
+   "profit_before_tax"
+  ],
+  [
+   "hdfclife-fy2025-s",
+   "net_profit"
+  ],
+  [
+   "bajfinance-2025q2-c",
+   "revenue_from_operations"
+  ],
+  [
+   "bajfinance-2025q2-c",
+   "total_expenses"
+  ],
+  [
+   "bajfinance-2025q2-c",
+   "eps_basic"
+  ],
+  [
+   "titan-2026q1-c",
+   "other_income"
+  ],
+  [
+   "titan-2026q1-c",
+   "total_income"
+  ],
+  [
+   "lt-2026q2-c",
+   "eps_basic"
+  ],
+  [
+   "lt-2026q2-c",
+   "eps_diluted"
+  ]
+ ]
+}

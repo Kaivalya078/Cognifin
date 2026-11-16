@@ -23,3 +23,23 @@ Frozen for every run: RETRIEVAL_K=60, FINAL_K=8, reranker cross-encoder/ms-marco
 No value was chosen by looking at golden-set scores.
 
 **Step 2 vs Step 1.** Same chunks and embeddings; quality within one question (one more hit, from LanceDB's FTS ranking differing from rank_bm25's). RSS falls 7× because vectors, text and metadata stay on disk instead of a 1.5 GB FAISS array plus pickles in RAM, and keyword search is pre-filtered by company/year instead of scoring all 491k chunks first. Re-index: 48 min on an RTX 3050 (Step 1: 66 min, mostly full-index rewrites after every PDF).
+
+# Financials table eval results
+
+Answer key: `tests/financials_golden.json` (26 cases, 245 values: 20 PDF cases, 6 iXBRL; 4 banks, 2 insurers, 3 NBFCs; hand-drafted, spot-checked by the user, every value re-found on its source page).
+Scorer: `python -m tests.eval_financials --label <name>` over `index_cache/financials.duckdb`.
+Precision = stored values matching the key / key values stored. Coverage = key values stored / all key values. A match is within one rounding unit (₹1 lakh or 0.01%, whichever is larger; 0.006 for EPS, % and ratios).
+Gate: precision ≥ 99%; coverage ≥ 90% overall, ≥ 80% bank and insurer metrics.
+
+| run | change | precision | coverage | all | bank | insurer | wrong |
+|---|---|---|---|---|---|---|---|
+| v1 | first build | 94.7% | 76.7% | 77.3% | 52.6% | 94.7% | 10 |
+| v2 | rules: space-padded number spans split; an unreadable first row settles its label; profit after associates wins. LLM values must sit under a column of the claimed period | 99.5% | 74.3% | 74.9% | 47.4% | 94.7% | 1 |
+| v3 | rules: undated header columns explain their numbers; OCR'd "croresl" unit; policyholders' account skipped for PBT/tax/profit; "Earnings per share: Basic and diluted"; OCR spaces beside separators; wrapped labels. Verbatim tolerates OCR spacing; LLM's wrong page corrected when the value is on exactly one sent page; LLM asked for every basis a page title names | 99.1% | 92.7% | 92.8% | 89.5% | 94.7% | 2 |
+| v4-ocr | rules: "a) Current tax" is an item, not a wrapped label; owners' share after a discontinued block wins. OCR (rapidocr) for image-only pages: failed files 22 → 14 | 99.1% | 92.2% | 92.8% | 89.5% | 89.5% | 2 |
+| v5-ocr-deskew | OCR cells deskewed by the median box slope (a 1.5° scan of SBILIFE's statement paired labels with the next row); text-layer pages read before OCR'd copies | 99.6% | 93.1% | 92.8% | 89.5% | 100.0% | 1 |
+| **v6** (shipped) | solvency normalised at extraction (percent ÷ 100, hundredth × 100) and anything outside 0.5–10x sent to review (the LLM had read "14,500" from the Fair Value Change row) | **100.0%** | **92.7%** | 92.8% | 89.5% | 94.7% | 0 |
+
+Build v6: 372 files — 340 parsed, 18 partial, 14 failed; 5,513 rows (iXBRL, rules, LLM); 498 values held in `review`.
+The answer key has no scan-only case, so values read by OCR are guarded by the arithmetic and plausibility checks but not measured here.
+Remaining misses (18 values): EPS and ratio rows the rules and LLM both left empty, and values that failed verbatim/arithmetic (correctly or not) — see the `missing` list in the v6 report.

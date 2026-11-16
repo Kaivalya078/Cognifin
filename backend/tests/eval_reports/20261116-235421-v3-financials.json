@@ -1,0 +1,157 @@
+{
+ "report": {
+  "group:all": {
+   "total": 207,
+   "stored": 192,
+   "correct": 190,
+   "precision": 0.9895833333333334,
+   "coverage": 0.927536231884058
+  },
+  "group:bank": {
+   "total": 19,
+   "stored": 17,
+   "correct": 17,
+   "precision": 1.0,
+   "coverage": 0.8947368421052632
+  },
+  "group:insurer": {
+   "total": 19,
+   "stored": 18,
+   "correct": 18,
+   "precision": 1.0,
+   "coverage": 0.9473684210526315
+  },
+  "method:llm": {
+   "total": 27,
+   "stored": 27,
+   "correct": 27,
+   "precision": 1.0,
+   "coverage": 1.0
+  },
+  "method:rule": {
+   "total": 137,
+   "stored": 137,
+   "correct": 135,
+   "precision": 0.9854014598540146,
+   "coverage": 1.0
+  },
+  "method:xbrl": {
+   "total": 63,
+   "stored": 63,
+   "correct": 63,
+   "precision": 1.0,
+   "coverage": 1.0
+  },
+  "overall": {
+   "total": 245,
+   "stored": 227,
+   "correct": 225,
+   "precision": 0.9911894273127754,
+   "coverage": 0.926530612244898
+  },
+  "source:ixbrl": {
+   "total": 63,
+   "stored": 63,
+   "correct": 63,
+   "precision": 1.0,
+   "coverage": 1.0
+  },
+  "source:pdf": {
+   "total": 182,
+   "stored": 164,
+   "correct": 162,
+   "precision": 0.9878048780487805,
+   "coverage": 0.9010989010989011
+  }
+ },
+ "wrong": [
+  [
+   "jswsteel-2026q3-c",
+   "tax_expense",
+   "rule",
+   14150000000.0,
+   16920000000.0
+  ],
+  [
+   "tmpv-fy2025-c",
+   "net_profit_owners",
+   "rule",
+   229590000000.0,
+   278300000000.0
+  ]
+ ],
+ "missing": [
+  [
+   "adaniports-2025q1-c",
+   "eps_basic"
+  ],
+  [
+   "adaniports-2025q1-c",
+   "eps_diluted"
+  ],
+  [
+   "tmpv-2025q4-c",
+   "eps_diluted"
+  ],
+  [
+   "tmpv-fy2025-c",
+   "eps_basic"
+  ],
+  [
+   "tmpv-fy2025-c",
+   "eps_diluted"
+  ],
+  [
+   "axisbank-2025q3-s",
+   "net_npa_pct"
+  ],
+  [
+   "kotakbank-2026q1-s",
+   "interest_earned"
+  ],
+  [
+   "hdfcbank-2026q2-s",
+   "profit_before_tax"
+  ],
+  [
+   "hdfcbank-2026q2-s",
+   "tax_expense"
+  ],
+  [
+   "hdfcbank-2026q2-s",
+   "net_profit"
+  ],
+  [
+   "sbilife-2026q2-s",
+   "solvency_ratio"
+  ],
+  [
+   "sbilife-2026q2-s",
+   "eps_basic"
+  ],
+  [
+   "sbilife-2026q2-s",
+   "eps_diluted"
+  ],
+  [
+   "bajfinance-2025q2-c",
+   "eps_basic"
+  ],
+  [
+   "titan-2026q1-c",
+   "other_income"
+  ],
+  [
+   "titan-2026q1-c",
+   "total_income"
+  ],
+  [
+   "lt-2026q2-c",
+   "eps_basic"
+  ],
+  [
+   "lt-2026q2-c",
+   "eps_diluted"
+  ]
+ ]
+}

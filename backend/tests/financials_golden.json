@@ -1,0 +1,670 @@
+{
+ "version": 1,
+ "changelog": [
+  "2026-11-16: solvency_ratio stored as a multiple; hdfclife-2025q3-c-x 180.0 -> 1.8 (printed 180.00%)",
+  "2026-11-16: user spot-checked; claude re-checked all 245 values against source pages (recheck.py), 245/245 found (BAJFINANCE total_expenses printed '13 575.93')"
+ ],
+ "cases": [
+  {
+   "id": "tcs-2025q1-c",
+   "company": "TCS",
+   "period_end": "2025-06-30",
+   "period_type": "Q",
+   "basis": "consolidated",
+   "source_file": "TCS/2025-06.pdf",
+   "page": 8,
+   "values": {
+    "revenue_from_operations": 634370000000.0,
+    "other_income": 16600000000.0,
+    "total_income": 650970000000.0,
+    "total_expenses": 481180000000.0,
+    "profit_before_tax": 169790000000.0,
+    "tax_expense": 41600000000.0,
+    "net_profit": 128190000000.0,
+    "net_profit_owners": 127600000000.0,
+    "eps_basic": 35.27,
+    "eps_diluted": 35.27
+   },
+   "checked_by": [
+    "claude",
+    "user",
+    "claude-recheck"
+   ]
+  },
+  {
+   "id": "adaniports-2025q1-c",
+   "company": "ADANIPORTS",
+   "period_end": "2025-06-30",
+   "period_type": "Q",
+   "basis": "consolidated",
+   "source_file": "ADANIPORTS/2025-06.pdf",
+   "page": 12,
+   "values": {
+    "revenue_from_operations": 91261400000.0,
+    "other_income": 2960400000.0,
+    "total_income": 94221800000.0,
+    "total_expenses": 57318800000.0,
+    "profit_before_tax": 38476000000.0,
+    "tax_expense": 5370000000.0,
+    "net_profit": 33106000000.0,
+    "net_profit_owners": 33145900000.0,
+    "eps_basic": 15.34,
+    "eps_diluted": 15.34
+   },
+   "checked_by": [
+    "claude",
+    "user",
+    "claude-recheck"
+   ]
+  },
+  {
+   "id": "jswsteel-2026q3-c",
+   "company": "JSWSTEEL",
+   "period_end": "2026-09-30",
+   "period_type": "Q",
+   "basis": "consolidated",
+   "source_file": "JSWSTEEL/2026-09.pdf",
+   "page": 14,
+   "values": {
+    "revenue_from_operations": 544860000000.0,
+    "other_income": 4410000000.0,
+    "total_income": 549270000000.0,
+    "total_expenses": 481680000000.0,
+    "profit_before_tax": 70510000000.0,
+    "tax_expense": 16920000000.0,
+    "net_profit": 53590000000.0,
+    "net_profit_owners": 52790000000.0,
+    "eps_basic": 21.63,
+    "eps_diluted": 21.59
+   },
+   "checked_by": [
+    "claude",
+    "user",
+    "claude-recheck"
+   ]
+  },
+  {
+   "id": "hcltech-2026q4-c",
+   "company": "HCLTECH",
+   "period_end": "2026-03-31",
+   "period_type": "Q",
+   "basis": "consolidated",
+   "source_file": "HCLTECH/2026-03.pdf",
+   "page": 2,
+   "values": {
+    "revenue_from_operations": 339810000000.0,
+    "other_income": 3220000000.0,
+    "total_income": 343030000000.0,
+    "total_expenses": 286010000000.0,
+    "profit_before_tax": 57020000000.0,
+    "tax_expense": 12120000000.0,
+    "net_profit": 44900000000.0,
+    "net_profit_owners": 44880000000.0,
+    "eps_basic": 16.59,
+    "eps_diluted": 16.56
+   },
+   "checked_by": [
+    "claude",
+    "user",
+    "claude-recheck"
+   ]
+  },
+  {
+   "id": "hcltech-fy2026-c",
+   "company": "HCLTECH",
+   "period_end": "2026-03-31",
+   "period_type": "FY",
+   "basis": "consolidated",
+   "source_file": "HCLTECH/2026-03.pdf",
+   "page": 2,
+   "values": {
+    "revenue_from_operations": 1301440000000.0,
+    "other_income": 15300000000.0,
+    "total_income": 1316740000000.0,
+    "total_expenses": 1086160000000.0,
+    "profit_before_tax": 221020000000.0,
+    "tax_expense": 54500000000.0,
+    "net_profit": 166520000000.0,
+    "net_profit_owners": 166420000000.0,
+    "eps_basic": 61.46,
+    "eps_diluted": 61.36
+   },
+   "checked_by": [
+    "claude",
+    "user",
+    "claude-recheck"
+   ]
+  },
+  {
+   "id": "tmpv-2025q4-c",
+   "company": "TMPV",
+   "period_end": "2025-03-31",
+   "period_type": "Q",
+   "basis": "consolidated",
+   "source_file": "TMPV/2025-03.pdf",
+   "page": 25,
+   "values": {
+    "revenue_from_operations": 1195030000000.0,
+    "other_income": 15090000000.0,
+    "total_income": 1210120000000.0,
+    "total_expenses": 1090560000000.0,
+    "profit_before_tax": 115040000000.0,
+    "tax_expense": 29480000000.0,
+    "net_profit": 85560000000.0,
+    "net_profit_owners": 84700000000.0,
+    "eps_basic": 23.4,
+    "eps_diluted": 23.39
+   },
+   "checked_by": [
+    "claude",
+    "user",
+    "claude-recheck"
+   ]
+  },
+  {
+   "id": "tmpv-fy2025-c",
+   "company": "TMPV",
+   "period_end": "2025-03-31",
+   "period_type": "FY",
+   "basis": "consolidated",
+   "source_file": "TMPV/2025-03.pdf",
+   "page": 25,
+   "values": {
+    "revenue_from_operations": 4396950000000.0,
+    "other_income": 62440000000.0,
+    "total_income": 4459390000000.0,
+    "total_expenses": 4118960000000.0,
+    "net_profit": 281490000000.0,
+    "net_profit_owners": 278300000000.0,
+    "eps_basic": 78.8,
+    "eps_diluted": 78.75
+   },
+   "checked_by": [
+    "claude",
+    "user",
+    "claude-recheck"
+   ]
+  },
+  {
+   "id": "reliance-2025q1-c",
+   "company": "RELIANCE",
+   "period_end": "2025-06-30",
+   "period_type": "Q",
+   "basis": "consolidated",
+   "source_file": "RELIANCE/2025-06.pdf",
+   "page": 10,
+   "values": {
+    "revenue_from_operations": 2486600000000.0,
+    "other_income": 151190000000.0,
+    "total_income": 2637790000000.0,
+    "total_expenses": 2266330000000.0,
+    "profit_before_tax": 371460000000.0,
+    "net_profit": 307830000000.0,
+    "net_profit_owners": 269940000000.0
+   },
+   "checked_by": [
+    "claude",
+    "user",
+    "claude-recheck"
+   ]
+  },
+  {
+   "id": "axisbank-2025q3-s",
+   "company": "AXISBANK",
+   "period_end": "2025-12-31",
+   "period_type": "Q",
+   "basis": "standalone",
+   "source_file": "AXISBANK/2025-12.pdf",
+   "page": 2,
+   "values": {
+    "interest_earned": 322744000000.0,
+    "other_income": 62256600000.0,
+    "total_income": 385000600000.0,
+    "total_expenses": 276243600000.0,
+    "profit_before_tax": 86297800000.0,
+    "tax_expense": 21402100000.0,
+    "net_profit": 64895700000.0,
+    "eps_basic": 20.91,
+    "eps_diluted": 20.8,
+    "capital_adequacy_pct": 16.55,
+    "gross_npa_pct": 1.4,
+    "net_npa_pct": 0.42,
+    "return_on_assets_pct": 1.49
+   },
+   "checked_by": [
+    "claude",
+    "user",
+    "claude-recheck"
+   ]
+  },
+  {
+   "id": "kotakbank-2026q1-s",
+   "company": "KOTAKBANK",
+   "period_end": "2026-06-30",
+   "period_type": "Q",
+   "basis": "standalone",
+   "source_file": "KOTAKBANK/2026-06.pdf",
+   "page": 13,
+   "values": {
+    "interest_earned": 144774900000.0,
+    "other_income": 33382000000.0,
+    "total_income": 178156900000.0,
+    "total_expenses": 116843400000.0,
+    "profit_before_tax": 54632200000.0,
+    "tax_expense": 13402600000.0,
+    "net_profit": 41229600000.0,
+    "eps_diluted": 4.14,
+    "gross_npa_pct": 1.18,
+    "net_npa_pct": 0.27
+   },
+   "checked_by": [
+    "claude",
+    "user",
+    "claude-recheck"
+   ]
+  },
+  {
+   "id": "hdfcbank-2026q2-s",
+   "company": "HDFCBANK",
+   "period_end": "2026-09-30",
+   "period_type": "Q",
+   "basis": "standalone",
+   "source_file": "HDFCBANK/2026-09.pdf",
+   "page": 2,
+   "values": {
+    "interest_earned": 834266000000.0,
+    "other_income": 138310200000.0,
+    "total_income": 972676200000.0,
+    "total_expenses": 677742000000.0,
+    "profit_before_tax": 259098000000.0,
+    "tax_expense": 63998400000.0,
+    "net_profit": 196099600000.0,
+    "eps_basic": 12.66,
+    "eps_diluted": 12.63,
+    "capital_adequacy_pct": 18.87,
+    "gross_npa_pct": 1.11,
+    "net_npa_pct": 0.37,
+    "return_on_assets_pct": 0.45
+   },
+   "checked_by": [
+    "claude",
+    "user",
+    "claude-recheck"
+   ]
+  },
+  {
+   "id": "sbilife-2026q2-s",
+   "company": "SBILIFE",
+   "period_end": "2026-09-30",
+   "period_type": "Q",
+   "basis": "standalone",
+   "source_file": "SBILIFE/2026-09.pdf",
+   "page": 17,
+   "values": {
+    "first_year_premium": 57558600000.0,
+    "renewal_premium": 157636400000.0,
+    "single_premium": 55956300000.0,
+    "net_premium": 268777000000.0,
+    "profit_before_tax": 5537300000.0,
+    "net_profit": 5492300000.0,
+    "solvency_ratio": 1.97,
+    "eps_basic": 5.47,
+    "eps_diluted": 5.47
+   },
+   "checked_by": [
+    "claude",
+    "user",
+    "claude-recheck"
+   ]
+  },
+  {
+   "id": "hdfclife-2025q4-s",
+   "company": "HDFCLIFE",
+   "period_end": "2025-03-31",
+   "period_type": "Q",
+   "basis": "standalone",
+   "source_file": "HDFCLIFE/2025-03.pdf",
+   "page": 5,
+   "values": {
+    "first_year_premium": 43959500000.0,
+    "renewal_premium": 130623400000.0,
+    "single_premium": 65732800000.0,
+    "net_premium": 237655600000.0,
+    "profit_before_tax": 4862100000.0,
+    "net_profit": 4765400000.0
+   },
+   "checked_by": [
+    "claude",
+    "user",
+    "claude-recheck"
+   ]
+  },
+  {
+   "id": "hdfclife-fy2025-s",
+   "company": "HDFCLIFE",
+   "period_end": "2025-03-31",
+   "period_type": "FY",
+   "basis": "standalone",
+   "source_file": "HDFCLIFE/2025-03.pdf",
+   "page": 5,
+   "values": {
+    "first_year_premium": 129760700000.0,
+    "renewal_premium": 376796100000.0,
+    "single_premium": 203892300000.0,
+    "net_premium": 696161400000.0,
+    "profit_before_tax": 18660800000.0,
+    "net_profit": 18021200000.0
+   },
+   "checked_by": [
+    "claude",
+    "user",
+    "claude-recheck"
+   ]
+  },
+  {
+   "id": "bajfinance-2025q2-c",
+   "company": "BAJFINANCE",
+   "period_end": "2025-09-30",
+   "period_type": "Q",
+   "basis": "consolidated",
+   "source_file": "BAJFINANCE/2025-09.pdf",
+   "page": 14,
+   "values": {
+    "revenue_from_operations": 201789000000.0,
+    "other_income": 18600000.0,
+    "total_income": 201807599999.99997,
+    "total_expenses": 135759300000.0,
+    "profit_before_tax": 66081300000.0,
+    "tax_expense": 16603699999.999998,
+    "net_profit": 49477600000.0,
+    "net_profit_owners": 48753600000.0,
+    "eps_basic": 7.85,
+    "eps_diluted": 7.83
+   },
+   "checked_by": [
+    "claude",
+    "user",
+    "claude-recheck"
+   ]
+  },
+  {
+   "id": "shriramfin-2025q3-s",
+   "company": "SHRIRAMFIN",
+   "period_end": "2025-12-31",
+   "period_type": "Q",
+   "basis": "standalone",
+   "source_file": "SHRIRAMFIN/2025-12.pdf",
+   "page": 5,
+   "values": {
+    "revenue_from_operations": 121657500000.0,
+    "other_income": 258299999.99999997,
+    "total_income": 121915800000.0,
+    "total_expenses": 88313799999.99998,
+    "profit_before_tax": 33602000000.0,
+    "net_profit": 25216700000.0,
+    "eps_basic": 13.4,
+    "eps_diluted": 13.39
+   },
+   "checked_by": [
+    "claude",
+    "user",
+    "claude-recheck"
+   ]
+  },
+  {
+   "id": "jiofin-2025q3-c",
+   "company": "JIOFIN",
+   "period_end": "2025-12-31",
+   "period_type": "Q",
+   "basis": "consolidated",
+   "source_file": "JIOFIN/2025-12.pdf",
+   "page": 5,
+   "values": {
+    "revenue_from_operations": 9009000000.0,
+    "other_income": 1500000.0,
+    "total_income": 9010500000.0,
+    "total_expenses": 5659200000.0,
+    "profit_before_tax": 3710899999.9999995,
+    "tax_expense": 1021100000.0,
+    "net_profit": 2689800000.0,
+    "eps_basic": 0.42,
+    "eps_diluted": 0.42
+   },
+   "checked_by": [
+    "claude",
+    "user",
+    "claude-recheck"
+   ]
+  },
+  {
+   "id": "infy-2026q1-c",
+   "company": "INFY",
+   "period_end": "2026-06-30",
+   "period_type": "Q",
+   "basis": "consolidated",
+   "source_file": "INFY/2026-06.pdf",
+   "page": 22,
+   "values": {
+    "total_expenses": 381670000000.0,
+    "profit_before_tax": 110280000000.0,
+    "net_profit": 77750000000.0,
+    "net_profit_owners": 77690000000.0,
+    "eps_basic": 19.19,
+    "eps_diluted": 19.17
+   },
+   "checked_by": [
+    "claude",
+    "user",
+    "claude-recheck"
+   ]
+  },
+  {
+   "id": "titan-2026q1-c",
+   "company": "TITAN",
+   "period_end": "2026-06-30",
+   "period_type": "Q",
+   "basis": "consolidated",
+   "source_file": "TITAN/2026-06.pdf",
+   "page": 9,
+   "values": {
+    "other_income": 1460000000.0,
+    "total_income": 215020000000.0,
+    "total_expenses": 190750000000.0,
+    "profit_before_tax": 24290000000.0,
+    "tax_expense": 6520000000.0,
+    "net_profit": 17770000000.0,
+    "eps_basic": 20.03,
+    "eps_diluted": 20.02
+   },
+   "checked_by": [
+    "claude",
+    "user",
+    "claude-recheck"
+   ]
+  },
+  {
+   "id": "lt-2026q2-c",
+   "company": "LT",
+   "period_end": "2026-09-30",
+   "period_type": "Q",
+   "basis": "consolidated",
+   "source_file": "LT/2026-09.pdf",
+   "page": 11,
+   "values": {
+    "revenue_from_operations": 787499400000.0,
+    "other_income": 23062600000.000004,
+    "total_income": 810562000000.0,
+    "total_expenses": 734151400000.0,
+    "profit_before_tax": 76410600000.0,
+    "tax_expense": 17259100000.0,
+    "net_profit_owners": 52021000000.0,
+    "eps_basic": 37.81,
+    "eps_diluted": 37.8
+   },
+   "checked_by": [
+    "claude",
+    "user",
+    "claude-recheck"
+   ]
+  },
+  {
+   "id": "tatasteel-2025q1-c-x",
+   "company": "TATASTEEL",
+   "period_end": "2025-06-30",
+   "period_type": "Q",
+   "basis": "consolidated",
+   "source_file": "TATASTEEL/2025-06_consolidated.html",
+   "page": null,
+   "values": {
+    "revenue_from_operations": 531781200000,
+    "other_income": 2886700000,
+    "total_income": 534667900000,
+    "total_expenses": 503473100000,
+    "profit_before_tax": 29873600000,
+    "tax_expense": 10597200000,
+    "net_profit": 20073600000,
+    "net_profit_owners": 20776800000,
+    "eps_basic": 1.67,
+    "eps_diluted": 1.67
+   },
+   "checked_by": [
+    "claude",
+    "user",
+    "claude-recheck"
+   ]
+  },
+  {
+   "id": "axisbank-2026q4-c-x",
+   "company": "AXISBANK",
+   "period_end": "2026-03-31",
+   "period_type": "Q",
+   "basis": "consolidated",
+   "source_file": "AXISBANK/2026-03_consolidated.html",
+   "page": null,
+   "values": {
+    "interest_earned": 341709900000.0,
+    "other_income": 69717000000.0,
+    "total_income": 411426900000.0,
+    "total_expenses": 303234300000.0,
+    "profit_before_tax": 72471900000.0,
+    "tax_expense": -3845300000.0,
+    "net_profit": 76317200000.0,
+    "net_profit_owners": 76026300000.0,
+    "eps_basic": 24.47,
+    "eps_diluted": 24.33,
+    "cet1_pct": 14.45,
+    "gross_npa_pct": 1.23,
+    "net_npa_pct": 0.37,
+    "return_on_assets_pct": 1.64
+   },
+   "checked_by": [
+    "claude",
+    "user",
+    "claude-recheck"
+   ]
+  },
+  {
+   "id": "axisbank-fy2026-c-x",
+   "company": "AXISBANK",
+   "period_end": "2026-03-31",
+   "period_type": "FY",
+   "basis": "consolidated",
+   "source_file": "AXISBANK/2026-03_consolidated.html",
+   "page": null,
+   "values": {
+    "interest_earned": 1325382400000.0,
+    "other_income": 296737100000.0,
+    "total_income": 1622119500000.0,
+    "total_expenses": 1163014000000.0,
+    "profit_before_tax": 322934700000.0,
+    "tax_expense": 57996500000.0,
+    "net_profit": 264938200000.0,
+    "net_profit_owners": 263848500000.0,
+    "eps_basic": 85.04,
+    "eps_diluted": 84.48
+   },
+   "checked_by": [
+    "claude",
+    "user",
+    "claude-recheck"
+   ]
+  },
+  {
+   "id": "hdfclife-2025q3-c-x",
+   "company": "HDFCLIFE",
+   "period_end": "2025-12-31",
+   "period_type": "Q",
+   "basis": "consolidated",
+   "source_file": "HDFCLIFE/2025-12_consolidated.html",
+   "page": null,
+   "values": {
+    "first_year_premium": 33436000000.0,
+    "renewal_premium": 104799800000.0,
+    "single_premium": 50047400000.0,
+    "gross_premium": 188283200000.0,
+    "net_premium": 183514200000.0,
+    "profit_before_tax": 4410100000.0,
+    "tax_expense": 228200000.0,
+    "net_profit": 4181900000.0,
+    "solvency_ratio": 1.8,
+    "eps_basic": 1.94,
+    "eps_diluted": 1.94
+   },
+   "checked_by": [
+    "claude",
+    "user",
+    "claude-recheck"
+   ]
+  },
+  {
+   "id": "bajfinance-2026q4-c-x",
+   "company": "BAJFINANCE",
+   "period_end": "2026-03-31",
+   "period_type": "Q",
+   "basis": "consolidated",
+   "source_file": "BAJFINANCE/2026-03_consolidated.html",
+   "page": null,
+   "values": {
+    "revenue_from_operations": 216057900000.0,
+    "total_income": 216065000000.0,
+    "total_expenses": 142068700000.0,
+    "profit_before_tax": 73996300000.0,
+    "tax_expense": 18565400000.0,
+    "net_profit": 55533000000.0,
+    "net_profit_owners": 54645700000.0,
+    "eps_basic": 8.79,
+    "eps_diluted": 8.76
+   },
+   "checked_by": [
+    "claude",
+    "user",
+    "claude-recheck"
+   ]
+  },
+  {
+   "id": "infy-2026q4-c-x",
+   "company": "INFY",
+   "period_end": "2026-03-31",
+   "period_type": "Q",
+   "basis": "consolidated",
+   "source_file": "INFY/2026-03_consolidated.html",
+   "page": null,
+   "values": {
+    "revenue_from_operations": 464020000000.0,
+    "total_income": 475610000000.0,
+    "total_expenses": 367640000000.0,
+    "profit_before_tax": 107970000000.0,
+    "tax_expense": 22880000000.0,
+    "net_profit": 85090000000.0,
+    "net_profit_owners": 85010000000.0,
+    "eps_basic": 21.01,
+    "eps_diluted": 20.98
+   },
+   "checked_by": [
+    "claude",
+    "user",
+    "claude-recheck"
+   ]
+  }
+ ]
+}
