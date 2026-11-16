@@ -34,20 +34,20 @@ class Settings(BaseSettings):
     # Chunking + embedding [RE-INGEST] — must match index_cache/index_manifest.json
     CHUNK_SIZE: int = 900
     CHUNK_OVERLAP: int = 150
-    EMBEDDING_MODEL: str = "all-MiniLM-L6-v2"
-    QUERY_INSTRUCTION: str = ""
+    EMBEDDING_MODEL: str = "BAAI/bge-base-en-v1.5"
+    QUERY_INSTRUCTION: str = "Represent this sentence for searching relevant passages:"
 
     # Retrieval
     RETRIEVAL_K: int = 60
     FINAL_K: int = 8
     TOP_K: int = 5
-    SIMILARITY_THRESHOLD: float = 0.30
+    SIMILARITY_THRESHOLD: float = 0.50
     CONTEXT_WINDOW: int = 1
 
     # Reranking
     RERANKER_ENABLED: bool = True
-    RERANKER_MODEL: str = "BAAI/bge-reranker-base"
-    RERANKER_MAX_CANDIDATES: int = 60
+    RERANKER_MODEL: str = "cross-encoder/ms-marco-MiniLM-L-6-v2"
+    RERANKER_MAX_CANDIDATES: int = 30
     SKIP_RERANKER_THRESHOLD: float = 0.85
 
     # Hybrid search

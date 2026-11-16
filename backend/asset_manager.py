@@ -17,6 +17,27 @@ import requests
 
 from config import settings
 
+MARKER = "document_registry.json"  # written last by ingestion; present = complete
+
+
+def cache_is_current(cache_dir: str) -> bool:
+    """A LanceDB index whose registry matches this build's config.
+
+    Older caches (FAISS-era, or built with another embedder/chunker) also
+    have a registry, so its presence alone isn't enough.
+    """
+    import json
+    from core.retriever_pipeline import RetrieverPipeline
+    registry = os.path.join(cache_dir, MARKER)
+    if not (os.path.isdir(os.path.join(cache_dir, "lancedb")) and os.path.exists(registry)):
+        return False
+    try:
+        with open(registry, encoding="utf-8") as f:
+            fp = json.load(f).get("config_fingerprint")
+    except (OSError, ValueError):
+        return False
+    return fp == RetrieverPipeline.compute_config_fingerprint()
+
 
 def extract_cache(tarball: str, dest: str) -> None:
     # filter="data" rejects absolute paths, "..", links out of dest and device
@@ -29,7 +50,7 @@ def ensure_index_cache(cache_dir: str) -> None:
     if settings.ASSET_MODE == "local":
         print("Using local assets.")
         return
-    if os.path.exists(os.path.join(cache_dir, "faiss.index")):
+    if cache_is_current(cache_dir):
         print(f"{cache_dir} already present.")
         return
     if not settings.HF_CACHE_URL:
@@ -49,11 +70,11 @@ def ensure_index_cache(cache_dir: str) -> None:
         print("Extracting index cache...")
         root = os.path.join(tmp, "extracted")
         extract_cache(tarball, root)
-        if not os.path.exists(os.path.join(root, "faiss.index")):
+        if not os.path.exists(os.path.join(root, MARKER)):
             entries = os.listdir(root)
             if len(entries) == 1:
                 root = os.path.join(root, entries[0])
 
-        shutil.rmtree(cache_dir, ignore_errors=True)  # leftovers without faiss.index
+        shutil.rmtree(cache_dir, ignore_errors=True)  # stale or partial cache
         os.replace(root, cache_dir)
     print("Index cache ready.")

@@ -28,10 +28,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 
-from core.retriever_pipeline import RetrieverPipeline
-from core.corpus_manager import CorpusManager
-from core.lookup_index import ImmutableRangeError
-from core.cache_utils import has_leftover_tmp, clean_cache
+from core.app_retrieval import open_for_ingest
 
 
 DATA_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "data")
@@ -46,32 +43,13 @@ def main():
         print(f"Data directory not found: {data_dir}")
         sys.exit(1)
 
-    # ── Step 2: Init pipeline + corpus manager ───────────────────────
-    pipeline = RetrieverPipeline()
-    corpus = CorpusManager(pipeline)
-
-    # ── Step 3: Load existing index + registry (if any) ──────────────
-    if os.path.exists(CACHE_DIR):
-        if has_leftover_tmp(CACHE_DIR):
-            clean_cache(CACHE_DIR)
-
-        index_loaded = pipeline.load_index(CACHE_DIR)
-
-        if index_loaded:
-            registry_loaded = corpus.load_registry(CACHE_DIR)
-
-            if registry_loaded:
-                integrity_ok = corpus.validate_cache_integrity(
-                    pipeline.index.ntotal
-                )
-                if integrity_ok:
-                    corpus.init_lookup_index(CACHE_DIR, pipeline.index.ntotal)
-                else:
-                    print("Cache integrity check failed. Cannot proceed.")
-                    sys.exit(1)
-            else:
-                print("Failed to load registry. Cannot proceed.")
-                sys.exit(1)
+    # ── Step 2: Open the store, resuming from the saved registry ─────
+    corpus = open_for_ingest(CACHE_DIR)
+    pipeline = corpus.retriever
+    if pipeline.model.device.type == "cuda":
+        pipeline.model.half()  # document vectors only; queries embed on CPU at serve time
+    print(f"🖥️  Embedding device: {pipeline.model.device}; "
+          f"{len(corpus.documents)} document(s) already indexed")
 
     # ── Step 4: Discover company folders (sorted alphabetically) ─────
     companies = sorted(
@@ -108,7 +86,7 @@ def main():
             pdf_path = os.path.join(company_dir, pdf_name)
 
             doc_start = time.time()
-            print(f"[{ingested + skipped + 1}/{total_pdfs}] Ingesting {company} - {year}...", end=" ")
+            print(f"[{ingested + skipped + 1}/{total_pdfs}] Ingesting {company} - {year}...", end=" ", flush=True)
 
             try:
                 corpus.add_document(
@@ -117,18 +95,16 @@ def main():
                     document_type="Annual_Report",
                     year=year,
                 )
-            except (ValueError, ImmutableRangeError) as e:
-                print(f"SKIPPED (duplicate)")
+            except ValueError as e:
+                print(f"SKIPPED ({e})")
                 skipped += 1
                 continue
             except Exception as e:
                 print(f"\n❌ Error ingesting {company}/{year}: {e}")
                 sys.exit(1)
 
-            # Three-phase commit after each successful ingestion
+            # Rows are already on disk; the registry marks them committed.
             corpus.save_registry(CACHE_DIR)
-            pipeline.save_index(CACHE_DIR, pdf_path)
-            corpus.save_lookup_index(CACHE_DIR)
 
             doc_elapsed = time.time() - doc_start
             ingested += 1
@@ -139,7 +115,10 @@ def main():
             remaining = (total_pdfs - ingested - skipped) * avg_per_doc
             remaining_min = remaining / 60
 
-            print(f"✅ ({doc_elapsed:.1f}s) | ETA: {remaining_min:.0f}min")
+            print(f"✅ ({doc_elapsed:.1f}s) | ETA: {remaining_min:.0f}min", flush=True)
+
+    print("🔤 Building full-text index...", flush=True)
+    corpus.store.build_text_index()
 
     elapsed = time.time() - batch_start
     print(f"\n✅ Batch ingestion complete: {ingested} ingested, {skipped} skipped in {elapsed/60:.1f}min")

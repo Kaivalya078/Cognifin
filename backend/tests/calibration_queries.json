@@ -1,0 +1,29 @@
+{
+ "note": "Throwaway queries for threshold calibration only. Never overlaps tests/golden_set.json. The first four are main.SHOWCASE_QUESTIONS.",
+ "queries": [
+  "Compare TCS and Infosys revenue and profit",
+  "What are the key risk factors?",
+  "Who are the promoters and their shareholding?",
+  "Summarise the financial highlights",
+  "Axis Bank CASA ratio in 2024",
+  "What did Asian Paints spend on CSR in 2025?",
+  "Bharti Airtel spectrum payments in 2023",
+  "Kotak Mahindra Bank provision coverage ratio 2024",
+  "Hindalco Novelis aluminium shipments 2025",
+  "JSW Steel capacity expansion plans 2024",
+  "UltraTech Cement capacity in 2023",
+  "Nestle India new factory 2025",
+  "Who audits Wipro?",
+  "How many employees does HCLTech have?",
+  "What is Eicher Motors' Royal Enfield volume growth?",
+  "Dr. Reddy's biosimilars pipeline",
+  "Power Grid transmission line length",
+  "ONGC crude oil production trend",
+  "How does Apollo Hospitals plan to expand beds?",
+  "Trent Zudio store count",
+  "Shriram Finance vehicle loan book",
+  "Tata Consumer Products acquisitions",
+  "What dividend did ITC declare in 2023?",
+  "Board composition and independent directors of Reliance Industries"
+ ]
+}

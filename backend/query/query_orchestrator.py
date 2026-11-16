@@ -42,7 +42,6 @@ from .execution_planner import plan_execution, RetrievalStep
 from .context_assembler import assemble_context
 from core.corpus_manager import CorpusManager
 from core.metadata_schema import RetrievalResult
-from core.bm25_retriever import bm25_search, is_bm25_ready
 from core.result_merger import merge_results
 from core.retrieval_pipeline_v2 import refine_results
 
@@ -110,35 +109,17 @@ def retrieve_context(
             for sq in plan.sub_queries:
                 sq.rewritten_query = variant
 
-        faiss_results = corpus_manager.execute_plan(plan, embed_query)
-        if faiss_results:
-            all_result_lists.append(faiss_results)
+        dense_results = corpus_manager.execute_plan(plan, embed_query)
+        if dense_results:
+            all_result_lists.append(dense_results)
             all_labels.append(f"dense_q{i}")
 
-        # 4b: BM25 sparse search (if enabled)
-        if is_bm25_ready():
-            # Collect allowed_ranges from ALL sub-queries (not just the first)
-            # so comparison queries search both companies
-            all_ranges = []
-            for sq in plan.sub_queries:
-                ranges, _ = corpus_manager.lookup_index.resolve_ranges(sq.scope)
-                if ranges:
-                    all_ranges.extend(ranges)
-            allowed_ranges = all_ranges if all_ranges else None
-
-            bm25_hits = bm25_search(
-                query=variant,
-                k=retrieval_k,
-                allowed_ranges=allowed_ranges,
-            )
-
-            # Convert BM25 hits to RetrievalResult objects
-            bm25_results = _bm25_to_retrieval_results(
-                bm25_hits, corpus_manager
-            )
-            if bm25_results:
-                all_result_lists.append(bm25_results)
-                all_labels.append(f"bm25_q{i}")
+        # 4b: keyword (BM25) search over the same scopes
+        keyword_results = corpus_manager.search_text(
+            [sq.scope for sq in plan.sub_queries], variant, retrieval_k)
+        if keyword_results:
+            all_result_lists.append(keyword_results)
+            all_labels.append(f"bm25_q{i}")
 
     # ── Step 5: Merge all result lists via RRF ──
     if len(all_result_lists) > 1:
@@ -155,58 +136,12 @@ def retrieve_context(
     logger.debug(
         "Phase 3 complete: %d variants × %d search types → %d lists → %d merged",
         len(query_variants),
-        2 if is_bm25_ready() else 1,
+        2 if settings.BM25_ENABLED else 1,
         len(all_result_lists),
         len(merged),
     )
 
     return merged, parsed
-
-
-def _bm25_to_retrieval_results(
-    bm25_hits: List[Tuple[float, int]],
-    corpus_manager: CorpusManager,
-) -> List[RetrievalResult]:
-    """
-    Convert BM25 (score, vector_id) hits to RetrievalResult objects.
-
-    Mirrors the conversion logic in CorpusManager.search() so BM25
-    results are compatible with the refinement pipeline.
-    """
-    results = []
-    for score, vector_id in bm25_hits:
-        if vector_id >= len(corpus_manager.retriever.chunks):
-            continue
-
-        chunk = corpus_manager.retriever.chunks[vector_id]
-
-        # Look up document label from chunk metadata
-        meta = corpus_manager.chunk_metadata.get(vector_id)
-        doc_label = meta.document_label if meta else "unknown"
-
-        # Resolve PDF path for the /pdfs/ static route (mirrors corpus_manager.search()).
-        # pdf_path may be a Colab path, so extract last 2 segments (COMPANY/YEAR.pdf).
-        pdf_filename = ""
-        for rec in corpus_manager.documents.values():
-            if rec.vector_id_start <= vector_id < rec.vector_id_end:
-                parts = rec.pdf_path.replace("\\", "/").rstrip("/").split("/")
-                if len(parts) >= 2:
-                    pdf_filename = f"{parts[-2]}/{parts[-1]}"
-                else:
-                    pdf_filename = parts[-1] if parts else ""
-                break
-
-        result = RetrievalResult(
-            chunk_id=chunk.chunk_id,
-            score=score,
-            snippet=chunk.text,
-            document_label=doc_label,
-            page_number=chunk.page_number,
-            pdf_filename=pdf_filename,
-        )
-        results.append(result)
-
-    return results
 
 
 # =============================================================================
@@ -361,23 +296,16 @@ def _run_step_retrieval(
     for i, variant in enumerate(query_variants):
         # FAISS dense search
         vector = embed_query(variant)
-        faiss_results = corpus_manager.search(scope, vector)
-        if faiss_results:
-            all_result_lists.append(faiss_results)
+        dense_results = corpus_manager.search(scope, vector)
+        if dense_results:
+            all_result_lists.append(dense_results)
             all_labels.append(f"dense_{step.label}_q{i}")
 
-        # BM25 sparse search
-        if is_bm25_ready():
-            ranges, _ = corpus_manager.lookup_index.resolve_ranges(scope)
-            bm25_hits = bm25_search(
-                query=variant,
-                k=retrieval_k,
-                allowed_ranges=ranges if ranges else None,
-            )
-            bm25_results = _bm25_to_retrieval_results(bm25_hits, corpus_manager)
-            if bm25_results:
-                all_result_lists.append(bm25_results)
-                all_labels.append(f"bm25_{step.label}_q{i}")
+        # Keyword (BM25) search
+        keyword_results = corpus_manager.search_text([scope], variant, retrieval_k)
+        if keyword_results:
+            all_result_lists.append(keyword_results)
+            all_labels.append(f"bm25_{step.label}_q{i}")
 
     # ── Step E: Merge via RRF ──
     if len(all_result_lists) > 1:
@@ -402,8 +330,7 @@ def _run_step_retrieval(
         results=merged,
         query=step.query,
         parsed_query=parsed_for_refine,
-        all_chunks=pipeline.chunks if pipeline else None,
-        chunk_metadata=corpus_manager.chunk_metadata,
+        corpus=corpus_manager,
         final_k=final_k,
     )
 

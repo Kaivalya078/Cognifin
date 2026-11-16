@@ -207,91 +207,30 @@ def deduplicate(
 # CONTEXT ENRICHMENT
 # =============================================================================
 
-def enrich_context(
-    results: list,
-    all_chunks: list,
-    chunk_metadata: dict,
-    window: Optional[int] = None,
-) -> list:
+def enrich_context(results: list, corpus, window: Optional[int] = None) -> list:
     """
-    Expand winning chunks with neighboring chunk text for continuity.
+    Expand each result with its neighbouring chunks from the same document.
 
-    For each result, if adjacent chunks (vector_id ± window) are from the
-    same document, merge their text into an expanded snippet.
-
-    Currently disabled by default (CONTEXT_WINDOW=0).
-    Enable after validating reranker performance.
-
-    Args:
-        results:        List of RetrievalResult objects
-        all_chunks:     Full chunks list from RetrieverPipeline
-        chunk_metadata: Dict mapping vector_id → ChunkMetadata
-        window:         Number of neighbor chunks to merge (0=disabled)
-
-    Returns:
-        List of RetrievalResult with potentially expanded snippets
+    corpus: the CorpusManager the results came from. Results whose document
+    isn't in it (e.g. session uploads when the global corpus is passed) are
+    left as they are. Expanded results get an "[expanded]" chunk_id prefix.
     """
     ctx_window = window if window is not None else settings.CONTEXT_WINDOW
-
-    if ctx_window == 0 or not results or not all_chunks:
+    if ctx_window == 0 or not results or corpus is None:
         return results
 
     max_merged_chars = settings.CHUNK_SIZE * 2
-
     enriched = []
     for r in results:
-        # Extract vector_id from chunk_id (e.g., "chunk_340" → 340)
-        try:
-            vid = int(r.chunk_id.replace("chunk_", "").split(":")[0].replace("[expanded]", ""))
-        except (ValueError, IndexError):
-            enriched.append(r)
-            continue
-
-        # Get the document label of this chunk
-        meta = chunk_metadata.get(vid)
-        if meta is None:
-            enriched.append(r)
-            continue
-
-        doc_label = meta.document_label
-
-        # Collect neighbor texts from the same document
-        parts = []
-        for offset in range(-ctx_window, ctx_window + 1):
-            neighbor_vid = vid + offset
-            if neighbor_vid < 0 or neighbor_vid >= len(all_chunks):
-                continue
-
-            # Only merge neighbors from the same document
-            neighbor_meta = chunk_metadata.get(neighbor_vid)
-            if neighbor_meta is None:
-                continue
-            if neighbor_meta.document_label != doc_label:
-                continue
-
-            parts.append((offset, all_chunks[neighbor_vid].text))
-
-        # Sort by offset to maintain reading order
-        parts.sort(key=lambda x: x[0])
-        merged_text = "\n".join(text for _, text in parts)
-
-        # Cap merged text to prevent token overflow
-        if len(merged_text) > max_merged_chars:
-            merged_text = merged_text[:max_merged_chars]
-
-        # Mark as expanded if text actually grew
-        if len(merged_text) > len(r.snippet):
-            updated = dc_replace(
-                r,
-                snippet=merged_text,
-                chunk_id=f"[expanded]{r.chunk_id}",
-            )
-            enriched.append(updated)
+        texts = corpus.neighbor_texts(r, ctx_window)
+        merged = "\n".join(texts)[:max_merged_chars] if texts else ""
+        if len(merged) > len(r.snippet):
+            chunk_id = r.chunk_id if r.chunk_id.startswith("[expanded]") else f"[expanded]{r.chunk_id}"
+            enriched.append(dc_replace(r, snippet=merged, chunk_id=chunk_id))
         else:
             enriched.append(r)
 
-    expanded_count = sum(1 for r in enriched if "[expanded]" in r.chunk_id)
-    if expanded_count > 0:
-        logger.debug("enrich_context: expanded %d/%d chunks (window=%d)", expanded_count, len(enriched), ctx_window)
-
+    expanded = sum(1 for a, b in zip(results, enriched) if a is not b)
+    if expanded:
+        logger.debug("enrich_context: expanded %d/%d chunks (window=%d)", expanded, len(enriched), ctx_window)
     return enriched

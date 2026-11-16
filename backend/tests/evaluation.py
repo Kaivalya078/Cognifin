@@ -45,12 +45,12 @@ load_dotenv()
 
 # Core pipeline imports (no FastAPI, no OpenAI)
 from core.retriever_pipeline import RetrieverPipeline
-from core.corpus_manager import CorpusManager
+from core.corpus_manager import CorpusManager, new_session_corpus
 from core.corpus_router import CorpusRouter
 from core.metadata_schema import ChunkMetadata, RetrievalResult
 from query.query_understanding import parse_query
 from query.search_plan_builder import build_plan
-from core.cache_utils import has_leftover_tmp, clean_cache
+from core.app_retrieval import load_global_corpus
 
 
 # =============================================================================
@@ -134,23 +134,17 @@ def extract_vector_id(chunk_id: str) -> Optional[int]:
     return None
 
 
-def build_metadata_map(
-    results: List[RetrievalResult],
-    chunk_metadata: Dict[int, ChunkMetadata],
-) -> Dict[str, Optional[ChunkMetadata]]:
+def build_metadata_map(results: List[RetrievalResult], corpora) -> Dict[str, Optional[object]]:
     """
-    Map each RetrievalResult.chunk_id → its ChunkMetadata.
-
-    Returns a dict keyed by chunk_id.  Value is None if the
-    vector_id could not be resolved (should not happen in practice).
+    Map each RetrievalResult.chunk_id → its chunk metadata, looked up in the
+    corpus whose registry holds the result's document (session and global
+    vector_ids overlap, so the document label decides).
     """
-    meta_map: Dict[str, Optional[ChunkMetadata]] = {}
+    meta_map: Dict[str, Optional[object]] = {}
     for r in results:
         vid = extract_vector_id(r.chunk_id)
-        if vid is not None:
-            meta_map[r.chunk_id] = chunk_metadata.get(vid)
-        else:
-            meta_map[r.chunk_id] = None
+        owner = next((c for c in corpora if r.document_label in c.documents), None)
+        meta_map[r.chunk_id] = owner.chunk_metadata.get(vid) if (owner and vid is not None) else None
     return meta_map
 
 
@@ -272,72 +266,9 @@ def precision_at_k(
 # =============================================================================
 
 def load_corpus() -> Tuple[RetrieverPipeline, CorpusManager, CorpusRouter]:
-    """
-    Load the global corpus from index_cache exactly as main.py lifespan does.
-
-    Load order:
-        1. load_index()
-        2. load_registry()
-        3. validate_cache_integrity()
-        4. init_lookup_index()
-        5. CorpusRouter(corpus_manager)
-
-    Returns:
-        (pipeline, corpus_manager, corpus_router)
-
-    Raises:
-        RuntimeError if any step fails.
-    """
-    cache_dir = os.getenv("INDEX_CACHE_DIR", "index_cache")
-
-    # Initialize pipeline (loads embedding model)
-    pipeline = RetrieverPipeline()
-
-    # Wrap in CorpusManager
-    corpus_manager = CorpusManager(pipeline)
-
-    # Validate cache directory
-    if not os.path.exists(cache_dir):
-        raise RuntimeError(
-            f"Cache directory '{cache_dir}' does not exist. "
-            f"Run batch_ingest_annual_reports.py first."
-        )
-
-    if has_leftover_tmp(cache_dir):
-        # Do NOT clean — this is read-only evaluation
-        raise RuntimeError(
-            f"Leftover tmp files in '{cache_dir}'. "
-            f"Resolve cache corruption before running evaluation."
-        )
-
-    # Step 1: Load FAISS index
-    if not pipeline.load_index(cache_dir):
-        raise RuntimeError(
-            f"Failed to load FAISS index from '{cache_dir}'. "
-            f"Run batch_ingest_annual_reports.py to rebuild."
-        )
-
-    # Step 2: Load registry
-    if not corpus_manager.load_registry(cache_dir):
-        raise RuntimeError(
-            f"Failed to load document registry from '{cache_dir}'. "
-            f"Run batch_ingest_annual_reports.py to rebuild."
-        )
-
-    # Step 3: Validate integrity
-    if not corpus_manager.validate_cache_integrity(pipeline.index.ntotal):
-        raise RuntimeError(
-            "Cache integrity check failed. "
-            "Run batch_ingest_annual_reports.py to rebuild."
-        )
-
-    # Step 4: Initialize LookupIndex
-    corpus_manager.init_lookup_index(cache_dir, pipeline.index.ntotal)
-
-    # Step 5: Build router
-    router = CorpusRouter(corpus_manager)
-
-    return pipeline, corpus_manager, router
+    """Load the global corpus exactly as main.py's lifespan does."""
+    pipeline, corpus_manager = load_global_corpus(os.getenv("INDEX_CACHE_DIR", "index_cache"))
+    return pipeline, corpus_manager, CorpusRouter(corpus_manager)
 
 
 # =============================================================================
@@ -375,7 +306,7 @@ def run_eval_case(
     )
 
     # --- Step 4: Build metadata map ---
-    meta_map = build_metadata_map(results, corpus_manager.chunk_metadata)
+    meta_map = build_metadata_map(results, [corpus_manager])
 
     # --- Step 5: Run validations ---
 
@@ -434,11 +365,9 @@ def run_session_test(
     session_id = "__eval_session__"
 
     try:
-        # Create isolated pipeline + corpus (mirrors main.py /upload)
-        session_pipeline = RetrieverPipeline()
-        session_corpus = CorpusManager(session_pipeline)
+        # Isolated corpus on a temporary store (mirrors main.py /upload)
+        session_corpus = new_session_corpus(pipeline)
 
-        # Ingest into session corpus (in-memory only)
         num_chunks = session_corpus.add_document(
             pdf_path=test_pdf,
             company="TESTCO",
@@ -476,12 +405,7 @@ def run_session_test(
             session_id=session_id,
         )
 
-        # Build combined metadata map from both corpora
-        combined_meta: Dict[int, ChunkMetadata] = {}
-        combined_meta.update(corpus_manager.chunk_metadata)
-        combined_meta.update(session_corpus.chunk_metadata)
-
-        meta_map = build_metadata_map(results, combined_meta)
+        meta_map = build_metadata_map(results, [session_corpus, corpus_manager])
 
         # Validate
         report.checks.append(

@@ -1,0 +1,2049 @@
+{
+  "label": "baseline",
+  "golden_set": "golden_set.json",
+  "settings": {
+    "EMBEDDING_MODEL": "all-MiniLM-L6-v2",
+    "QUERY_INSTRUCTION": "",
+    "RETRIEVAL_K": 60,
+    "FINAL_K": 8,
+    "RERANKER_MODEL": "cross-encoder/ms-marco-MiniLM-L-6-v2",
+    "RERANKER_MAX_CANDIDATES": 30,
+    "SIMILARITY_THRESHOLD": 0.3,
+    "SKIP_RERANKER_THRESHOLD": 0.85,
+    "CONTEXT_WINDOW": 1,
+    "BM25_ENABLED": true
+  },
+  "rss_mb": 4401.50016,
+  "legacy_page_map": true,
+  "summary": {
+    "overall": {
+      "n": 40,
+      "hit3": 0.675,
+      "hit8": 0.9,
+      "mrr": 0.5852083333333333,
+      "recall60": 0.925
+    },
+    "by_kind": {
+      "narrative": {
+        "n": 20,
+        "hit3": 0.7,
+        "hit8": 0.9,
+        "mrr": 0.625,
+        "recall60": 0.9
+      },
+      "table": {
+        "n": 20,
+        "hit3": 0.65,
+        "hit8": 0.9,
+        "mrr": 0.5454166666666667,
+        "recall60": 0.95
+      }
+    },
+    "latency_ms": {
+      "p50": 2208.582400002342,
+      "p95": 3011.015670000779
+    }
+  },
+  "rows": [
+    {
+      "id": "tcs-2024-revenue",
+      "kind": "table",
+      "hit3": true,
+      "hit8": true,
+      "rr": 1.0,
+      "recall60": true,
+      "returned": [
+        [
+          "TCS",
+          "2024",
+          76
+        ],
+        [
+          "TCS",
+          "2024",
+          76
+        ],
+        [
+          "TCS",
+          "2024",
+          90
+        ],
+        [
+          "TCS",
+          "2024",
+          230
+        ],
+        [
+          "TCS",
+          "2024",
+          151
+        ],
+        [
+          "TCS",
+          "2024",
+          153
+        ],
+        [
+          "TCS",
+          "2024",
+          230
+        ],
+        [
+          "TCS",
+          "2024",
+          57
+        ]
+      ]
+    },
+    {
+      "id": "tcs-2024-netzero",
+      "kind": "narrative",
+      "hit3": true,
+      "hit8": true,
+      "rr": 0.5,
+      "recall60": true,
+      "returned": [
+        [
+          "TCS",
+          "2023",
+          171
+        ],
+        [
+          "TCS",
+          "2024",
+          11
+        ],
+        [
+          "TCS",
+          "2023",
+          78
+        ],
+        [
+          "TCS",
+          "2023",
+          78
+        ],
+        [
+          "TCS",
+          "2024",
+          153
+        ],
+        [
+          "TCS",
+          "2024",
+          11
+        ],
+        [
+          "TCS",
+          "2024",
+          325
+        ],
+        [
+          "TCS",
+          "2023",
+          152
+        ]
+      ]
+    },
+    {
+      "id": "infy-2025-revenue",
+      "kind": "table",
+      "hit3": true,
+      "hit8": true,
+      "rr": 1.0,
+      "recall60": true,
+      "returned": [
+        [
+          "INFY",
+          "2025",
+          74
+        ],
+        [
+          "INFY",
+          "2025",
+          74
+        ],
+        [
+          "INFY",
+          "2025",
+          345
+        ],
+        [
+          "INFY",
+          "2025",
+          74
+        ],
+        [
+          "INFY",
+          "2025",
+          74
+        ],
+        [
+          "INFY",
+          "2025",
+          266
+        ],
+        [
+          "INFY",
+          "2025",
+          77
+        ],
+        [
+          "INFY",
+          "2025",
+          74
+        ]
+      ]
+    },
+    {
+      "id": "infy-2025-acquisitions",
+      "kind": "narrative",
+      "hit3": false,
+      "hit8": false,
+      "rr": 0.0,
+      "recall60": false,
+      "returned": [
+        [
+          "INFY",
+          "2025",
+          88
+        ],
+        [
+          "INFY",
+          "2025",
+          55
+        ],
+        [
+          "INFY",
+          "2025",
+          39
+        ],
+        [
+          "INFY",
+          "2025",
+          354
+        ],
+        [
+          "INFY",
+          "2025",
+          287
+        ],
+        [
+          "INFY",
+          "2025",
+          315
+        ],
+        [
+          "INFY",
+          "2025",
+          354
+        ],
+        [
+          "INFY",
+          "2025",
+          54
+        ]
+      ]
+    },
+    {
+      "id": "hdfcbank-2024-gnpa",
+      "kind": "table",
+      "hit3": true,
+      "hit8": true,
+      "rr": 1.0,
+      "recall60": true,
+      "returned": [
+        [
+          "HDFCBANK",
+          "2024",
+          236
+        ],
+        [
+          "HDFCBANK",
+          "2024",
+          355
+        ],
+        [
+          "HDFCBANK",
+          "2024",
+          301
+        ],
+        [
+          "HDFCBANK",
+          "2024",
+          353
+        ],
+        [
+          "HDFCBANK",
+          "2024",
+          266
+        ],
+        [
+          "HDFCBANK",
+          "2024",
+          235
+        ],
+        [
+          "HDFCBANK",
+          "2024",
+          242
+        ],
+        [
+          "HDFCBANK",
+          "2024",
+          365
+        ]
+      ]
+    },
+    {
+      "id": "hdfcbank-2024-merger",
+      "kind": "narrative",
+      "hit3": true,
+      "hit8": true,
+      "rr": 1.0,
+      "recall60": true,
+      "returned": [
+        [
+          "HDFCBANK",
+          "2024",
+          273
+        ],
+        [
+          "HDFCBANK",
+          "2024",
+          296
+        ],
+        [
+          "HDFCBANK",
+          "2024",
+          272
+        ],
+        [
+          "HDFCBANK",
+          "2023",
+          21
+        ],
+        [
+          "HDFCBANK",
+          "2023",
+          19
+        ],
+        [
+          "HDFCBANK",
+          "2024",
+          267
+        ],
+        [
+          "HDFCBANK",
+          "2024",
+          303
+        ],
+        [
+          "HDFCBANK",
+          "2024",
+          405
+        ]
+      ]
+    },
+    {
+      "id": "reliance-2023-netprofit",
+      "kind": "table",
+      "hit3": false,
+      "hit8": true,
+      "rr": 0.16666666666666666,
+      "recall60": true,
+      "returned": [
+        [
+          "RELIANCE",
+          "2023",
+          310
+        ],
+        [
+          "RELIANCE",
+          "2023",
+          308
+        ],
+        [
+          "RELIANCE",
+          "2023",
+          277
+        ],
+        [
+          "RELIANCE",
+          "2023",
+          307
+        ],
+        [
+          "RELIANCE",
+          "2023",
+          307
+        ],
+        [
+          "RELIANCE",
+          "2023",
+          194
+        ],
+        [
+          "RELIANCE",
+          "2023",
+          194
+        ],
+        [
+          "RELIANCE",
+          "2023",
+          265
+        ]
+      ]
+    },
+    {
+      "id": "reliance-2023-gigacomplex",
+      "kind": "narrative",
+      "hit3": true,
+      "hit8": true,
+      "rr": 0.5,
+      "recall60": true,
+      "returned": [
+        [
+          "RELIANCE",
+          "2024",
+          45
+        ],
+        [
+          "RELIANCE",
+          "2023",
+          142
+        ],
+        [
+          "RELIANCE",
+          "2023",
+          132
+        ],
+        [
+          "RELIANCE",
+          "2024",
+          46
+        ],
+        [
+          "RELIANCE",
+          "2024",
+          49
+        ],
+        [
+          "RELIANCE",
+          "2023",
+          153
+        ],
+        [
+          "RELIANCE",
+          "2025",
+          45
+        ],
+        [
+          "RELIANCE",
+          "2024",
+          28
+        ]
+      ]
+    },
+    {
+      "id": "itc-2025-cigarettes",
+      "kind": "table",
+      "hit3": true,
+      "hit8": true,
+      "rr": 0.3333333333333333,
+      "recall60": true,
+      "returned": [
+        [
+          "ITC",
+          "2025",
+          325
+        ],
+        [
+          "ITC",
+          "2025",
+          216
+        ],
+        [
+          "ITC",
+          "2025",
+          217
+        ],
+        [
+          "ITC",
+          "2025",
+          348
+        ],
+        [
+          "ITC",
+          "2025",
+          68
+        ],
+        [
+          "ITC",
+          "2025",
+          325
+        ],
+        [
+          "ITC",
+          "2025",
+          217
+        ],
+        [
+          "ITC",
+          "2025",
+          325
+        ]
+      ]
+    },
+    {
+      "id": "itc-2025-hotels-demerger",
+      "kind": "narrative",
+      "hit3": true,
+      "hit8": true,
+      "rr": 1.0,
+      "recall60": true,
+      "returned": [
+        [
+          "ITC",
+          "2025",
+          231
+        ],
+        [
+          "ITC",
+          "2025",
+          244
+        ],
+        [
+          "ITC",
+          "2025",
+          339
+        ],
+        [
+          "ITC",
+          "2024",
+          172
+        ],
+        [
+          "ITC",
+          "2025",
+          339
+        ],
+        [
+          "ITC",
+          "2024",
+          333
+        ],
+        [
+          "ITC",
+          "2025",
+          221
+        ],
+        [
+          "ITC",
+          "2025",
+          209
+        ]
+      ]
+    },
+    {
+      "id": "sbin-2023-netprofit",
+      "kind": "table",
+      "hit3": true,
+      "hit8": true,
+      "rr": 1.0,
+      "recall60": true,
+      "returned": [
+        [
+          "SBIN",
+          "2023",
+          42
+        ],
+        [
+          "SBIN",
+          "2023",
+          100
+        ],
+        [
+          "SBIN",
+          "2023",
+          98
+        ],
+        [
+          "SBIN",
+          "2023",
+          105
+        ],
+        [
+          "SBIN",
+          "2023",
+          3
+        ],
+        [
+          "SBIN",
+          "2023",
+          217
+        ],
+        [
+          "SBIN",
+          "2023",
+          264
+        ],
+        [
+          "SBIN",
+          "2023",
+          206
+        ]
+      ]
+    },
+    {
+      "id": "sbin-2023-yono",
+      "kind": "narrative",
+      "hit3": false,
+      "hit8": true,
+      "rr": 0.16666666666666666,
+      "recall60": true,
+      "returned": [
+        [
+          "SBIN",
+          "2025",
+          90
+        ],
+        [
+          "SBIN",
+          "2025",
+          426
+        ],
+        [
+          "SBIN",
+          "2025",
+          19
+        ],
+        [
+          "SBIN",
+          "2025",
+          421
+        ],
+        [
+          "SBIN",
+          "2025",
+          83
+        ],
+        [
+          "SBIN",
+          "2023",
+          71
+        ],
+        [
+          "SBIN",
+          "2024",
+          67
+        ],
+        [
+          "SBIN",
+          "2023",
+          62
+        ]
+      ]
+    },
+    {
+      "id": "icicibank-2025-pat",
+      "kind": "table",
+      "hit3": true,
+      "hit8": true,
+      "rr": 0.5,
+      "recall60": true,
+      "returned": [
+        [
+          "ICICIBANK",
+          "2025",
+          73
+        ],
+        [
+          "ICICIBANK",
+          "2025",
+          76
+        ],
+        [
+          "ICICIBANK",
+          "2025",
+          202
+        ],
+        [
+          "ICICIBANK",
+          "2025",
+          202
+        ],
+        [
+          "ICICIBANK",
+          "2025",
+          239
+        ],
+        [
+          "ICICIBANK",
+          "2025",
+          200
+        ],
+        [
+          "ICICIBANK",
+          "2025",
+          290
+        ],
+        [
+          "ICICIBANK",
+          "2025",
+          133
+        ]
+      ]
+    },
+    {
+      "id": "icicibank-2025-onebank",
+      "kind": "narrative",
+      "hit3": true,
+      "hit8": true,
+      "rr": 1.0,
+      "recall60": true,
+      "returned": [
+        [
+          "ICICIBANK",
+          "2025",
+          84
+        ],
+        [
+          "ICICIBANK",
+          "2023",
+          67
+        ],
+        [
+          "ICICIBANK",
+          "2025",
+          78
+        ],
+        [
+          "ICICIBANK",
+          "2024",
+          99
+        ],
+        [
+          "ICICIBANK",
+          "2023",
+          67
+        ],
+        [
+          "ICICIBANK",
+          "2023",
+          67
+        ],
+        [
+          "ICICIBANK",
+          "2023",
+          72
+        ],
+        [
+          "ICICIBANK",
+          "2023",
+          83
+        ]
+      ]
+    },
+    {
+      "id": "lt-2024-orderbook",
+      "kind": "table",
+      "hit3": true,
+      "hit8": true,
+      "rr": 1.0,
+      "recall60": true,
+      "returned": [
+        [
+          "LT",
+          "2024",
+          33
+        ],
+        [
+          "LT",
+          "2024",
+          33
+        ],
+        [
+          "LT",
+          "2024",
+          388
+        ],
+        [
+          "LT",
+          "2024",
+          388
+        ],
+        [
+          "LT",
+          "2024",
+          5
+        ],
+        [
+          "LT",
+          "2024",
+          596
+        ],
+        [
+          "LT",
+          "2024",
+          108
+        ],
+        [
+          "LT",
+          "2024",
+          73
+        ]
+      ]
+    },
+    {
+      "id": "lt-2024-middleeast",
+      "kind": "narrative",
+      "hit3": true,
+      "hit8": true,
+      "rr": 1.0,
+      "recall60": true,
+      "returned": [
+        [
+          "LT",
+          "2024",
+          9
+        ],
+        [
+          "LT",
+          "2024",
+          32
+        ],
+        [
+          "LT",
+          "2024",
+          9
+        ],
+        [
+          "LT",
+          "2025",
+          5
+        ],
+        [
+          "LT",
+          "2025",
+          37
+        ],
+        [
+          "LT",
+          "2023",
+          4
+        ],
+        [
+          "LT",
+          "2023",
+          83
+        ],
+        [
+          "LT",
+          "2024",
+          32
+        ]
+      ]
+    },
+    {
+      "id": "maruti-2023-revenue",
+      "kind": "table",
+      "hit3": true,
+      "hit8": true,
+      "rr": 0.3333333333333333,
+      "recall60": true,
+      "returned": [
+        [
+          "MARUTI",
+          "2023",
+          194
+        ],
+        [
+          "MARUTI",
+          "2023",
+          119
+        ],
+        [
+          "MARUTI",
+          "2023",
+          160
+        ],
+        [
+          "MARUTI",
+          "2023",
+          158
+        ],
+        [
+          "MARUTI",
+          "2023",
+          157
+        ],
+        [
+          "MARUTI",
+          "2023",
+          37
+        ],
+        [
+          "MARUTI",
+          "2023",
+          109
+        ],
+        [
+          "MARUTI",
+          "2023",
+          117
+        ]
+      ]
+    },
+    {
+      "id": "maruti-2023-kharkhoda",
+      "kind": "narrative",
+      "hit3": false,
+      "hit8": false,
+      "rr": 0.0,
+      "recall60": false,
+      "returned": [
+        [
+          "MARUTI",
+          "2025",
+          41
+        ],
+        [
+          "MARUTI",
+          "2025",
+          21
+        ],
+        [
+          "MARUTI",
+          "2023",
+          1
+        ],
+        [
+          "MARUTI",
+          "2025",
+          132
+        ],
+        [
+          "MARUTI",
+          "2025",
+          132
+        ],
+        [
+          "MARUTI",
+          "2025",
+          136
+        ],
+        [
+          "MARUTI",
+          "2025",
+          132
+        ],
+        [
+          "MARUTI",
+          "2023",
+          23
+        ]
+      ]
+    },
+    {
+      "id": "hul-2025-pat",
+      "kind": "table",
+      "hit3": true,
+      "hit8": true,
+      "rr": 0.5,
+      "recall60": true,
+      "returned": [
+        [
+          "HINDUNILVR",
+          "2025",
+          165
+        ],
+        [
+          "HINDUNILVR",
+          "2025",
+          190
+        ],
+        [
+          "HINDUNILVR",
+          "2025",
+          62
+        ],
+        [
+          "HINDUNILVR",
+          "2025",
+          62
+        ],
+        [
+          "HINDUNILVR",
+          "2025",
+          63
+        ],
+        [
+          "HINDUNILVR",
+          "2025",
+          179
+        ],
+        [
+          "HINDUNILVR",
+          "2025",
+          156
+        ],
+        [
+          "HINDUNILVR",
+          "2025",
+          62
+        ]
+      ]
+    },
+    {
+      "id": "hul-2025-icecream",
+      "kind": "narrative",
+      "hit3": false,
+      "hit8": true,
+      "rr": 0.25,
+      "recall60": true,
+      "returned": [
+        [
+          "HINDUNILVR",
+          "2025",
+          66
+        ],
+        [
+          "HINDUNILVR",
+          "2023",
+          19
+        ],
+        [
+          "HINDUNILVR",
+          "2025",
+          83
+        ],
+        [
+          "HINDUNILVR",
+          "2025",
+          54
+        ],
+        [
+          "HINDUNILVR",
+          "2025",
+          14
+        ],
+        [
+          "HINDUNILVR",
+          "2025",
+          29
+        ],
+        [
+          "HINDUNILVR",
+          "2025",
+          66
+        ],
+        [
+          "HINDUNILVR",
+          "2025",
+          14
+        ]
+      ]
+    },
+    {
+      "id": "bharti-2024-revenue",
+      "kind": "table",
+      "hit3": false,
+      "hit8": true,
+      "rr": 0.125,
+      "recall60": true,
+      "returned": [
+        [
+          "BHARTIARTL",
+          "2024",
+          194
+        ],
+        [
+          "BHARTIARTL",
+          "2024",
+          178
+        ],
+        [
+          "BHARTIARTL",
+          "2024",
+          85
+        ],
+        [
+          "BHARTIARTL",
+          "2024",
+          220
+        ],
+        [
+          "BHARTIARTL",
+          "2024",
+          83
+        ],
+        [
+          "BHARTIARTL",
+          "2024",
+          179
+        ],
+        [
+          "BHARTIARTL",
+          "2024",
+          57
+        ],
+        [
+          "BHARTIARTL",
+          "2024",
+          80
+        ]
+      ]
+    },
+    {
+      "id": "bharti-2024-arpu",
+      "kind": "narrative",
+      "hit3": true,
+      "hit8": true,
+      "rr": 0.5,
+      "recall60": true,
+      "returned": [
+        [
+          "BHARTIARTL",
+          "2024",
+          8
+        ],
+        [
+          "BHARTIARTL",
+          "2024",
+          80
+        ],
+        [
+          "BHARTIARTL",
+          "2024",
+          9
+        ],
+        [
+          "BHARTIARTL",
+          "2024",
+          85
+        ],
+        [
+          "BHARTIARTL",
+          "2024",
+          80
+        ],
+        [
+          "BHARTIARTL",
+          "2024",
+          80
+        ],
+        [
+          "BHARTIARTL",
+          "2024",
+          84
+        ],
+        [
+          "BHARTIARTL",
+          "2024",
+          112
+        ]
+      ]
+    },
+    {
+      "id": "wipro-2023-revenue",
+      "kind": "table",
+      "hit3": true,
+      "hit8": true,
+      "rr": 1.0,
+      "recall60": true,
+      "returned": [
+        [
+          "WIPRO",
+          "2023",
+          48
+        ],
+        [
+          "WIPRO",
+          "2023",
+          50
+        ],
+        [
+          "WIPRO",
+          "2023",
+          48
+        ],
+        [
+          "WIPRO",
+          "2023",
+          50
+        ],
+        [
+          "WIPRO",
+          "2023",
+          53
+        ],
+        [
+          "WIPRO",
+          "2023",
+          48
+        ],
+        [
+          "WIPRO",
+          "2023",
+          28
+        ],
+        [
+          "WIPRO",
+          "2023",
+          343
+        ]
+      ]
+    },
+    {
+      "id": "wipro-2023-rizing",
+      "kind": "narrative",
+      "hit3": true,
+      "hit8": true,
+      "rr": 1.0,
+      "recall60": true,
+      "returned": [
+        [
+          "WIPRO",
+          "2023",
+          22
+        ],
+        [
+          "WIPRO",
+          "2024",
+          401
+        ],
+        [
+          "WIPRO",
+          "2023",
+          278
+        ],
+        [
+          "WIPRO",
+          "2023",
+          22
+        ],
+        [
+          "WIPRO",
+          "2024",
+          400
+        ],
+        [
+          "WIPRO",
+          "2024",
+          244
+        ],
+        [
+          "WIPRO",
+          "2023",
+          376
+        ],
+        [
+          "WIPRO",
+          "2025",
+          38
+        ]
+      ]
+    },
+    {
+      "id": "tatasteel-2025-turnover",
+      "kind": "table",
+      "hit3": false,
+      "hit8": true,
+      "rr": 0.16666666666666666,
+      "recall60": true,
+      "returned": [
+        [
+          "TATASTEEL",
+          "2025",
+          167
+        ],
+        [
+          "TATASTEEL",
+          "2025",
+          73
+        ],
+        [
+          "TATASTEEL",
+          "2025",
+          76
+        ],
+        [
+          "TATASTEEL",
+          "2025",
+          135
+        ],
+        [
+          "TATASTEEL",
+          "2025",
+          183
+        ],
+        [
+          "TATASTEEL",
+          "2025",
+          189
+        ],
+        [
+          "TATASTEEL",
+          "2025",
+          135
+        ],
+        [
+          "TATASTEEL",
+          "2025",
+          135
+        ]
+      ]
+    },
+    {
+      "id": "tatasteel-2025-porttalbot",
+      "kind": "narrative",
+      "hit3": false,
+      "hit8": true,
+      "rr": 0.125,
+      "recall60": true,
+      "returned": [
+        [
+          "TATASTEEL",
+          "2024",
+          17
+        ],
+        [
+          "TATASTEEL",
+          "2024",
+          4
+        ],
+        [
+          "TATASTEEL",
+          "2024",
+          162
+        ],
+        [
+          "TATASTEEL",
+          "2024",
+          549
+        ],
+        [
+          "TATASTEEL",
+          "2023",
+          62
+        ],
+        [
+          "TATASTEEL",
+          "2025",
+          19
+        ],
+        [
+          "TATASTEEL",
+          "2024",
+          347
+        ],
+        [
+          "TATASTEEL",
+          "2025",
+          8
+        ]
+      ]
+    },
+    {
+      "id": "ntpc-2024-pat",
+      "kind": "table",
+      "hit3": false,
+      "hit8": true,
+      "rr": 0.2,
+      "recall60": true,
+      "returned": [
+        [
+          "NTPC",
+          "2024",
+          319
+        ],
+        [
+          "NTPC",
+          "2024",
+          106
+        ],
+        [
+          "NTPC",
+          "2024",
+          330
+        ],
+        [
+          "NTPC",
+          "2024",
+          311
+        ],
+        [
+          "NTPC",
+          "2024",
+          320
+        ],
+        [
+          "NTPC",
+          "2024",
+          209
+        ],
+        [
+          "NTPC",
+          "2024",
+          106
+        ],
+        [
+          "NTPC",
+          "2024",
+          209
+        ]
+      ]
+    },
+    {
+      "id": "ntpc-2024-capacity",
+      "kind": "narrative",
+      "hit3": true,
+      "hit8": true,
+      "rr": 0.3333333333333333,
+      "recall60": true,
+      "returned": [
+        [
+          "NTPC",
+          "2024",
+          29
+        ],
+        [
+          "NTPC",
+          "2024",
+          30
+        ],
+        [
+          "NTPC",
+          "2024",
+          80
+        ],
+        [
+          "NTPC",
+          "2024",
+          92
+        ],
+        [
+          "NTPC",
+          "2024",
+          96
+        ],
+        [
+          "NTPC",
+          "2024",
+          12
+        ],
+        [
+          "NTPC",
+          "2024",
+          28
+        ],
+        [
+          "NTPC",
+          "2024",
+          98
+        ]
+      ]
+    },
+    {
+      "id": "asianpaint-2023-revenue",
+      "kind": "table",
+      "hit3": true,
+      "hit8": true,
+      "rr": 0.3333333333333333,
+      "recall60": true,
+      "returned": [
+        [
+          "ASIANPAINT",
+          "2023",
+          190
+        ],
+        [
+          "ASIANPAINT",
+          "2023",
+          150
+        ],
+        [
+          "ASIANPAINT",
+          "2023",
+          82
+        ],
+        [
+          "ASIANPAINT",
+          "2023",
+          217
+        ],
+        [
+          "ASIANPAINT",
+          "2023",
+          72
+        ],
+        [
+          "ASIANPAINT",
+          "2023",
+          167
+        ],
+        [
+          "ASIANPAINT",
+          "2023",
+          148
+        ],
+        [
+          "ASIANPAINT",
+          "2023",
+          196
+        ]
+      ]
+    },
+    {
+      "id": "asianpaint-2023-vam",
+      "kind": "narrative",
+      "hit3": true,
+      "hit8": true,
+      "rr": 1.0,
+      "recall60": true,
+      "returned": [
+        [
+          "ASIANPAINT",
+          "2023",
+          16
+        ],
+        [
+          "ASIANPAINT",
+          "2023",
+          15
+        ],
+        [
+          "ASIANPAINT",
+          "2023",
+          16
+        ],
+        [
+          "ASIANPAINT",
+          "2025",
+          41
+        ],
+        [
+          "ASIANPAINT",
+          "2023",
+          34
+        ],
+        [
+          "ASIANPAINT",
+          "2024",
+          17
+        ],
+        [
+          "ASIANPAINT",
+          "2025",
+          120
+        ],
+        [
+          "ASIANPAINT",
+          "2024",
+          17
+        ]
+      ]
+    },
+    {
+      "id": "cipla-2025-revenue",
+      "kind": "table",
+      "hit3": false,
+      "hit8": true,
+      "rr": 0.25,
+      "recall60": true,
+      "returned": [
+        [
+          "CIPLA",
+          "2025",
+          346
+        ],
+        [
+          "CIPLA",
+          "2025",
+          200
+        ],
+        [
+          "CIPLA",
+          "2025",
+          432
+        ],
+        [
+          "CIPLA",
+          "2025",
+          426
+        ],
+        [
+          "CIPLA",
+          "2025",
+          263
+        ],
+        [
+          "CIPLA",
+          "2025",
+          22
+        ],
+        [
+          "CIPLA",
+          "2025",
+          147
+        ],
+        [
+          "CIPLA",
+          "2025",
+          337
+        ]
+      ]
+    },
+    {
+      "id": "cipla-2025-approvals",
+      "kind": "narrative",
+      "hit3": false,
+      "hit8": true,
+      "rr": 0.125,
+      "recall60": true,
+      "returned": [
+        [
+          "CIPLA",
+          "2025",
+          23
+        ],
+        [
+          "CIPLA",
+          "2025",
+          84
+        ],
+        [
+          "CIPLA",
+          "2025",
+          160
+        ],
+        [
+          "CIPLA",
+          "2025",
+          158
+        ],
+        [
+          "CIPLA",
+          "2025",
+          86
+        ],
+        [
+          "CIPLA",
+          "2025",
+          36
+        ],
+        [
+          "CIPLA",
+          "2025",
+          84
+        ],
+        [
+          "CIPLA",
+          "2025",
+          33
+        ]
+      ]
+    },
+    {
+      "id": "titan-2024-revenue",
+      "kind": "table",
+      "hit3": false,
+      "hit8": false,
+      "rr": 0.0,
+      "recall60": true,
+      "returned": [
+        [
+          "TITAN",
+          "2024",
+          412
+        ],
+        [
+          "TITAN",
+          "2024",
+          445
+        ],
+        [
+          "TITAN",
+          "2024",
+          358
+        ],
+        [
+          "TITAN",
+          "2024",
+          266
+        ],
+        [
+          "TITAN",
+          "2024",
+          415
+        ],
+        [
+          "TITAN",
+          "2024",
+          248
+        ],
+        [
+          "TITAN",
+          "2024",
+          281
+        ],
+        [
+          "TITAN",
+          "2024",
+          286
+        ]
+      ]
+    },
+    {
+      "id": "titan-2024-caratlane",
+      "kind": "narrative",
+      "hit3": true,
+      "hit8": true,
+      "rr": 1.0,
+      "recall60": true,
+      "returned": [
+        [
+          "TITAN",
+          "2024",
+          157
+        ],
+        [
+          "TITAN",
+          "2024",
+          134
+        ],
+        [
+          "TITAN",
+          "2025",
+          453
+        ],
+        [
+          "TITAN",
+          "2025",
+          303
+        ],
+        [
+          "TITAN",
+          "2024",
+          305
+        ],
+        [
+          "TITAN",
+          "2024",
+          137
+        ],
+        [
+          "TITAN",
+          "2024",
+          447
+        ],
+        [
+          "TITAN",
+          "2023",
+          125
+        ]
+      ]
+    },
+    {
+      "id": "coalindia-2025-dividend",
+      "kind": "table",
+      "hit3": true,
+      "hit8": true,
+      "rr": 1.0,
+      "recall60": true,
+      "returned": [
+        [
+          "COALINDIA",
+          "2025",
+          46
+        ],
+        [
+          "COALINDIA",
+          "2025",
+          210
+        ],
+        [
+          "COALINDIA",
+          "2025",
+          1
+        ],
+        [
+          "COALINDIA",
+          "2025",
+          81
+        ],
+        [
+          "COALINDIA",
+          "2025",
+          209
+        ],
+        [
+          "COALINDIA",
+          "2025",
+          85
+        ],
+        [
+          "COALINDIA",
+          "2025",
+          195
+        ],
+        [
+          "COALINDIA",
+          "2025",
+          85
+        ]
+      ]
+    },
+    {
+      "id": "coalindia-2025-production",
+      "kind": "narrative",
+      "hit3": true,
+      "hit8": true,
+      "rr": 1.0,
+      "recall60": true,
+      "returned": [
+        [
+          "COALINDIA",
+          "2025",
+          23
+        ],
+        [
+          "COALINDIA",
+          "2025",
+          23
+        ],
+        [
+          "COALINDIA",
+          "2025",
+          206
+        ],
+        [
+          "COALINDIA",
+          "2025",
+          205
+        ],
+        [
+          "COALINDIA",
+          "2025",
+          206
+        ],
+        [
+          "COALINDIA",
+          "2025",
+          74
+        ],
+        [
+          "COALINDIA",
+          "2025",
+          45
+        ],
+        [
+          "COALINDIA",
+          "2025",
+          205
+        ]
+      ]
+    },
+    {
+      "id": "mm-2025-tractors",
+      "kind": "table",
+      "hit3": true,
+      "hit8": true,
+      "rr": 1.0,
+      "recall60": true,
+      "returned": [
+        [
+          "M&M",
+          "2025",
+          77
+        ],
+        [
+          "M&M",
+          "2025",
+          81
+        ],
+        [
+          "M&M",
+          "2025",
+          48
+        ],
+        [
+          "M&M",
+          "2025",
+          143
+        ],
+        [
+          "M&M",
+          "2025",
+          83
+        ],
+        [
+          "M&M",
+          "2025",
+          47
+        ],
+        [
+          "M&M",
+          "2025",
+          83
+        ],
+        [
+          "M&M",
+          "2025",
+          19
+        ]
+      ]
+    },
+    {
+      "id": "mm-2025-suvshare",
+      "kind": "narrative",
+      "hit3": true,
+      "hit8": true,
+      "rr": 1.0,
+      "recall60": true,
+      "returned": [
+        [
+          "M&M",
+          "2025",
+          8
+        ],
+        [
+          "M&M",
+          "2025",
+          18
+        ],
+        [
+          "M&M",
+          "2025",
+          18
+        ],
+        [
+          "M&M",
+          "2025",
+          18
+        ],
+        [
+          "M&M",
+          "2025",
+          77
+        ],
+        [
+          "M&M",
+          "2025",
+          9
+        ],
+        [
+          "M&M",
+          "2025",
+          8
+        ],
+        [
+          "M&M",
+          "2025",
+          17
+        ]
+      ]
+    },
+    {
+      "id": "bajfinance-2024-aum",
+      "kind": "table",
+      "hit3": false,
+      "hit8": false,
+      "rr": 0.0,
+      "recall60": false,
+      "returned": [
+        [
+          "BAJFINANCE",
+          "2024",
+          254
+        ],
+        [
+          "BAJFINANCE",
+          "2024",
+          235
+        ],
+        [
+          "BAJFINANCE",
+          "2024",
+          136
+        ],
+        [
+          "BAJFINANCE",
+          "2024",
+          354
+        ],
+        [
+          "BAJFINANCE",
+          "2024",
+          298
+        ],
+        [
+          "BAJFINANCE",
+          "2024",
+          306
+        ],
+        [
+          "BAJFINANCE",
+          "2024",
+          53
+        ],
+        [
+          "BAJFINANCE",
+          "2024",
+          399
+        ]
+      ]
+    },
+    {
+      "id": "bajfinance-2024-deposits",
+      "kind": "narrative",
+      "hit3": true,
+      "hit8": true,
+      "rr": 1.0,
+      "recall60": true,
+      "returned": [
+        [
+          "BAJFINANCE",
+          "2024",
+          51
+        ],
+        [
+          "BAJFINANCE",
+          "2024",
+          134
+        ],
+        [
+          "BAJFINANCE",
+          "2024",
+          341
+        ],
+        [
+          "BAJFINANCE",
+          "2024",
+          135
+        ],
+        [
+          "BAJFINANCE",
+          "2024",
+          66
+        ],
+        [
+          "BAJFINANCE",
+          "2024",
+          121
+        ],
+        [
+          "BAJFINANCE",
+          "2024",
+          408
+        ],
+        [
+          "BAJFINANCE",
+          "2024",
+          38
+        ]
+      ]
+    }
+  ]
+}

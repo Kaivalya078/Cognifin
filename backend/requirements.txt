@@ -8,15 +8,12 @@ uvicorn>=0.24.0
 # PDF Processing
 pymupdf>=1.23.0
 
-# Embeddings & Vector Search
+# Embeddings
 sentence-transformers>=2.2.0
-faiss-cpu>=1.7.4
 
 # LLM Generation (Phase 2)
 openai>=1.0.0
 
-# Sparse Retrieval (Phase 3: Hybrid Search)
-rank-bm25>=0.2.2
 
 # Configuration
 pydantic-settings>=2.0.0
@@ -35,8 +32,14 @@ itsdangerous>=2.1.0
 
 # Rate limiting
 slowapi>=0.1.9
+# Vector + full-text store (core/chunk_store.py)
+lancedb>=0.41
+pyarrow>=15
 # Index bootstrap (asset_manager.py)
 requests>=2.31.0
 
 # Tests
 pytest>=8.0.0
+
+# Memory reporting (core/app_retrieval.py)
+psutil>=5.9

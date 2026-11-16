@@ -15,6 +15,8 @@ Phase: 2 (Generation Layer)
 import re
 from typing import List, Tuple
 
+from core.citation_verifier import bare_chunk_id
+
 
 # =============================================================================
 # SYSTEM PROMPT TEMPLATE
@@ -184,12 +186,14 @@ def extract_citations(answer: str, available_chunk_ids: List[str]) -> List[str]:
     
     # Filter to only chunks that were actually in the context
     # This prevents hallucinated citations
+    # Context ids may carry an "[expanded]" or "[label]:" prefix; the model
+    # cites the bare chunk_N. Return the context's own id for each citation.
+    by_bare = {}
+    for cid in available_chunk_ids:
+        by_bare.setdefault(bare_chunk_id(cid), cid)
     cited = []
-    seen = set()
-    
-    for chunk_id in found:
-        if chunk_id in available_chunk_ids and chunk_id not in seen:
-            cited.append(chunk_id)
-            seen.add(chunk_id)
-    
+    for ref in found:
+        cid = by_bare.get(ref)
+        if cid is not None and cid not in cited:
+            cited.append(cid)
     return cited

@@ -122,8 +122,12 @@ def upload_ready(monkeypatch):
             seen["corpus"] = self
             return 3
 
+    def fake_session_corpus(_retriever):
+        seen["factory_called"] = True
+        return FakeCorpus()
+
     monkeypatch.setattr(main, "RetrieverPipeline", lambda: None)
-    monkeypatch.setattr(main, "CorpusManager", FakeCorpus)
+    monkeypatch.setattr(main, "new_session_corpus", fake_session_corpus)
     monkeypatch.setattr(main, "corpus_router", SimpleNamespace(register_session=lambda *a: None))
     main.limiter.reset()
     return TestClient(main.app), seen
@@ -249,15 +253,16 @@ def remote_assets(monkeypatch):
 
 def test_remote_index_lands_in_configured_dir(remote_assets, tmp_path):
     asset_manager, served = remote_assets
-    served["bytes"] = _tarball({"index_cache/faiss.index": b"idx", "index_cache/chunks.pkl": b"c"})
+    served["bytes"] = _tarball({"index_cache/document_registry.json": b"{}", "index_cache/lancedb/chunks.lance/x": b"c"})
     cache_dir = tmp_path / "data" / "index_cache"
     asset_manager.ensure_index_cache(str(cache_dir))
-    assert (cache_dir / "faiss.index").read_bytes() == b"idx"
+    assert (cache_dir / "document_registry.json").read_bytes() == b"{}"
+    assert (cache_dir / "lancedb" / "chunks.lance" / "x").exists()
 
 
 def test_tarball_cannot_write_outside_its_dir(remote_assets, tmp_path):
     asset_manager, served = remote_assets
-    served["bytes"] = _tarball({"../../evil.txt": b"pwned", "faiss.index": b"idx"})
+    served["bytes"] = _tarball({"../../evil.txt": b"pwned", "document_registry.json": b"{}"})
     cache_dir = tmp_path / "a" / "index_cache"
     with pytest.raises(tarfile.TarError):
         asset_manager.ensure_index_cache(str(cache_dir))
@@ -281,15 +286,14 @@ def fake_pipeline(monkeypatch):
         sent["system"] = system_prompt
         return "Revenue rose 10% (chunk_7). Margins held at 20% (chunk_99)."
 
-    def retrieve_context(raw_query, **_):
-        intent = "comparison" if " vs " in raw_query else "single_entity"
-        return [chunk], SimpleNamespace(intent=intent)
+    def retrieve_global(question, **_):
+        intent = "comparison" if " vs " in question else "single_entity"
+        return [chunk], [chunk], SimpleNamespace(intent=intent)
 
     monkeypatch.setattr(main, "corpus_manager", SimpleNamespace(is_indexed=True, chunk_metadata={}))
     monkeypatch.setattr(main, "pipeline", SimpleNamespace(chunks=[]))
     monkeypatch.setattr(main, "llm_client", SimpleNamespace(is_configured=True, model="t", generate=generate))
-    monkeypatch.setattr(main, "retrieve_context", retrieve_context)
-    monkeypatch.setattr(main, "refine_results", lambda results, **_: results)
+    monkeypatch.setattr(main, "retrieve_global", retrieve_global)
     monkeypatch.setattr(main, "is_intelligent_parsing_enabled", lambda: False)
     main.response_cache.invalidate_all()
     yield main, sent
@@ -347,4 +351,36 @@ def test_uploaded_pdf_evidence_gets_no_dead_pdf_link(upload_ready):
     """The upload is a temp file deleted after ingestion: nothing to link to."""
     client, seen = upload_ready
     assert _upload(client, PDF, headers=_auth("alice")).status_code == 200
-    assert seen["corpus"].public_pdfs is False
+    assert seen["factory_called"]            # /upload builds its corpus via the session factory
+    from core.corpus_manager import new_session_corpus, discard
+    cm = new_session_corpus(SimpleNamespace(embedding_dim=4))
+    try:
+        assert cm.public_pdfs is False       # …which never advertises a PDF link
+    finally:
+        discard(cm)
+
+
+def test_stale_pre_lancedb_cache_is_replaced(remote_assets, tmp_path):
+    """A volume holding the old FAISS-era cache (registry but no lancedb/) must re-download."""
+    asset_manager, served = remote_assets
+    cache_dir = tmp_path / "index_cache"
+    cache_dir.mkdir()
+    (cache_dir / "document_registry.json").write_text("{}")
+    (cache_dir / "faiss.index").write_bytes(b"old")
+    served["bytes"] = _tarball({"index_cache/document_registry.json": b"{}",
+                                "index_cache/lancedb/chunks.lance/x": b"new"})
+    asset_manager.ensure_index_cache(str(cache_dir))
+    assert (cache_dir / "lancedb" / "chunks.lance" / "x").read_bytes() == b"new"
+    assert not (cache_dir / "faiss.index").exists()
+
+
+def test_current_cache_is_not_redownloaded(remote_assets, tmp_path, monkeypatch):
+    import json
+    from core.retriever_pipeline import RetrieverPipeline
+    asset_manager, _ = remote_assets
+    cache_dir = tmp_path / "index_cache"
+    (cache_dir / "lancedb").mkdir(parents=True)
+    (cache_dir / "document_registry.json").write_text(
+        json.dumps({"config_fingerprint": RetrieverPipeline.compute_config_fingerprint()}))
+    monkeypatch.setattr(asset_manager.requests, "get", lambda *a, **k: pytest.fail("re-downloaded"))
+    asset_manager.ensure_index_cache(str(cache_dir))

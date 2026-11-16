@@ -21,6 +21,15 @@ from typing import List, Dict
 logger = logging.getLogger(__name__)
 
 
+_REF = re.compile(r"chunk_\d+")
+
+
+def bare_chunk_id(chunk_id: str) -> str:
+    """"[expanded]chunk_12" / "[TCS]:chunk_12" -> "chunk_12" (what the model cites)."""
+    m = _REF.search(chunk_id)
+    return m.group() if m else chunk_id
+
+
 def verify_citations(
     answer: str,
     chunk_ids: List[str],
@@ -55,8 +64,9 @@ def verify_citations(
             seen.add(ref)
 
     # Split into valid (in context) vs invalid (hallucinated)
-    valid = [ref for ref in unique_refs if ref in chunk_ids]
-    invalid = [ref for ref in unique_refs if ref not in chunk_ids]
+    in_context = {bare_chunk_id(c) for c in chunk_ids}
+    valid = [ref for ref in unique_refs if ref in in_context]
+    invalid = [ref for ref in unique_refs if ref not in in_context]
 
     # Count sentences and citation coverage
     sentences = [s.strip() for s in re.split(r'[.!?\n]', answer) if len(s.strip()) > 15]

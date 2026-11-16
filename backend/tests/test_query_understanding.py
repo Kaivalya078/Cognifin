@@ -383,3 +383,58 @@ class TestParseQuery:
             "Wipro growth from 2024 to 2021", KNOWN_COMPANIES,
         )
         assert result.years == ["2021", "2022", "2023", "2024"]
+
+
+# =============================================================================
+# COMPANY ALIASES (real registry keys are NSE symbols)
+# =============================================================================
+
+SYMBOLS = sorted(p.name for p in (Path(__file__).parent.parent / "data").iterdir()) if (
+    Path(__file__).parent.parent / "data").is_dir() else [
+    "TCS", "INFY", "HDFCBANK", "HDFCLIFE", "SBIN", "SBILIFE", "M&M", "TECHM",
+    "KOTAKBANK", "LT", "BHARTIARTL", "BAJFINANCE", "BAJAJFINSV", "BAJAJ-AUTO",
+    "HINDUNILVR", "DRREDDY", "RELIANCE", "TMPV", "TATASTEEL"]
+
+
+class TestCompanyAliases:
+
+    @pytest.mark.parametrize("query,expected", [
+        ("What was Infosys revenue?", ["INFY"]),
+        ("HDFC Bank gross NPA", ["HDFCBANK"]),
+        ("How many tractors did Mahindra sell?", ["M&M"]),
+        ("Mahindra & Mahindra SUV share", ["M&M"]),
+        ("SBI net profit", ["SBIN"]),
+        ("State Bank of India deposits", ["SBIN"]),
+        ("Airtel ARPU", ["BHARTIARTL"]),
+        ("L&T order book", ["LT"]),
+        ("Larsen & Toubro order book", ["LT"]),
+        ("Hindustan Unilever ice cream", ["HINDUNILVR"]),
+        ("HUL margins", ["HINDUNILVR"]),
+        ("Dr. Reddy's US sales", ["DRREDDY"]),
+        ("Tata Motors EV plans", ["TMPV"]),
+    ])
+    def test_common_names_resolve_to_symbols(self, query, expected):
+        assert detect_companies(query, SYMBOLS)[0] == expected
+
+    @pytest.mark.parametrize("query,expected", [
+        ("SBI Life premiums", ["SBILIFE"]),
+        ("HDFC Life embedded value", ["HDFCLIFE"]),
+        ("Tech Mahindra deal wins", ["TECHM"]),
+        ("Kotak Mahindra Bank CASA", ["KOTAKBANK"]),
+        ("Bajaj Finserv vs Bajaj Finance vs Bajaj Auto", ["BAJAJFINSV", "BAJFINANCE", "BAJAJ-AUTO"]),
+    ])
+    def test_longest_name_wins(self, query, expected):
+        assert sorted(detect_companies(query, SYMBOLS)[0]) == sorted(expected)
+
+    @pytest.mark.parametrize("query", [
+        "Tata group strategy", "HDFC group", "Bajaj group", "Adani group",
+    ])
+    def test_ambiguous_group_names_match_nothing(self, query):
+        assert detect_companies(query, SYMBOLS)[0] == []
+
+    def test_alias_ignored_when_company_not_in_corpus(self):
+        assert detect_companies("Infosys revenue", ["TCS"])[0] == []
+
+    def test_showcase_comparison_resolves_both(self):
+        got = detect_companies("Compare TCS and Infosys revenue and profit", SYMBOLS)[0]
+        assert sorted(got) == ["INFY", "TCS"]
