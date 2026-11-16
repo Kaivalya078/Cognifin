@@ -1,0 +1,757 @@
+{
+ "version": 1,
+ "changelog": [],
+ "cases": [
+  {
+   "id": "tcs-2024-revenue",
+   "question": "What was TCS's consolidated revenue from operations in FY2024?",
+   "company": "TCS",
+   "year": "2024",
+   "answer_pages": [
+    7,
+    9,
+    17,
+    18,
+    56,
+    57,
+    76,
+    90,
+    130,
+    182,
+    216,
+    217,
+    230,
+    231
+   ],
+   "answer": "₹2,40,893 crore",
+   "kind": "table",
+   "checked_by": [
+    "claude"
+   ]
+  },
+  {
+   "id": "tcs-2024-netzero",
+   "question": "By which year does TCS aim to become net zero?",
+   "company": "TCS",
+   "year": "2024",
+   "answer_pages": [
+    11,
+    25,
+    62,
+    132,
+    153,
+    321,
+    322,
+    325
+   ],
+   "answer": "Net zero by 2030 (and 70% Scope 1+2 reduction by 2025 vs 2016)",
+   "kind": "narrative",
+   "checked_by": [
+    "claude"
+   ]
+  },
+  {
+   "id": "infy-2025-revenue",
+   "question": "What were Infosys's consolidated revenues for fiscal 2025?",
+   "company": "INFY",
+   "year": "2025",
+   "answer_pages": [
+    11,
+    16,
+    31,
+    74,
+    76,
+    322,
+    323,
+    346,
+    347
+   ],
+   "answer": "₹1,62,990 crore",
+   "kind": "table",
+   "checked_by": [
+    "claude"
+   ]
+  },
+  {
+   "id": "infy-2025-acquisitions",
+   "question": "Which acquisitions did the Infosys board approve in fiscal 2025?",
+   "company": "INFY",
+   "year": "2025",
+   "answer_pages": [
+    37,
+    289
+   ],
+   "answer": "MRE Consulting (US energy consulting) and The Missing Link (Australian cybersecurity)",
+   "kind": "narrative",
+   "checked_by": [
+    "claude"
+   ]
+  },
+  {
+   "id": "hdfcbank-2024-gnpa",
+   "question": "What was HDFC Bank's gross NPA ratio at the end of FY2024?",
+   "company": "HDFCBANK",
+   "year": "2024",
+   "answer_pages": [
+    48,
+    53,
+    74,
+    236,
+    242,
+    355
+   ],
+   "answer": "1.24%",
+   "kind": "table",
+   "checked_by": [
+    "claude"
+   ]
+  },
+  {
+   "id": "hdfcbank-2024-merger",
+   "question": "When did the amalgamation of HDFC Limited with HDFC Bank become effective?",
+   "company": "HDFCBANK",
+   "year": "2024",
+   "answer_pages": [
+    267,
+    272,
+    273,
+    552
+   ],
+   "answer": "July 1, 2023",
+   "kind": "narrative",
+   "checked_by": [
+    "claude"
+   ]
+  },
+  {
+   "id": "reliance-2023-netprofit",
+   "question": "What was Reliance Industries' consolidated net profit in FY2023?",
+   "company": "RELIANCE",
+   "year": "2023",
+   "answer_pages": [
+    55,
+    58,
+    59,
+    69,
+    74,
+    77,
+    136,
+    194,
+    262,
+    300
+   ],
+   "answer": "₹73,670 crore",
+   "kind": "table",
+   "checked_by": [
+    "claude"
+   ]
+  },
+  {
+   "id": "reliance-2023-gigacomplex",
+   "question": "Where is Reliance building its Dhirubhai Ambani Green Energy Giga Complex and what will it make?",
+   "company": "RELIANCE",
+   "year": "2023",
+   "answer_pages": [
+    59,
+    132,
+    142,
+    153
+   ],
+   "answer": "Jamnagar, ~5,000 acres; PV panels, energy storage, green hydrogen, fuel cells",
+   "kind": "narrative",
+   "checked_by": [
+    "claude"
+   ]
+  },
+  {
+   "id": "itc-2025-cigarettes",
+   "question": "What was ITC's gross revenue from the cigarettes segment in FY2025?",
+   "company": "ITC",
+   "year": "2025",
+   "answer_pages": [
+    197,
+    217
+   ],
+   "answer": "₹32,631.27 crore",
+   "kind": "table",
+   "checked_by": [
+    "claude"
+   ]
+  },
+  {
+   "id": "itc-2025-hotels-demerger",
+   "question": "Into which company was ITC's Hotels business demerged?",
+   "company": "ITC",
+   "year": "2025",
+   "answer_pages": [
+    45,
+    64,
+    103,
+    155,
+    200,
+    209,
+    216,
+    221,
+    231,
+    249,
+    250,
+    314,
+    328,
+    339,
+    348,
+    400
+   ],
+   "answer": "ITC Hotels Limited",
+   "kind": "narrative",
+   "checked_by": [
+    "claude"
+   ]
+  },
+  {
+   "id": "sbin-2023-netprofit",
+   "question": "What was SBI's net profit for FY2023?",
+   "company": "SBIN",
+   "year": "2023",
+   "answer_pages": [
+    4,
+    9,
+    16,
+    42,
+    105,
+    206,
+    207,
+    211,
+    351,
+    380,
+    394
+   ],
+   "answer": "₹50,232 crore",
+   "kind": "table",
+   "checked_by": [
+    "claude"
+   ]
+  },
+  {
+   "id": "sbin-2023-yono",
+   "question": "How many registered users does SBI's YONO app have?",
+   "company": "SBIN",
+   "year": "2023",
+   "answer_pages": [
+    4,
+    5,
+    71,
+    72,
+    380
+   ],
+   "answer": "6.07+ crore",
+   "kind": "narrative",
+   "checked_by": [
+    "claude"
+   ]
+  },
+  {
+   "id": "icicibank-2025-pat",
+   "question": "What was ICICI Bank's standalone profit after tax in FY2025?",
+   "company": "ICICIBANK",
+   "year": "2025",
+   "answer_pages": [
+    74,
+    76,
+    82,
+    133,
+    184,
+    185,
+    204
+   ],
+   "answer": "₹472.27 billion",
+   "kind": "table",
+   "checked_by": [
+    "claude"
+   ]
+  },
+  {
+   "id": "icicibank-2025-onebank",
+   "question": "What does ICICI Bank mean by 'One Bank, One Team'?",
+   "company": "ICICIBANK",
+   "year": "2025",
+   "answer_pages": [
+    78,
+    80,
+    82,
+    83,
+    84,
+    89,
+    93,
+    101,
+    119,
+    184,
+    304,
+    416
+   ],
+   "answer": "Structurally aligning teams to deliver Customer-360° propositions",
+   "kind": "narrative",
+   "checked_by": [
+    "claude"
+   ]
+  },
+  {
+   "id": "lt-2024-orderbook",
+   "question": "What was Larsen & Toubro's order book as of March 31, 2024?",
+   "company": "LT",
+   "year": "2024",
+   "answer_pages": [
+    5,
+    33
+   ],
+   "answer": "₹4,75,809 crore",
+   "kind": "table",
+   "checked_by": [
+    "claude"
+   ]
+  },
+  {
+   "id": "lt-2024-middleeast",
+   "question": "Apart from India, which region is the most significant source of orders for L&T?",
+   "company": "LT",
+   "year": "2024",
+   "answer_pages": [
+    9,
+    30
+   ],
+   "answer": "The Middle East",
+   "kind": "narrative",
+   "checked_by": [
+    "claude"
+   ]
+  },
+  {
+   "id": "maruti-2023-revenue",
+   "question": "What was Maruti Suzuki's revenue from operations in FY2023?",
+   "company": "MARUTI",
+   "year": "2023",
+   "answer_pages": [
+    120,
+    140,
+    157,
+    160
+   ],
+   "answer": "₹1,175,229 million",
+   "kind": "table",
+   "checked_by": [
+    "claude"
+   ]
+  },
+  {
+   "id": "maruti-2023-kharkhoda",
+   "question": "What capacity is Maruti Suzuki's Kharkhoda facility being built for?",
+   "company": "MARUTI",
+   "year": "2023",
+   "answer_pages": [
+    3
+   ],
+   "answer": "Scalable up to 1 million vehicles per annum",
+   "kind": "narrative",
+   "checked_by": [
+    "claude"
+   ]
+  },
+  {
+   "id": "hul-2025-pat",
+   "question": "What was Hindustan Unilever's profit after tax in FY2025?",
+   "company": "HINDUNILVR",
+   "year": "2025",
+   "answer_pages": [
+    5,
+    15,
+    16,
+    53,
+    62,
+    146,
+    147,
+    160,
+    166,
+    190
+   ],
+   "answer": "₹10,644 crore",
+   "kind": "table",
+   "checked_by": [
+    "claude"
+   ]
+  },
+  {
+   "id": "hul-2025-icecream",
+   "question": "Why did Hindustan Unilever decide to demerge its ice cream business?",
+   "company": "HINDUNILVR",
+   "year": "2025",
+   "answer_pages": [
+    14,
+    54
+   ],
+   "answer": "Limited complementarity and synergies with the rest of the portfolio; a separate entity can better seize the opportunity",
+   "kind": "narrative",
+   "checked_by": [
+    "claude"
+   ]
+  },
+  {
+   "id": "bharti-2024-revenue",
+   "question": "What were Bharti Airtel's consolidated revenues for FY2024?",
+   "company": "BHARTIARTL",
+   "year": "2024",
+   "answer_pages": [
+    3,
+    15,
+    80,
+    103,
+    184,
+    212,
+    217,
+    218
+   ],
+   "answer": "₹1,499,824 million",
+   "kind": "table",
+   "checked_by": [
+    "claude"
+   ]
+  },
+  {
+   "id": "bharti-2024-arpu",
+   "question": "What was Airtel's mobile ARPU in FY2024?",
+   "company": "BHARTIARTL",
+   "year": "2024",
+   "answer_pages": [
+    10,
+    46,
+    80
+   ],
+   "answer": "₹209 (up ₹16)",
+   "kind": "narrative",
+   "checked_by": [
+    "claude"
+   ]
+  },
+  {
+   "id": "wipro-2023-revenue",
+   "question": "What was Wipro's consolidated revenue (sales) for FY2023?",
+   "company": "WIPRO",
+   "year": "2023",
+   "answer_pages": [
+    48,
+    99,
+    246,
+    302,
+    344,
+    403
+   ],
+   "answer": "₹904,876 million",
+   "kind": "table",
+   "checked_by": [
+    "claude"
+   ]
+  },
+  {
+   "id": "wipro-2023-rizing",
+   "question": "Which SAP consulting firm did Wipro acquire?",
+   "company": "WIPRO",
+   "year": "2023",
+   "answer_pages": [
+    22,
+    276,
+    378
+   ],
+   "answer": "Rizing",
+   "kind": "narrative",
+   "checked_by": [
+    "claude"
+   ]
+  },
+  {
+   "id": "tatasteel-2025-turnover",
+   "question": "What was Tata Steel's consolidated turnover in FY2025?",
+   "company": "TATASTEEL",
+   "year": "2025",
+   "answer_pages": [
+    8,
+    12,
+    13,
+    17,
+    18,
+    40,
+    189
+   ],
+   "answer": "₹2,18,543 crore",
+   "kind": "table",
+   "checked_by": [
+    "claude"
+   ]
+  },
+  {
+   "id": "tatasteel-2025-porttalbot",
+   "question": "What investment is Tata Steel making at Port Talbot in the UK?",
+   "company": "TATASTEEL",
+   "year": "2025",
+   "answer_pages": [
+    8,
+    50,
+    141,
+    186,
+    314,
+    526
+   ],
+   "answer": "£1.25 bn electric arc furnace (EAF); blast furnaces decommissioned",
+   "kind": "narrative",
+   "checked_by": [
+    "claude"
+   ]
+  },
+  {
+   "id": "ntpc-2024-pat",
+   "question": "What was NTPC's consolidated profit after tax for FY2024?",
+   "company": "NTPC",
+   "year": "2024",
+   "answer_pages": [
+    11,
+    25,
+    76,
+    77,
+    78,
+    107,
+    240,
+    241,
+    301,
+    302,
+    320
+   ],
+   "answer": "₹21,332 crore",
+   "kind": "table",
+   "checked_by": [
+    "claude"
+   ]
+  },
+  {
+   "id": "ntpc-2024-capacity",
+   "question": "How much capacity did NTPC add in FY2024?",
+   "company": "NTPC",
+   "year": "2024",
+   "answer_pages": [
+    11,
+    76,
+    77,
+    78,
+    80
+   ],
+   "answer": "3,924 MW, taking total installed capacity to ~76 GW",
+   "kind": "narrative",
+   "checked_by": [
+    "claude"
+   ]
+  },
+  {
+   "id": "asianpaint-2023-revenue",
+   "question": "What was Asian Paints' standalone revenue from operations in FY2023?",
+   "company": "ASIANPAINT",
+   "year": "2023",
+   "answer_pages": [
+    34,
+    73,
+    82,
+    167
+   ],
+   "answer": "₹30,078.4 crore",
+   "kind": "table",
+   "checked_by": [
+    "claude"
+   ]
+  },
+  {
+   "id": "asianpaint-2023-vam",
+   "question": "What backward-integration plant is Asian Paints planning and how much will it invest?",
+   "company": "ASIANPAINT",
+   "year": "2023",
+   "answer_pages": [
+    16,
+    84
+   ],
+   "answer": "VAE/VAM manufacturing facility, ~₹2,100 crore over 3 years",
+   "kind": "narrative",
+   "checked_by": [
+    "claude"
+   ]
+  },
+  {
+   "id": "cipla-2025-revenue",
+   "question": "What was Cipla's consolidated total revenue from operations in FY2025?",
+   "company": "CIPLA",
+   "year": "2025",
+   "answer_pages": [
+    163,
+    347,
+    426
+   ],
+   "answer": "₹27,547.62 crore",
+   "kind": "table",
+   "checked_by": [
+    "claude"
+   ]
+  },
+  {
+   "id": "cipla-2025-approvals",
+   "question": "Which major US drug approvals did Cipla receive in FY2025?",
+   "company": "CIPLA",
+   "year": "2025",
+   "answer_pages": [
+    24,
+    33
+   ],
+   "answer": "Lanreotide (ANDA), Nilotinib (NDA), Nano-Paclitaxel (ANDA)",
+   "kind": "narrative",
+   "checked_by": [
+    "claude"
+   ]
+  },
+  {
+   "id": "titan-2024-revenue",
+   "question": "What was Titan's consolidated revenue from operations in FY2024?",
+   "company": "TITAN",
+   "year": "2024",
+   "answer_pages": [
+    127,
+    133,
+    134,
+    366,
+    413
+   ],
+   "answer": "₹51,084 crore",
+   "kind": "table",
+   "checked_by": [
+    "claude"
+   ]
+  },
+  {
+   "id": "titan-2024-caratlane",
+   "question": "What is Titan's shareholding in CaratLane after buying the additional stake?",
+   "company": "TITAN",
+   "year": "2024",
+   "answer_pages": [
+    134,
+    157,
+    217,
+    372
+   ],
+   "answer": "99.99%",
+   "kind": "narrative",
+   "checked_by": [
+    "claude"
+   ]
+  },
+  {
+   "id": "coalindia-2025-dividend",
+   "question": "What was Coal India's dividend per share for FY2025?",
+   "company": "COALINDIA",
+   "year": "2025",
+   "answer_pages": [
+    28,
+    46,
+    79,
+    85,
+    209,
+    211
+   ],
+   "answer": "₹26.50",
+   "kind": "table",
+   "checked_by": [
+    "claude"
+   ]
+  },
+  {
+   "id": "coalindia-2025-production",
+   "question": "How much coal did Coal India produce in FY2025?",
+   "company": "COALINDIA",
+   "year": "2025",
+   "answer_pages": [
+    22,
+    23,
+    24,
+    28,
+    29,
+    46,
+    58,
+    59,
+    85,
+    87
+   ],
+   "answer": "781.06 million tonnes (record)",
+   "kind": "narrative",
+   "checked_by": [
+    "claude"
+   ]
+  },
+  {
+   "id": "mm-2025-tractors",
+   "question": "How many tractors did Mahindra & Mahindra sell in FY2025?",
+   "company": "M&M",
+   "year": "2025",
+   "answer_pages": [
+    25
+   ],
+   "answer": "4,24,641",
+   "kind": "table",
+   "checked_by": [
+    "claude"
+   ]
+  },
+  {
+   "id": "mm-2025-suvshare",
+   "question": "What was Mahindra's SUV revenue market share in FY2025?",
+   "company": "M&M",
+   "year": "2025",
+   "answer_pages": [
+    8,
+    18,
+    23
+   ],
+   "answer": "22.5% (#1, up 210 bps)",
+   "kind": "narrative",
+   "checked_by": [
+    "claude"
+   ]
+  },
+  {
+   "id": "bajfinance-2024-aum",
+   "question": "What were Bajaj Finance's assets under management at the end of FY2024?",
+   "company": "BAJFINANCE",
+   "year": "2024",
+   "answer_pages": [
+    26,
+    28,
+    30,
+    38,
+    42,
+    43,
+    46,
+    52,
+    120
+   ],
+   "answer": "₹330,615 crore",
+   "kind": "table",
+   "checked_by": [
+    "claude"
+   ]
+  },
+  {
+   "id": "bajfinance-2024-deposits",
+   "question": "How large was Bajaj Finance's deposits book at March 31, 2024 and how fast did it grow?",
+   "company": "BAJFINANCE",
+   "year": "2024",
+   "answer_pages": [
+    28,
+    51
+   ],
+   "answer": "₹60,151 crore, up 35%",
+   "kind": "narrative",
+   "checked_by": [
+    "claude"
+   ]
+  }
+ ]
+}
