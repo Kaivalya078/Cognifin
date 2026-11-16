@@ -200,13 +200,11 @@ def test_session_store_dir_removed_on_eviction(tmp_path, monkeypatch):
     router = CorpusRouter(global_corpus=None)
     first, second = new_session_corpus(p), new_session_corpus(p)
     first.add_document(_report(tmp_path, "s.pdf"), company="UPLOAD", document_type="Annual_Report", year="2024")
-    a_dir, b_dir = first.store.path, second.store.path
-    assert os.path.isdir(a_dir) and first.public_pdfs is False
+    assert first.store.path == "memory://" and first.public_pdfs is False   # nothing on disk
+    assert second.num_chunks == 0 and first.num_chunks > 0                 # stores are separate
     router.register_session("a", first)
     router.register_session("b", second)          # evicts "a"
-    assert not os.path.exists(a_dir) and os.path.isdir(b_dir)
-    router.remove_session("b")
-    assert not os.path.exists(b_dir)
+    assert not router.has_session("a") and router.has_session("b")
 
 
 def test_open_for_ingest_resumes_and_drops_unregistered_rows(tmp_path):

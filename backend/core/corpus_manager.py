@@ -317,11 +317,10 @@ class CorpusManager:
 
 
 def new_session_corpus(retriever: RetrieverPipeline) -> CorpusManager:
-    """An /upload corpus on its own temporary store; discard() deletes it."""
-    path = tempfile.mkdtemp(prefix="cognifin-session-")
-    cm = CorpusManager(retriever, ChunkStore(path, retriever.embedding_dim))
+    """An /upload corpus on an in-memory store: the uploaded document's text
+    never touches disk and is freed with the session."""
+    cm = CorpusManager(retriever, ChunkStore("memory://", retriever.embedding_dim))
     cm.public_pdfs = False  # its PDF is a temp file
-    cm.owns_store_dir = True
     return cm
 
 
