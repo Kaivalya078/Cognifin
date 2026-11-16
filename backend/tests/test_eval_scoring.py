@@ -53,3 +53,28 @@ def test_summarize_splits_by_kind_and_reports_p95():
     assert s["by_kind"]["table"]["hit3"] == 0.5
     assert s["by_kind"]["narrative"]["mrr"] == 0.25
     assert s["latency_ms"]["p50"] == 100.0 and s["latency_ms"]["p95"] >= 100.0
+
+
+def test_threshold_recalibration_maps_same_percentile():
+    from tests.calibrate_thresholds import percentile_rank, value_at_rank
+    old = [0.1, 0.2, 0.3, 0.4]          # threshold 0.25 → half the scores below it
+    new = [0.6, 0.7, 0.8, 0.9]
+    rank = percentile_rank(old, 0.25)
+    assert rank == 0.5
+    assert 0.7 <= value_at_rank(new, rank) <= 0.8
+    assert value_at_rank(new, 1.0) > 0.9   # a threshold nothing reached stays unreached
+
+
+def test_page_map_overrides_metadata_page():
+    md = {7: meta("TCS", "2024", 1)}  # legacy index: every page_number is 1
+    assert chunk_location("chunk_7", md, page_map={7: 12}) == ("TCS", "2024", 12)
+
+
+def test_legacy_page_lookup_by_start_offset():
+    from tests.legacy_page_map import page_starts, page_of
+    pages = ["alpha beta", "", "gamma", "delta"]      # page 2 is blank
+    full, starts = page_starts(pages)
+    assert full == "alpha beta gamma delta"
+    assert page_of(starts, full.index("gamma")) == 3
+    assert page_of(starts, full.index("beta")) == 1
+    assert page_of(starts, full.index("delta")) == 4

@@ -28,23 +28,30 @@ if sys.stdout.encoding != "utf-8":
 _VID = re.compile(r"chunk_(\d+)")
 
 
-def chunk_location(chunk_id: str, chunk_metadata: dict):
-    """(company, year, page_number) for a result's chunk_id, or None."""
+def chunk_location(chunk_id: str, chunk_metadata: dict, page_map: dict = None):
+    """(company, year, page_number) for a result's chunk_id, or None.
+
+    page_map (vector_id -> page) overrides metadata pages; only the legacy
+    baseline index needs it (see tests/legacy_page_map.py).
+    """
     m = _VID.search(chunk_id.replace("[expanded]", ""))
-    meta = chunk_metadata.get(int(m.group(1))) if m else None
+    vid = int(m.group(1)) if m else None
+    meta = chunk_metadata.get(vid) if m else None
     if meta is None:
         return None
-    return meta.company, str(meta.year), int(meta.page_number)
+    page = page_map.get(vid, meta.page_number) if page_map else meta.page_number
+    return meta.company, str(meta.year), int(page)
 
 
-def _is_hit(case: dict, result, chunk_metadata: dict) -> bool:
-    loc = chunk_location(result.chunk_id, chunk_metadata)
+def _is_hit(case: dict, result, chunk_metadata: dict, page_map=None) -> bool:
+    loc = chunk_location(result.chunk_id, chunk_metadata, page_map)
     return (loc is not None and loc[0] == case["company"]
             and loc[1] == str(case["year"]) and loc[2] in case["answer_pages"])
 
 
-def score_case(case: dict, candidates: list, final: list, chunk_metadata: dict) -> dict:
-    ranks = [i for i, res in enumerate(final) if _is_hit(case, res, chunk_metadata)]
+def score_case(case: dict, candidates: list, final: list, chunk_metadata: dict,
+               page_map: dict = None) -> dict:
+    ranks = [i for i, res in enumerate(final) if _is_hit(case, res, chunk_metadata, page_map)]
     first = ranks[0] + 1 if ranks else None
     return {
         "id": case["id"],
@@ -52,7 +59,7 @@ def score_case(case: dict, candidates: list, final: list, chunk_metadata: dict) 
         "hit3": first is not None and first <= 3,
         "hit8": first is not None and first <= 8,
         "rr": 1.0 / first if first else 0.0,
-        "recall60": any(_is_hit(case, res, chunk_metadata) for res in candidates[:60]),
+        "recall60": any(_is_hit(case, res, chunk_metadata, page_map) for res in candidates[:60]),
     }
 
 
@@ -98,6 +105,10 @@ def main() -> None:
     cases = json.loads(Path(args.set).read_text(encoding="utf-8"))["cases"]
     pipeline, cm = load_global_corpus(args.cache)
     rss = rss_mb()
+    pm_path = Path(args.cache) / "legacy_page_map.json"
+    page_map = {int(k): v for k, v in json.loads(pm_path.read_text()).items()} if pm_path.exists() else None
+    if page_map:
+        print(f"using legacy page map ({len(page_map)} chunks)")
 
     rows, lat = [], []
     for case in cases:
@@ -107,8 +118,8 @@ def main() -> None:
             top_k=settings.TOP_K, final_k=settings.FINAL_K,
         )
         lat.append((time.perf_counter() - t0) * 1000)
-        row = score_case(case, candidates, final, cm.chunk_metadata)
-        row["returned"] = [chunk_location(r.chunk_id, cm.chunk_metadata) for r in final]
+        row = score_case(case, candidates, final, cm.chunk_metadata, page_map)
+        row["returned"] = [chunk_location(r.chunk_id, cm.chunk_metadata, page_map) for r in final]
         rows.append(row)
         mark = "✓" if row["hit3"] else ("~" if row["hit8"] else ("·" if row["recall60"] else "✗"))
         print(f"{mark} {case['id']:<40} rr={row['rr']:.2f}  {lat[-1]:.0f} ms")
@@ -130,6 +141,7 @@ def main() -> None:
             "RERANKER_MODEL", "RERANKER_MAX_CANDIDATES", "SIMILARITY_THRESHOLD",
             "SKIP_RERANKER_THRESHOLD", "CONTEXT_WINDOW", "BM25_ENABLED")},
         "rss_mb": rss,
+        "legacy_page_map": bool(page_map),
         "summary": summary,
         "rows": rows,
     }, indent=2), encoding="utf-8")
