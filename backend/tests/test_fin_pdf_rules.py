@@ -178,3 +178,19 @@ def test_segment_page_skipped(tmp_path):
     seg_body = [[(c, t.replace("1,234.50", "99.00")) for c, t in r] for r in BODY]
     v = _vals(extract_rules(_pdf(tmp_path, [seg + seg_body, _head() + BODY]))[0])
     assert v["revenue_from_operations"].value == 1234.5e7
+
+
+def test_merged_mixed_phrase_cell_not_trusted(tmp_path):
+    """'3 Months Twelve Months' in one cell over two columns: the year column must not be Q."""
+    head = _head(cols=(), dates=("31.03.2026", "31.12.2025", "31.03.2025", "31.03.2026"))
+    head[2] = [(0, "Particulars"), (float(X[3]), "3 Months Twelve Months")]
+    head[3] = [(1, "31.12.2025"), (2, "30.09.2025"), (3, "31.12.2024"), (4, "31.03.2026")]
+    src = _pdf(tmp_path, [head + BODY])
+    src.period_end = date(2026, 3, 31)
+    assert [c for c in extract_rules(src)[0] if c.period_type == "Q"] == []
+
+
+def test_conflicting_unit_words_yield_nothing(tmp_path):
+    head = _head(unit="(Rs. in Lakhs)")
+    head.insert(1, [(3, "£ Cr /")])
+    assert extract_rules(_pdf(tmp_path, [head + BODY]))[0] == []

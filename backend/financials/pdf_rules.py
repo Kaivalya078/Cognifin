@@ -99,6 +99,10 @@ def find_date(text: str) -> date | None:
 def _phrase(text: str) -> str | None:
     t = re.sub(r"\s+", "", text.lower())   # OCR splits words: "Yea r ended", "S ix months"
     if re.search(r"quarter|threemonths|3months", t):
+        # one merged cell naming two period lengths ("3 Months Twelve Months") is unreadable
+        if re.search(r"half|sixmonths|6months|ninemonths|9months|twelvemonths|12months|"
+                     r"yearended|yeartodate", t):
+            return "?"
         return "Q"
     if re.search(r"half|sixmonths|6months|ninemonths|9months|period", t):
         return "YTD"
@@ -188,7 +192,8 @@ def _layout(rows, period_end: date, prev):
     dated = [s for s in _stacks(cells) if find_date(s["text"])]
     if not dated:
         return dict(prev, start=0) if prev else None
-    unit = next((m for m in (unit_multiplier(c["text"]) for c in cells) if m), None)
+    units = {m for m in (unit_multiplier(c["text"]) for c in cells) if m}
+    unit = units.pop() if len(units) == 1 else None   # "in Lakhs" + a stray "Cr": unknown
     short = [r for r in head if all(len(c["text"]) <= _SHORT for c in r)]
     phrases = [c for c in cells if len(c["text"]) <= _SHORT and _phrase(c["text"])]
     bcells = [c for c in cells if len(c["text"]) <= _SHORT and _basis_word(c["text"])]
@@ -198,15 +203,17 @@ def _layout(rows, period_end: date, prev):
     def phrase_of(col):
         """Header rows above the column, closest first: text of the cells overlapping it,
         accumulated upwards until a phrase reads ("months ended" + "Preceding three")."""
-        if _phrase(col["text"]):
-            return _phrase(col["text"])
+        ph = _phrase(col["text"])
         acc = ""
         for r in reversed([r for r in short if r[0]["y1"] <= col["y0"] + 1]):
+            if ph:
+                break
             acc = " ".join(c["text"] for c in r if _overlap(c, col) > 0) + " " + acc
-            if _phrase(acc):
-                return _phrase(acc)
-        p = nearest_above(phrases, col)
-        return p and _phrase(p["text"])
+            ph = _phrase(acc)
+        if not ph:
+            p = nearest_above(phrases, col)
+            ph = p and _phrase(p["text"])
+        return None if ph == "?" else ph
 
     def nearest_above(cands, cell):
         above = [c for c in cands if c["y1"] <= cell["y0"] + 1]
