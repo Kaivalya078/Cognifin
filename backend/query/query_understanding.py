@@ -31,6 +31,8 @@ Design:
 from __future__ import annotations
 
 import re
+
+from query.company_aliases import COMPANY_ALIASES
 from dataclasses import dataclass
 from typing import List, Literal, Tuple
 
@@ -131,25 +133,28 @@ def detect_companies(
     spans: List[Tuple[int, int]] = []
     query_lower = query.lower()
 
-    # Sort by name length descending so "Reliance Industries" matches
-    # before "Reliance" and doesn't leave a partial span.
-    sorted_companies = sorted(known_companies, key=len, reverse=True)
+    # Every surface form (the key itself + its aliases), longest first, so
+    # "SBI Life" claims its span before "SBI" and "Tech Mahindra" before
+    # "Mahindra"; the overlap check then stops the shorter form matching inside.
+    surfaces = sorted(
+        ((name, company) for company in known_companies
+         for name in [company, *COMPANY_ALIASES.get(company, [])]),
+        key=lambda nc: len(nc[0]), reverse=True,
+    )
 
-    for company in sorted_companies:
-        if company in matched:
-            continue
-
-        company_lower = company.lower()
-
+    for name, company in surfaces:
         # --- Full name match (word-boundary) ---
         pattern = re.compile(
-            r'\b' + re.escape(company_lower) + r'\b',
+            r'(?<!\w)' + re.escape(name) + r'(?!\w)',
             re.IGNORECASE,
         )
         for m in pattern.finditer(query):
             if not _overlaps_existing(m.start(), m.end(), spans):
-                matched.append(company)
+                if company not in matched:
+                    matched.append(company)
                 spans.append((m.start(), m.end()))
+
+    for company in sorted(known_companies, key=len, reverse=True):
 
         # --- Abbreviation match (multi-word names only) ---
         words = company.split()
