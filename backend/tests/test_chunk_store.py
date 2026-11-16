@@ -170,3 +170,20 @@ def test_enrich_skips_results_from_other_corpora(corpus):
     foreign = RetrievalResult(chunk_id="chunk_0", score=1.0, snippet="session text",
                               document_label="UPLOAD_Annual_Report_2024_v1")
     assert enrich_context([foreign], corpus, window=1)[0] == foreign
+
+
+def test_keyword_search_respects_scope(corpus):
+    corpus.store.build_text_index()
+    hits = corpus.search_text([RetrievalScope(label="t", companies=["TCS"])], "231456", k=10)
+    assert hits and {r.document_label for r in hits} == {"TCS_Annual_Report_2024_v1"}
+    assert all(r.page_number == 2 for r in hits)
+
+
+def test_orchestrator_keyword_hits_respect_scope(corpus, monkeypatch):
+    from query.query_orchestrator import retrieve_context
+    corpus.store.build_text_index()
+    monkeypatch.setattr(corpus, "search", lambda scope, vec: [])   # keyword results only
+    merged, parsed = retrieve_context("INFY revenue 231456 in 2024", corpus_manager=corpus,
+                                      embed_query=corpus.retriever.embed_query)
+    assert parsed.companies == ["INFY"]
+    assert merged and {r.document_label for r in merged} == {"INFY_Annual_Report_2024_v1"}

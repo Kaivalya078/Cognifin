@@ -82,7 +82,6 @@ from core.reranker import is_reranker_ready
 from core.retrieval_pipeline_v2 import refine_results
 
 # Phase 3: Recall improvement (multi-query, hybrid search, expansion)
-from core.bm25_retriever import is_bm25_ready
 from query.multi_query import init_multi_query, is_multi_query_enabled
 from query.query_expander import get_synonym_count
 

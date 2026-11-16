@@ -13,7 +13,6 @@ from core.cache_utils import has_leftover_tmp, clean_cache
 from core.corpus_manager import CorpusManager
 from core.retriever_pipeline import RetrieverPipeline
 from core.reranker import init_reranker
-from core.bm25_retriever import init_bm25
 from core.retrieval_pipeline_v2 import refine_results
 from query.query_orchestrator import retrieve_context
 
@@ -58,11 +57,6 @@ def load_global_corpus(cache_dir: str):
         print("🔄 Reranker loaded: " + settings.RERANKER_MODEL)
     else:
         print("⚠️  Reranker disabled or failed to load — using FAISS-only ranking")
-
-    if init_bm25(pipeline.chunks):
-        print(f"🔍 BM25 index built: {len(pipeline.chunks)} documents")
-    else:
-        print("⚠️  BM25 disabled or failed — using dense search only")
 
     print(f"📈 RSS after corpus load: {rss_mb():.0f} MB")
     return pipeline, corpus_manager

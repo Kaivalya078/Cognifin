@@ -151,6 +151,19 @@ class CorpusManager:
                             threshold=threshold, scope_label=scope.label)
         return kept
 
+    def search_text(self, scopes: List[RetrievalScope], query: str, k: int) -> List[RetrievalResult]:
+        """Full-text (BM25) search over the union of the given scopes."""
+        if not settings.BM25_ENABLED or not query.strip():
+            return []
+        wheres = [scope_to_where(s) for s in scopes] or ["is_active = true"]
+        where = wheres[0] if len(wheres) == 1 else " OR ".join(f"({w})" for w in wheres)
+        try:
+            hits = self.store.search_text(query, k, where)
+        except Exception as e:  # e.g. no FTS index on a store built without one
+            logger.warning("search_text failed (%s) — dense results only", e)
+            return []
+        return [self._result(s, row) for s, row in hits]
+
     def execute_plan(
         self,
         plan: SearchPlan,

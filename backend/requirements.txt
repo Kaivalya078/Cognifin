@@ -15,8 +15,6 @@ faiss-cpu>=1.7.4
 # LLM Generation (Phase 2)
 openai>=1.0.0
 
-# Sparse Retrieval (Phase 3: Hybrid Search)
-rank-bm25>=0.2.2
 
 # Configuration
 pydantic-settings>=2.0.0
