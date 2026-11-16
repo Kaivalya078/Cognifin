@@ -5,12 +5,16 @@ from datetime import date, datetime
 from financials.metrics import METRICS
 
 _NUM = re.compile(r"^\(?[-–−]?\(?\d[\d,]*(\.\d+)?\)?$")
+# plain, western (1,234,567) or Indian (12,34,567) grouping; anything else is an OCR slip
+_GROUPED = re.compile(r"^(\d+|\d{1,3}(,\d{3})+|\d{1,2}(,\d{2})*,\d{3})(\.\d+)?$")
 
 
 def parse_number(s: str) -> float | None:
     """'1,08,532.40' -> 108532.4; '(625.30)' / '-625.30' -> -625.3; '', '-', '—' -> None."""
     t = re.sub(r"(?<=[(\-–−])\s+|\s+(?=\))", "", (s or "").strip())
     if not t or not _NUM.match(t):   # internal spaces (OCR "3 4 . 2 2") never match
+        return None
+    if not _GROUPED.match(re.sub(r"[()\-–−]", "", t)):
         return None
     neg = t.startswith("(") or t.lstrip("(")[:1] in "-–−"
     v = float(re.sub(r"[^\d.]", "", t))

@@ -97,12 +97,12 @@ def find_date(text: str) -> date | None:
 
 
 def _phrase(text: str) -> str | None:
-    t = text.lower()
-    if re.search(r"quarter|three months|3 months", t):
+    t = re.sub(r"\s+", "", text.lower())   # OCR splits words: "Yea r ended", "S ix months"
+    if re.search(r"quarter|threemonths|3months", t):
         return "Q"
-    if re.search(r"half|six months|6 months|nine months|9 months|period", t):
+    if re.search(r"half|sixmonths|6months|ninemonths|9months|period", t):
         return "YTD"
-    if re.search(r"year|twelve months|12 months", t):
+    if re.search(r"year|twelvemonths|12months", t):
         return "FY"
     return None
 
@@ -137,6 +137,8 @@ def _norm_label(s: str) -> str:
 
 def match_metrics(label: str) -> tuple[str, ...]:
     t = _norm_label(label)
+    if "discontinued" in t:   # never a headline figure
+        return ()
     for syn, ms in _SYN:
         if t.startswith(syn):
             return tuple(m for m in ms if not any(w in t for w in EXCLUDE.get(m, ())))
@@ -181,6 +183,8 @@ def _layout(rows, period_end: date, prev):
         return None
     head = rows[:first]
     cells = [c for r in head for c in r]
+    if any("segment" in c["text"].lower() for c in cells):
+        return None   # segment tables repeat headline labels with segment-level numbers
     dated = [s for s in _stacks(cells) if find_date(s["text"])]
     if not dated:
         return dict(prev, start=0) if prev else None
@@ -234,7 +238,9 @@ def _targets(layout, period_end: date):
             out.append((c, "Q"))
         elif c["phrase"] == "FY" and period_end.month == 3:
             out.append((c, "FY"))
-    return out
+    # two columns claiming the same basis and period means the header was misread: use neither
+    claims = [(c["basis"], p) for c, p in out]
+    return [(c, p) for c, p in out if claims.count((c["basis"], p)) == 1]
 
 
 def find_statement_pages(doc, period_end: date) -> list[tuple[int, str]]:
@@ -266,16 +272,21 @@ def extract_rules(src: Source) -> tuple[list[Candidate], dict[int, str]]:
             pages[pno] = doc[pno - 1].get_text()
             targets = _targets(lay, src.period_end)
             for r in rows[lay["start"]:]:
-                nums = [c for c in r if _num(c["text"]) is not None
-                        and min(abs(_xc(c) - k["x"]) for k in lay["cols"]) <= lay["tol"]]
-                if not nums:
-                    continue
+                left = min(k["x"] for k in lay["cols"]) - 1.5 * lay["tol"]
+                area = [c for c in r if _num(c["text"]) is not None and _xc(c) >= left]
+                nums = [c for c in area
+                        if min(abs(_xc(c) - k["x"]) for k in lay["cols"]) <= lay["tol"]]
+                if not nums or len(nums) < len(area):
+                    continue   # a number in the value area that no column explains
                 label = " ".join(c["text"] for c in r if c["x1"] <= min(n["x0"] for n in nums) + 1
                                  and _num(c["text"]) is None)
                 metrics = match_metrics(label)
+                owners = [id(min(lay["cols"], key=lambda k: abs(_xc(n) - k["x"]))) for n in nums]
+                if len(set(owners)) < len(owners):
+                    continue   # two numbers under one column: the columns do not fit this row
                 for col, ptype in targets:
                     cell = min(nums, key=lambda c: abs(_xc(c) - col["x"]))
-                    if min(lay["cols"], key=lambda k: abs(_xc(cell) - k["x"])) is not col:
+                    if owners[nums.index(cell)] != id(col):
                         continue
                     for m in metrics:
                         if m == "net_profit_owners" and col["basis"] != "consolidated":

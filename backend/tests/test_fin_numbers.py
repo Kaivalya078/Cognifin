@@ -42,3 +42,9 @@ def test_dates():
 def test_spaced_ocr_digits_rejected():
     assert parse_number("3 4 . 2 2 8 3 4") is None
     assert parse_number("( 625.30 )") == -625.30
+
+
+def test_malformed_grouping_rejected():
+    assert parse_number("19,245,56") is None and parse_number("995,36") is None
+    assert parse_number("1,33,408") == 133408 and parse_number("255,324") == 255324
+    assert parse_number("146691.68") == 146691.68

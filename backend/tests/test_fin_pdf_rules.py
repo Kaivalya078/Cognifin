@@ -141,3 +141,40 @@ def test_parenthesised_loss(tmp_path):
                         (3, "110.00"), (4, "525.00")]]
     v = _vals(extract_rules(_pdf(tmp_path, [_head() + body]))[0])
     assert v["net_profit"].value == -625.30e7 and v["net_profit"].printed == "(625.30)"
+
+
+def test_two_columns_claiming_one_period_refused(tmp_path):
+    """Header says 'Quarter ended' twice for 30.06.2025 (e.g. OCR lost 'Six months'): refuse."""
+    head = _head(dates=("30.06.2025", "31.03.2025", "30.06.2025", "31.03.2025"))
+    assert extract_rules(_pdf(tmp_path, [head + BODY]))[0] == []
+
+
+def test_more_numbers_than_columns_refused(tmp_path):
+    """Only two dated columns found but rows hold four numbers: never guess."""
+    head = _head(cols=("Quarter ended", "Quarter ended"), dates=("30.06.2025", "31.03.2025"))
+    assert extract_rules(_pdf(tmp_path, [head + BODY]))[0] == []
+
+
+def test_spaced_phrase_letters(tmp_path):
+    head = _head(cols=("Q uarter ended", "Q uarter ended", "Q uarter ended", "Yea r ended"),
+                 dates=("31.03.2026", "31.12.2025", "31.03.2025", "31.03.2026"))
+    src = _pdf(tmp_path, [head + BODY])
+    src.period_end = date(2026, 3, 31)
+    cands, _ = extract_rules(src)
+    assert _vals(cands)["revenue_from_operations"].value == 1234.5e7
+    assert _vals(cands, ptype="FY")["revenue_from_operations"].value == 4400e7
+
+
+def test_discontinued_row_is_not_net_profit(tmp_path):
+    body = BODY[:5] + [[(0, "Profit for the period from discontinued operations"), (1, "(8.00)"),
+                        (2, "1.00"), (3, "1.00"), (4, "1.00")]] + BODY[5:]
+    v = _vals(extract_rules(_pdf(tmp_path, [_head() + body]))[0])
+    assert v["net_profit"].value == 150e7
+
+
+def test_segment_page_skipped(tmp_path):
+    seg = _head()
+    seg[0] = [(0, "Consolidated Segment wise Revenue, Results and Capital Employed")]
+    seg_body = [[(c, t.replace("1,234.50", "99.00")) for c, t in r] for r in BODY]
+    v = _vals(extract_rules(_pdf(tmp_path, [seg + seg_body, _head() + BODY]))[0])
+    assert v["revenue_from_operations"].value == 1234.5e7
