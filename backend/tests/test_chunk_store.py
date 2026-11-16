@@ -72,3 +72,33 @@ def test_neighbors_stay_in_document(store):
 def test_reopen_persists(store, tmp_path):
     again = ChunkStore(str(tmp_path / "db"), DIM)
     assert again.count() == 6 and again.get(5)["text"] == "Infosys deals"
+
+
+# =============================================================================
+# scope_to_where
+# =============================================================================
+
+from core.chunk_store import scope_to_where
+from core.lookup_index import RetrievalScope
+
+
+def test_where_quotes_special_symbols(tmp_path):
+    s = ChunkStore(str(tmp_path / "db"), DIM)
+    start = 0
+    for co in ["M&M", "BAJAJ-AUTO", "O'Brien_upload", "TCS"]:
+        c, m = _doc(co, "2024", [f"{co} a", f"{co} b"], start)
+        s.add(c, m, _vecs(2, start))
+        start += 2
+    for co in ["M&M", "BAJAJ-AUTO", "O'Brien_upload"]:
+        where = scope_to_where(RetrievalScope(label="t", companies=[co], years=["2024"]))
+        hits = s.search_dense(_vecs(1, 99)[0], k=20, where=where)
+        assert {row["company"] for _, row in hits} == {co} and len(hits) == 2
+
+
+def test_where_empty_scope_is_active_only():
+    assert scope_to_where(RetrievalScope(label="all")) == "is_active = true"
+
+
+def test_where_multi_company_multi_year():
+    w = scope_to_where(RetrievalScope(label="c", companies=["TCS", "INFY"], years=["2023", "2024"]))
+    assert w == "is_active = true AND company IN ('TCS', 'INFY') AND year IN ('2023', '2024')"
