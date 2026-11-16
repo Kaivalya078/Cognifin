@@ -169,36 +169,45 @@ def _three_page_pdf(tmp_path, name="r.pdf"):
     ])
 
 
-def _corpus():
+def _corpus(tmp_path):
+    from core.chunk_store import ChunkStore
     from core.corpus_manager import CorpusManager
     from core.retriever_pipeline import RetrieverPipeline
-    return CorpusManager(RetrieverPipeline())
+    p = RetrieverPipeline()
+    return CorpusManager(p, ChunkStore(str(tmp_path / "db"), p.embedding_dim))
+
+
+def _rows(cm):
+    return sorted(cm.store.table.to_arrow().to_pylist(), key=lambda r: r["vector_id"])
 
 
 def test_cold_start_add_document_has_real_page_numbers(tmp_path):
-    cm = _corpus()
+    cm = _corpus(tmp_path)
     cm.add_document(_three_page_pdf(tmp_path), company="ACME", document_type="Annual_Report", year="2024")
-    assert {m.page_number for m in cm.chunk_metadata.values()} == {1, 2, 3}
+    assert {r["page_number"] for r in _rows(cm)} == {1, 2, 3}
 
 
 def test_metadata_gets_heading_and_content_form(tmp_path):
-    cm = _corpus()
+    cm = _corpus(tmp_path)
     cm.add_document(_three_page_pdf(tmp_path), company="ACME", document_type="Annual_Report", year="2024")
-    tab = [m for m in cm.chunk_metadata.values() if m.content_form == "tabular"]
-    assert len(tab) == 1 and tab[0].section_hint == "Segment Revenue" and tab[0].page_number == 2
-    assert all(m.content_form == "narrative" for m in cm.chunk_metadata.values() if m not in tab)
+    rows = _rows(cm)
+    tab = [r for r in rows if r["content_form"] == "tabular"]
+    assert len(tab) == 1 and tab[0]["section_hint"] == "Segment Revenue" and tab[0]["page_number"] == 2
+    assert all(r["content_form"] == "narrative" for r in rows if r not in tab)
 
 
 def test_append_path_matches_cold_start_path(tmp_path):
-    cm = _corpus()
+    cm = _corpus(tmp_path)
     pdf = _three_page_pdf(tmp_path)
     cm.add_document(pdf, company="ACME", document_type="Annual_Report", year="2023")
-    n = cm.retriever.index.ntotal
-    cm.add_document(pdf, company="ACME", document_type="Annual_Report", year="2024")  # append path
-    first = [(c.text, c.page_number) for c in cm.retriever.chunks[:n]]
-    second = [(c.text, c.page_number) for c in cm.retriever.chunks[n:]]
+    n = cm.num_chunks
+    cm.add_document(pdf, company="ACME", document_type="Annual_Report", year="2024")  # second document
+    rows = _rows(cm)
+    first = [(r["text"], r["page_number"]) for r in rows[:n]]
+    second = [(r["text"], r["page_number"]) for r in rows[n:]]
     assert first == second
-    assert [c.chunk_id for c in cm.retriever.chunks] == [f"chunk_{i}" for i in range(2 * n)]
+    assert [r["vector_id"] for r in rows] == list(range(2 * n))
+    assert [r["chunk_seq"] for r in rows] == list(range(n)) * 2
 
 
 def test_image_only_pdf_is_rejected(tmp_path):
@@ -206,7 +215,7 @@ def test_image_only_pdf_is_rejected(tmp_path):
     path = tmp_path / "img.pdf"
     doc = fitz.open(); doc.new_page(); doc.save(str(path))
     with pytest.raises(ValueError, match="no extractable text"):
-        _corpus().add_document(str(path), company="ACME", document_type="Annual_Report", year="2024")
+        _corpus(tmp_path).add_document(str(path), company="ACME", document_type="Annual_Report", year="2024")
 
 
 def test_embed_texts_returns_float32_from_fp16_model(monkeypatch):

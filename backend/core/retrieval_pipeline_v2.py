@@ -9,7 +9,7 @@ This module is the single integration point for Phase 2. Endpoints call
 refine_results() and get back the highest-quality chunks for the LLM.
 
 Separation of concerns:
-    - corpus_manager.py: FAISS search + scope filtering (unchanged)
+    - corpus_manager.py: scoped search over the ChunkStore
     - this module:       post-retrieval quality refinement (new)
     - main.py:           endpoint orchestration (calls both)
 
@@ -32,8 +32,7 @@ def refine_results(
     results: list,
     query: str,
     parsed_query = None,
-    all_chunks: list = None,
-    chunk_metadata: dict = None,
+    corpus=None,
     final_k: int = 5,
 ) -> list:
     """
@@ -48,8 +47,7 @@ def refine_results(
         results:         Raw retrieval results from FAISS (post-threshold)
         query:           Original user query string
         parsed_query:    ParsedQuery from query_understanding (for metadata boost)
-        all_chunks:      Full chunk list from RetrieverPipeline (for enrichment)
-        chunk_metadata:  Dict mapping vector_id → ChunkMetadata (for enrichment)
+        corpus:          CorpusManager the results came from (neighbour enrichment)
         final_k:         Number of results to return to LLM
 
     Returns:
@@ -138,10 +136,7 @@ def refine_results(
     results = deduplicate(results)
 
     # ── Stage 4: Context enrichment ──
-    if all_chunks and chunk_metadata:
-        results = enrich_context(results, all_chunks, chunk_metadata)
-    else:
-        logger.debug("Phase 2 Stage 4: No chunks/metadata provided, skipping enrichment")
+    results = enrich_context(results, corpus)
 
     # ── Trim to final_k ──
     results = results[:final_k]

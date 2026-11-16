@@ -102,3 +102,71 @@ def test_where_empty_scope_is_active_only():
 def test_where_multi_company_multi_year():
     w = scope_to_where(RetrievalScope(label="c", companies=["TCS", "INFY"], years=["2023", "2024"]))
     assert w == "is_active = true AND company IN ('TCS', 'INFY') AND year IN ('2023', '2024')"
+
+
+# =============================================================================
+# CorpusManager on ChunkStore
+# =============================================================================
+
+from tests.pdf_fixtures import make_pdf
+
+SENT = " ".join(f"Sentence {i} reports steady revenue growth." for i in range(40))
+
+
+def _report(tmp_path, name):
+    return make_pdf(tmp_path / name, [
+        [("heading", "Directors Report"), ("para", SENT)],
+        [("heading", "Segment Revenue"), ("table", [["Particulars", "FY24", "FY23"],
+                                                    ["Revenue", "231456", "198234"],
+                                                    ["Other income", "5432", "4321"]])],
+    ])
+
+
+@pytest.fixture
+def corpus(tmp_path):
+    from core.corpus_manager import CorpusManager
+    from core.retriever_pipeline import RetrieverPipeline
+    p = RetrieverPipeline()
+    cm = CorpusManager(p, ChunkStore(str(tmp_path / "db"), p.embedding_dim))
+    cm.add_document(_report(tmp_path, "a.pdf"), company="TCS", document_type="Annual_Report", year="2024")
+    cm.add_document(_report(tmp_path, "b.pdf"), company="INFY", document_type="Annual_Report", year="2024")
+    return cm
+
+
+def test_corpus_search_is_scoped_and_carries_pages(corpus):
+    vec = corpus.retriever.embed_query("segment revenue table")
+    res = corpus.search(RetrievalScope(label="t", companies=["INFY"], years=["2024"]), vec)
+    assert res and {r.document_label for r in res} == {"INFY_Annual_Report_2024_v1"}
+    assert {r.page_number for r in res} <= {1, 2} and 2 in {r.page_number for r in res}
+    assert all(r.chunk_id.startswith("chunk_") for r in res)
+
+
+def test_registry_round_trip_and_fingerprint_guard(corpus, tmp_path, monkeypatch):
+    from core.corpus_manager import CorpusManager
+    corpus.save_registry(str(tmp_path / "cache"))
+    again = CorpusManager(corpus.retriever, corpus.store)
+    assert again.load_registry(str(tmp_path / "cache"))
+    assert again.num_chunks == corpus.store.count() and again.is_indexed
+    monkeypatch.setattr("core.retriever_pipeline.RetrieverPipeline.compute_config_fingerprint",
+                        staticmethod(lambda: "different-model"))
+    assert CorpusManager(corpus.retriever, corpus.store).load_registry(str(tmp_path / "cache")) is False
+
+
+def test_enrich_uses_chunk_seq_and_expanded_ids(corpus):
+    from core.metadata_schema import RetrievalResult
+    from core.result_refiner import enrich_context
+    first_infy = corpus.documents["INFY_Annual_Report_2024_v1"].vector_id_start
+    hit = RetrievalResult(chunk_id=f"[expanded]chunk_{first_infy}", score=1.0, snippet="x",
+                          document_label="INFY_Annual_Report_2024_v1")
+    out = enrich_context([hit], corpus, window=1)[0]
+    tcs_last = corpus.store.get(first_infy - 1)["text"]
+    assert out.chunk_id.startswith("[expanded]") and tcs_last not in out.snippet  # never crosses documents
+    assert corpus.store.get(first_infy + 1)["text"][:40] in out.snippet
+
+
+def test_enrich_skips_results_from_other_corpora(corpus):
+    from core.metadata_schema import RetrievalResult
+    from core.result_refiner import enrich_context
+    foreign = RetrievalResult(chunk_id="chunk_0", score=1.0, snippet="session text",
+                              document_label="UPLOAD_Annual_Report_2024_v1")
+    assert enrich_context([foreign], corpus, window=1)[0] == foreign

@@ -88,8 +88,7 @@ def retrieve_global(question: str, pipeline, corpus_manager, top_k: int, final_k
         results=candidates,
         query=question,
         parsed_query=parsed,
-        all_chunks=pipeline.chunks,
-        chunk_metadata=corpus_manager.chunk_metadata,
+        corpus=corpus_manager,
         final_k=final_k,
     )
     return candidates, final, parsed

@@ -677,8 +677,7 @@ def retrieve(request: Request, body: RetrieveRequest):
             results=results,
             query=body.query,
             parsed_query=parsed,
-            all_chunks=pipeline.chunks,
-            chunk_metadata=corpus_manager.chunk_metadata,
+            corpus=corpus_manager,
             final_k=final_k,
         )
 
@@ -776,8 +775,7 @@ def answer_question(question: str, session_id: Optional[str] = None,
                 results=results,
                 query=question,
                 parsed_query=parsed,
-                all_chunks=pipeline.chunks,
-                chunk_metadata=corpus_manager.chunk_metadata,
+                corpus=corpus_manager,
                 final_k=final_k,
             )
 

@@ -402,8 +402,7 @@ def _run_step_retrieval(
         results=merged,
         query=step.query,
         parsed_query=parsed_for_refine,
-        all_chunks=pipeline.chunks if pipeline else None,
-        chunk_metadata=corpus_manager.chunk_metadata,
+        corpus=corpus_manager,
         final_k=final_k,
     )
 
