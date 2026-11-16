@@ -5,6 +5,7 @@
 import re
 import sys
 from collections import defaultdict
+from dataclasses import replace
 from pathlib import Path
 
 from financials.checks import check_arithmetic, check_plausible, check_ratio, check_verbatim
@@ -42,6 +43,14 @@ class _Counting:
         return self._client.chat.completions.create(**kw)
 
 
+def normalise(c: Candidate) -> Candidate:
+    """Solvency is printed as a multiple (1.97) or a percent (180.0); store it as a multiple.
+    The regulatory floor is 1.5x, so a multiple above 10 is always a percent."""
+    if c.metric == "solvency_ratio" and c.value > 10:
+        return replace(c, value=round(c.value / 100, 4))
+    return c
+
+
 def _rounding(group: list[Candidate]) -> float:
     """One unit of the last printed digit, in rupees (largest across the group's INR values)."""
     r = 0.0
@@ -68,7 +77,7 @@ def _check_pdf(cands: list[Candidate], pages: dict[int, str],
     for g in groups.values():
         text = " ".join(pages.get(c.page, "") for c in g).lower()
         fails = check_arithmetic(g, _rounding(g),
-                                 direct_pbt=not re.search(r"associate|joint venture|discontinued", text))
+                                 direct_pbt=not re.search(r"associate|joint venture|discontinued|regulatory deferral", text))
         for c in g:
             if any(c is t for t in trusted):
                 continue
@@ -137,6 +146,7 @@ def build(sources_dir: Path, out_db: Path, use_llm: bool = True, client=None,
         filings.append(filing)
 
     # plausibility across periods of the same company/basis/metric
+    rows = [normalise(c) for c in rows]
     series = defaultdict(list)
     for c in rows:
         series[c.company, c.basis, c.period_type, c.metric].append(c)

@@ -103,3 +103,27 @@ def test_no_llm_flag(tmp_path):
     root, fake = _corpus(tmp_path)
     s = build(root, tmp_path / "f.duckdb", use_llm=False, client=fake, cache_dir=tmp_path / "cache")
     assert fake.calls == 0 and s["llm_calls"] == 0
+
+
+def _cand(metric, value, printed, basis="standalone"):
+    from financials.store import Candidate
+    return Candidate("NTPC", basis, "Q", date(2025, 4, 1), date(2025, 6, 30), metric, value,
+                     "INR" if metric != "solvency_ratio" else "ratio", printed, 3, "rule",
+                     "bse_pdf", "NTPC/2025-06.pdf", "https://x", None)
+
+
+def test_solvency_percent_stored_as_times():
+    from financials.build import normalise
+    assert normalise(_cand("solvency_ratio", 180.0, "180.00")).value == 1.8
+    assert normalise(_cand("solvency_ratio", 1.97, "1.97")).value == 1.97
+
+
+def test_regulatory_deferral_skips_pbt_minus_tax_rule():
+    from financials.build import _check_pdf
+    # NTPC: net profit = PBT - tax + deferral movement, so PBT - tax != net profit
+    g = [_cand("profit_before_tax", 4336.74e7, "4336.74"), _cand("tax_expense", 821.04e7, "821.04"),
+         _cand("net_profit", 4774.68e7, "4774.68")]
+    page = ("Profit before tax and regulatory deferral account balances 4336.74 Tax 821.04 "
+            "Net movement in regulatory deferral account balances 1258.98 Profit 4774.68")
+    keep, bad = _check_pdf(g, {3: page})
+    assert len(keep) == 3 and not bad
