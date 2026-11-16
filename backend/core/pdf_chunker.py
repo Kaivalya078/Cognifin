@@ -64,7 +64,7 @@ def _segments(blocks) -> List[Dict]:
 def _seg(spans, key) -> Dict:
     text = " ".join(" ".join(s["text"].split()) for s in spans)
     return {"text": _LEADER.sub(" ", text).strip(),
-            "x0": min(s["bbox"][0] for s in spans),
+            "x0": min(s["bbox"][0] for s in spans), "x1": max(s["bbox"][2] for s in spans),
             "y0": min(s["bbox"][1] for s in spans), "y1": max(s["bbox"][3] for s in spans),
             "key": key}
 
@@ -82,6 +82,12 @@ def _rows(segs) -> List[List[Dict]]:
                 continue
         rows.append([sg])
     return [sorted(r, key=lambda g: g["x0"]) for r in rows]
+
+
+def page_rows(page) -> List[List[Dict]]:
+    """Visual rows of a PyMuPDF page, each left to right; cells have text, x0, x1, y0, y1."""
+    blocks = [b for b in page.get_text("dict")["blocks"] if b.get("type") == 0]
+    return _rows([g for g in _segments(blocks) if g["text"]])
 
 
 def _is_data(row) -> bool:

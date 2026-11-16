@@ -225,3 +225,15 @@ def test_embed_texts_returns_float32_from_fp16_model(monkeypatch):
     monkeypatch.setattr(p.model, "encode", lambda texts, **_: np.ones((len(texts), 4), dtype=np.float16))
     out = p.embed_texts(["a", "b"])
     assert out.dtype == np.float32 and abs(float((out[0] ** 2).sum()) - 1.0) < 1e-5
+
+
+def test_page_rows_public(tmp_path):
+    import fitz
+    from core.pdf_chunker import page_rows
+    pdf = make_pdf(tmp_path / "r.pdf", [[("table", [["Particulars", "Q1", "Q2"],
+                                                    ["Revenue", "1,234.5", "1,100.0"]])]])
+    with fitz.open(pdf) as doc:
+        rows = page_rows(doc[0])
+    assert [[c["text"] for c in r] for r in rows] == [["Particulars", "Q1", "Q2"],
+                                                     ["Revenue", "1,234.5", "1,100.0"]]
+    assert all(c["x1"] > c["x0"] and c["y1"] > c["y0"] for r in rows for c in r)
