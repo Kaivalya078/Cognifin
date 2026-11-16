@@ -200,7 +200,7 @@ def test_session_store_dir_removed_on_eviction(tmp_path, monkeypatch):
     router = CorpusRouter(global_corpus=None)
     first, second = new_session_corpus(p), new_session_corpus(p)
     first.add_document(_report(tmp_path, "s.pdf"), company="UPLOAD", document_type="Annual_Report", year="2024")
-    assert first.store.path == "memory://" and first.public_pdfs is False   # nothing on disk
+    assert first.store.path.startswith("memory://") and first.public_pdfs is False   # nothing on disk
     assert second.num_chunks == 0 and first.num_chunks > 0                 # stores are separate
     router.register_session("a", first)
     router.register_session("b", second)          # evicts "a"
@@ -257,3 +257,16 @@ def test_refine_enriches_only_the_final_results(corpus, monkeypatch):
                             document_label="TCS_Annual_Report_2024_v1") for i in range(30)]
     out = refine_results(many, "q", corpus=corpus, final_k=8)
     assert len(out) == 8 and len(calls) == 8
+
+
+def test_new_session_cannot_see_earlier_sessions(tmp_path):
+    from core.corpus_manager import new_session_corpus
+    from core.retriever_pipeline import RetrieverPipeline
+    p = RetrieverPipeline()
+    first = new_session_corpus(p)
+    first.add_document(_report(tmp_path, "s.pdf"), company="UPLOAD", document_type="Annual_Report", year="2024")
+    second = new_session_corpus(p)                       # created after first holds rows
+    assert second.store.count() == 0 and second.num_chunks == 0
+    assert first.store.path != second.store.path
+    vec = p.embed_query("revenue")
+    assert second.search(RetrievalScope(label="t"), vec) == []

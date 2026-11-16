@@ -13,7 +13,7 @@ import os
 import json
 import shutil
 import logging
-import tempfile
+import uuid
 from dataclasses import asdict, replace as dc_replace
 from types import SimpleNamespace
 from typing import List, Dict, Callable, Optional
@@ -327,7 +327,9 @@ class CorpusManager:
 def new_session_corpus(retriever: RetrieverPipeline) -> CorpusManager:
     """An /upload corpus on an in-memory store: the uploaded document's text
     never touches disk and is freed with the session."""
-    cm = CorpusManager(retriever, ChunkStore("memory://", retriever.embedding_dim))
+    # A unique namespace per session, so isolation never rests on how
+    # LanceDB treats repeated memory:// connections.
+    cm = CorpusManager(retriever, ChunkStore(f"memory://{uuid.uuid4().hex}", retriever.embedding_dim))
     cm.public_pdfs = False  # its PDF is a temp file
     return cm
 
