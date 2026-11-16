@@ -145,8 +145,12 @@ class CorpusManager:
         )
 
     def search(self, scope: RetrievalScope, query_vector: np.ndarray) -> List[RetrievalResult]:
-        """Dense search within scope; drops results under SIMILARITY_THRESHOLD."""
-        hits = self.store.search_dense(query_vector, settings.RETRIEVAL_K, scope_to_where(scope))
+        """Dense search within scope (relaxed if it matches nothing); drops
+        results under SIMILARITY_THRESHOLD."""
+        for (relaxed,) in _relaxations([scope]):
+            hits = self.store.search_dense(query_vector, settings.RETRIEVAL_K, scope_to_where(relaxed))
+            if hits:
+                break
         results = [self._result(s, row) for s, row in hits]
 
         threshold = settings.SIMILARITY_THRESHOLD
@@ -159,13 +163,17 @@ class CorpusManager:
         """Full-text (BM25) search over the union of the given scopes."""
         if not settings.BM25_ENABLED or not query.strip():
             return []
-        wheres = [scope_to_where(s) for s in scopes] or ["is_active = true"]
-        where = wheres[0] if len(wheres) == 1 else " OR ".join(f"({w})" for w in wheres)
-        try:
-            hits = self.store.search_text(query, k, where)
-        except Exception as e:  # e.g. no FTS index on a store built without one
-            logger.warning("search_text failed (%s) — dense results only", e)
-            return []
+        hits = []
+        for relaxed in _relaxations(scopes or [RetrievalScope(label="all")]):
+            wheres = [scope_to_where(s) for s in relaxed]
+            where = wheres[0] if len(wheres) == 1 else " OR ".join(f"({w})" for w in wheres)
+            try:
+                hits = self.store.search_text(query, k, where)
+            except Exception as e:  # e.g. no FTS index on a store built without one
+                logger.warning("search_text failed (%s) — dense results only", e)
+                return []
+            if hits:
+                break
         return [self._result(s, row) for s, row in hits]
 
     def execute_plan(
@@ -330,6 +338,21 @@ def discard(corpus: CorpusManager) -> None:
         path = corpus.store.path
         corpus.store = corpus.chunk_metadata = None  # drop open table handles first
         shutil.rmtree(path, ignore_errors=True)
+
+
+def _relaxations(scopes: List[RetrievalScope]):
+    """The scopes as given, then without years, then without doc types too.
+
+    A question about a year or filing type the corpus doesn't hold ("TCS
+    revenue 2019", "Infosys DRHP") should fall back to that company's
+    documents rather than return nothing. The company filter is never relaxed.
+    """
+    yield scopes
+    if any(s.years for s in scopes):
+        scopes = [dc_replace(s, years=[]) for s in scopes]
+        yield scopes
+    if any(s.doc_types for s in scopes):
+        yield [dc_replace(s, doc_types=[]) for s in scopes]
 
 
 def _vector_id(chunk_id: str) -> Optional[int]:

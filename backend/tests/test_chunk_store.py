@@ -231,3 +231,29 @@ def test_open_for_ingest_refuses_index_from_another_config(tmp_path, monkeypatch
                         staticmethod(lambda: "other"))
     with pytest.raises(RuntimeError, match="different config"):
         open_for_ingest(cache)
+
+
+def test_scope_with_unindexed_year_falls_back_to_company(corpus):
+    vec = corpus.retriever.embed_query("revenue")
+    scope = RetrievalScope(label="t", companies=["TCS"], years=["2019"], doc_types=["DRHP"])
+    res = corpus.search(scope, vec)
+    assert res and {r.document_label for r in res} == {"TCS_Annual_Report_2024_v1"}
+    corpus.store.build_text_index()
+    kw = corpus.search_text([scope], "revenue", 10)
+    assert kw and {r.document_label for r in kw} == {"TCS_Annual_Report_2024_v1"}
+
+
+def test_unknown_company_still_returns_nothing(corpus):
+    vec = corpus.retriever.embed_query("revenue")
+    assert corpus.search(RetrievalScope(label="t", companies=["NOPE"]), vec) == []
+
+
+def test_refine_enriches_only_the_final_results(corpus, monkeypatch):
+    from core.metadata_schema import RetrievalResult
+    from core.retrieval_pipeline_v2 import refine_results
+    calls = []
+    monkeypatch.setattr(corpus, "neighbor_texts", lambda r, w: calls.append(r.chunk_id) or None)
+    many = [RetrievalResult(chunk_id=f"chunk_{i}", score=1 - i / 100, snippet=f"distinct text {i} " * 5,
+                            document_label="TCS_Annual_Report_2024_v1") for i in range(30)]
+    out = refine_results(many, "q", corpus=corpus, final_k=8)
+    assert len(out) == 8 and len(calls) == 8

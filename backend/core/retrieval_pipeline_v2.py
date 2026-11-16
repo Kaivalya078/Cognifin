@@ -135,11 +135,9 @@ def refine_results(
     logger.debug("Phase 2 Stage 3: Deduplicating %d results...", len(results))
     results = deduplicate(results)
 
-    # ── Stage 4: Context enrichment ──
-    results = enrich_context(results, corpus)
-
-    # ── Trim to final_k ──
-    results = results[:final_k]
+    # ── Trim to final_k, then enrich only what the LLM will see ──
+    # (enrichment never reorders, so trimming first gives the same output)
+    results = enrich_context(results[:final_k], corpus)
 
     # ── Observability: Log rerank comparison ──
     post_rerank_ids = [r.chunk_id for r in results]

@@ -9,7 +9,8 @@ A hit = a chunk from the right company + year on one of the answer pages. hit@k 
 | baseline | legacy: 900-char slices, MiniLM, 263,967 chunks | 0.675 | 0.900 | 0.585 | 0.925 | 0.650 | 0.700 | 2.21 s / 3.01 s | 4.4 GB |
 | step1-frozen | structured chunks + bge-base, 491,123 chunks; thresholds unchanged | 0.775 | 0.975 | 0.682 | 1.000 | 0.800 | 0.750 | 2.44 s / 3.29 s | 6.2 GB |
 | step1-recal | same; SIMILARITY_THRESHOLD 0.30 → 0.50 | 0.775 | 0.975 | 0.682 | 1.000 | 0.800 | 0.750 | 2.40 s / 3.19 s | 6.2 GB |
-| **step2** (shipped) | same chunks + embeddings in LanceDB (disk-backed vectors, native FTS pre-filtered by scope) | 0.800 | 1.000 | 0.705 | 1.000 | 0.800 | 0.800 | 1.85 s / 2.03 s | 0.88 GB |
+| step2 | same chunks + embeddings in LanceDB (disk-backed vectors, native FTS pre-filtered by scope) | 0.800 | 1.000 | 0.705 | 1.000 | 0.800 | 0.800 | 1.85 s / 2.03 s | 0.88 GB |
+| **step2-reviewfix** (shipped) | same; context enrichment only on the final 8, scope relaxation for unindexed years/doc types | 0.800 | 1.000 | 0.705 | 1.000 | 0.800 | 0.800 | 1.38 s / 1.63 s | 0.88 GB |
 
 Frozen for every run: RETRIEVAL_K=60, FINAL_K=8, reranker cross-encoder/ms-marco-MiniLM-L-6-v2 on 30 candidates, multi-query and LLM query parsing off.
 

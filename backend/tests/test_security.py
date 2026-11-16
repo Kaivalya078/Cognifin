@@ -358,3 +358,29 @@ def test_uploaded_pdf_evidence_gets_no_dead_pdf_link(upload_ready):
         assert cm.public_pdfs is False       # …which never advertises a PDF link
     finally:
         discard(cm)
+
+
+def test_stale_pre_lancedb_cache_is_replaced(remote_assets, tmp_path):
+    """A volume holding the old FAISS-era cache (registry but no lancedb/) must re-download."""
+    asset_manager, served = remote_assets
+    cache_dir = tmp_path / "index_cache"
+    cache_dir.mkdir()
+    (cache_dir / "document_registry.json").write_text("{}")
+    (cache_dir / "faiss.index").write_bytes(b"old")
+    served["bytes"] = _tarball({"index_cache/document_registry.json": b"{}",
+                                "index_cache/lancedb/chunks.lance/x": b"new"})
+    asset_manager.ensure_index_cache(str(cache_dir))
+    assert (cache_dir / "lancedb" / "chunks.lance" / "x").read_bytes() == b"new"
+    assert not (cache_dir / "faiss.index").exists()
+
+
+def test_current_cache_is_not_redownloaded(remote_assets, tmp_path, monkeypatch):
+    import json
+    from core.retriever_pipeline import RetrieverPipeline
+    asset_manager, _ = remote_assets
+    cache_dir = tmp_path / "index_cache"
+    (cache_dir / "lancedb").mkdir(parents=True)
+    (cache_dir / "document_registry.json").write_text(
+        json.dumps({"config_fingerprint": RetrieverPipeline.compute_config_fingerprint()}))
+    monkeypatch.setattr(asset_manager.requests, "get", lambda *a, **k: pytest.fail("re-downloaded"))
+    asset_manager.ensure_index_cache(str(cache_dir))
