@@ -56,7 +56,10 @@ index_cache_baseline/
 index_cache_step1/
 
 # Source PDFs (too large for Git — document setup in README)
-data/
+data/*
+!data/quarterly/
+data/quarterly/*
+!data/quarterly/sources.csv
 
 # Session upload temp files
 temp_data/
