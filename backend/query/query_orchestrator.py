@@ -109,9 +109,9 @@ def retrieve_context(
             for sq in plan.sub_queries:
                 sq.rewritten_query = variant
 
-        faiss_results = corpus_manager.execute_plan(plan, embed_query)
-        if faiss_results:
-            all_result_lists.append(faiss_results)
+        dense_results = corpus_manager.execute_plan(plan, embed_query)
+        if dense_results:
+            all_result_lists.append(dense_results)
             all_labels.append(f"dense_q{i}")
 
         # 4b: keyword (BM25) search over the same scopes
@@ -296,9 +296,9 @@ def _run_step_retrieval(
     for i, variant in enumerate(query_variants):
         # FAISS dense search
         vector = embed_query(variant)
-        faiss_results = corpus_manager.search(scope, vector)
-        if faiss_results:
-            all_result_lists.append(faiss_results)
+        dense_results = corpus_manager.search(scope, vector)
+        if dense_results:
+            all_result_lists.append(dense_results)
             all_labels.append(f"dense_{step.label}_q{i}")
 
         # Keyword (BM25) search
