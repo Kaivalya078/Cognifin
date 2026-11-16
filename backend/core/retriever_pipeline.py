@@ -108,6 +108,8 @@ class Chunk:
     start_char: int
     end_char: int
     page_number: int = 1
+    heading: str = ""                  # section heading prefixed to text ("" = none)
+    content_form: str = "narrative"    # "tabular" for table chunks
 
 
 # =============================================================================
