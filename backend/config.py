@@ -46,8 +46,8 @@ class Settings(BaseSettings):
 
     # Reranking
     RERANKER_ENABLED: bool = True
-    RERANKER_MODEL: str = "BAAI/bge-reranker-base"
-    RERANKER_MAX_CANDIDATES: int = 60
+    RERANKER_MODEL: str = "cross-encoder/ms-marco-MiniLM-L-6-v2"
+    RERANKER_MAX_CANDIDATES: int = 30
     SKIP_RERANKER_THRESHOLD: float = 0.85
 
     # Hybrid search

@@ -16,7 +16,7 @@ RUN pip install -r requirements.txt
 
 # Must match EMBEDDING_MODEL / RERANKER_MODEL at runtime (HF_HUB_OFFLINE below).
 ARG EMBEDDING_MODEL=all-MiniLM-L6-v2
-ARG RERANKER_MODEL=BAAI/bge-reranker-base
+ARG RERANKER_MODEL=cross-encoder/ms-marco-MiniLM-L-6-v2
 ENV HF_HOME=/models
 RUN python -c "import sys; from sentence_transformers import SentenceTransformer, CrossEncoder; \
 SentenceTransformer(sys.argv[1]); CrossEncoder(sys.argv[2])" "$EMBEDDING_MODEL" "$RERANKER_MODEL"

@@ -59,6 +59,9 @@ data/
 # Session upload temp files
 temp_data/
 
+# Index tarball for deploy (uploaded to R2, never committed)
+index_cache.tar.gz
+
 # Serialized corpus data
 *.pkl
 
