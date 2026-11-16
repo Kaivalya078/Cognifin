@@ -41,7 +41,7 @@ class Settings(BaseSettings):
     RETRIEVAL_K: int = 60
     FINAL_K: int = 8
     TOP_K: int = 5
-    SIMILARITY_THRESHOLD: float = 0.30
+    SIMILARITY_THRESHOLD: float = 0.50
     CONTEXT_WINDOW: int = 1
 
     # Reranking
