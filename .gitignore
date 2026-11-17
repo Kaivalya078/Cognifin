@@ -48,3 +48,6 @@ build/
 # Local planning docs and agent scratch (not part of the repo)
 ROADMAP.md
 .superpowers/
+
+# Playwright MCP console logs
+.playwright-mcp/
