@@ -193,8 +193,11 @@ def _layout(rows, period_end: date, prev):
         return None
     head = rows[:first]
     cells = [c for r in head for c in r]
-    if any("segment" in c["text"].lower() for c in cells):
-        return None   # segment tables repeat headline labels with segment-level numbers
+    if any(re.search(r"(?i)segment|cash\s*flow|operating activities|^notes\b|regulation 52",
+                     c["text"]) for c in cells):
+        # segment, cash-flow and notes tables repeat headline labels: BAJAJFINSV's PBT from
+        # its cash flow; TMPV's Reg 52(4) notes table, no basis named, read as standalone EPS
+        return None
     stacks = _stacks(cells)
     dated = [s for s in stacks if find_date(s["text"])]
     # a header that reads only "March 31," still marks a column: it explains the numbers
@@ -290,6 +293,29 @@ _SHAREHOLDERS_ONLY = {"profit_before_tax", "tax_expense", "net_profit"}
 _KEY = re.compile(r"revenue from operations|total income|profit before tax|interest earned|premium")
 
 
+def _eps_block(text: str, cur: str | None) -> str | None:
+    """Which EPS block a heading opens: 'cont', 'disc' or 'total' (continuing and
+    discontinued). Text that is no EPS heading keeps the current block."""
+    t = text.lower()
+    if "per share" not in t and "eps" not in t:
+        return cur
+    c, d = "continuing" in t, "discontinued" in t
+    return "total" if c and d else "disc" if d else "cont" if c else cur
+
+
+_EPS = {"eps_basic", "eps_diluted"}
+
+
+def _withdraw_eps(unread, eps_block, found, late_keys, blocked) -> None:
+    """An all-operations EPS row that can't be read (TMPV's OCR'd "78,80") leaves the
+    continuing-only figure standing; that one is not the company's EPS either."""
+    if eps_block == "total":
+        for k in unread:
+            if k[2] in _EPS and k not in late_keys:
+                found.pop(k, None)
+                blocked.add(k)
+
+
 _OCR_CACHE = Path(__file__).resolve().parents[1] / "index_cache" / "financials_ocr_cache"
 
 
@@ -308,6 +334,8 @@ def extract_rules(src: Source, ocr_cache: Path = _OCR_CACHE) -> tuple[list[Candi
     for pno, _, (lay, rows) in layouts:
         pages[pno] = rt[pno - 1][1]
         targets = _targets(lay, src.period_end)
+        above = ""   # a numberless row on the previous page labels nothing here
+        eps_block = None
         discontinued = False   # per page: the standalone page's block says nothing of the next
         for r in rows[:lay["start"]]:
             policyholders = _section(r, policyholders)
@@ -319,14 +347,19 @@ def extract_rules(src: Source, ocr_cache: Path = _OCR_CACHE) -> tuple[list[Candi
             if not nums:
                 policyholders = _section(r, policyholders)
                 above = " ".join(c["text"] for c in r)
+                # "...continuing and discontinued" / "operations": the wrap keeps the block
+                eps_block = _eps_block(above, eps_block)
                 continue
             label = " ".join(c["text"] for c in r if c["x1"] <= min(n["x0"] for n in nums) + 1
                              and _num(c["text"]) is None)
             # "and Joint Ventures": a wrapped label ("a) Current tax" is an item, not a wrap)
-            if label[:1].islower() and above and not re.match(r"[a-z]{1,3}[).]\s", label):
+            if label[:1].islower() and above and not re.match(r"([ivx]{1,5}|[a-z])[).]?\s", label):
                 label = above + " " + label
             above = ""
             metrics = match_metrics(label)
+            eps_block = _eps_block(label, eps_block)
+            if eps_block == "disc":   # discontinued-only EPS never stands in for the company's
+                metrics = tuple(m for m in metrics if m not in _EPS)
             discontinued = discontinued or "discontinued" in label.lower()
             if policyholders:   # insurers: the company's PBT/tax/profit are shareholders'
                 metrics = tuple(m for m in metrics if m not in _SHAREHOLDERS_ONLY)
@@ -337,6 +370,7 @@ def extract_rules(src: Source, ocr_cache: Path = _OCR_CACHE) -> tuple[list[Candi
             owners = [id(min(lay["cols"], key=lambda k: abs(_xc(n) - k["x"]))) for n in nums]
             if len(nums) < len(area) or len(set(owners)) < len(owners):
                 blocked |= unread   # a stray number, or two under one column: misfit row
+                _withdraw_eps(unread, eps_block, found, late_keys, blocked)
                 continue
             for col, ptype in targets:
                 cell = min(nums, key=lambda c: abs(_xc(c) - col["x"]))
@@ -350,7 +384,8 @@ def extract_rules(src: Source, ocr_cache: Path = _OCR_CACHE) -> tuple[list[Candi
                     # profit after the share of associates replaces a plain PAT row; owners'
                     # share after a discontinued block replaces their continuing-only share
                     late = (m == "net_profit" and re.search(r"associate|joint venture", label, re.I)
-                            or m == "net_profit_owners" and discontinued)
+                            or m == "net_profit_owners" and discontinued
+                            or m in _EPS and eps_block == "total")
                     if key in blocked or (key in found and not (late and key not in late_keys)):
                         continue
                     if late:
@@ -362,6 +397,7 @@ def extract_rules(src: Source, ocr_cache: Path = _OCR_CACHE) -> tuple[list[Candi
                         METRICS[m][1], cell["text"].strip(), pno, "rule", "bse_pdf", src.rel,
                         src.url, None)
             blocked |= unread - set(found)
+            _withdraw_eps(unread, eps_block, found, late_keys, blocked)
     # pages the rules could not lay out, for the LLM fallback
     for i, (_, text, _) in enumerate(rt):
         if len(pages) >= 6:
@@ -388,7 +424,10 @@ def check_columns(src: Source, cands: list[Candidate],
                  if g["text"].strip() == c.printed.strip()] if lay else []
         good = {(k["basis"], p) for k, p in _targets(lay, src.period_end)} if lay else set()
         hits = [min(lay["cols"], key=lambda k: abs(_xc(g) - k["x"])) for g in cells]
-        if hits and not any((k["basis"], c.period_type) in good and k["date"] == src.period_end
+        if lay and lay["unit"] and METRICS[c.metric][1] == "INR" and                 abs(c.value - to_value(c.printed, c.metric, lay["unit"])) > 1e-6 * abs(c.value or 1):
+            bad.append(review_row(c, f"unit: page {c.page} is in x{lay['unit']:g}, not "
+                                     f"x{c.value / parse_number(c.printed):g}"))
+        elif hits and not any((k["basis"], c.period_type) in good and k["date"] == src.period_end
                             and k["phrase"] == c.period_type for k in hits):
             bad.append(review_row(c, f"column: '{c.printed}' is not under a "
                                      f"{c.basis} {c.period_type} {src.period_end} column"))

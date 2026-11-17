@@ -243,7 +243,8 @@ def test_llm_value_from_wrong_column_rejected(tmp_path):
 
     def c(printed):
         return Candidate("TCS", "consolidated", "Q", date(2025, 4, 1), END, "revenue_from_operations",
-                         1.0, "INR", printed, 1, "llm", "bse_pdf", "TCS/x.pdf", "u", None)
+                         float(printed.replace(",", "")) * 1e7, "INR", printed, 1, "llm", "bse_pdf",
+                         "TCS/x.pdf", "u", None)
     ok, bad = check_columns(src, [c("1,234.50"), c("1,100.00")])
     assert [x.printed for x in ok] == ["1,234.50"]
     assert len(bad) == 1 and bad[0]["reason"].startswith("column")
@@ -339,3 +340,76 @@ def test_skewed_scan_rows_stay_aligned(tmp_path):
     src.path, src.sha256 = tmp_path / "scan.pdf", "skew"
     v = _vals(extract_rules(src, ocr_cache=tmp_path / "ocr")[0])
     assert v["other_income"].value == 10.5e7 and v["total_income"].value == 1245e7
+
+
+def test_label_from_previous_page_not_carried(tmp_path):
+    """ADANIPORTS: page 1 ends on a numberless EPS heading; page 2's first row is
+    'ii Profit before tax' and must not become EPS."""
+    p1 = _head() + BODY[:6] + [[(0, "Earnings per share Basic and Diluted (in Rs.)")]]
+    p2 = _head("Standalone") + [
+        [(0, "ii Profit before tax"), (1, "509.13"), (2, "480.00"), (3, "400.00"), (4, "1,900.00")]]
+    v = _vals(extract_rules(_pdf(tmp_path, [p1, p2]))[0], "standalone")
+    assert "eps_basic" not in v and v["profit_before_tax"].value == 509.13e7
+
+
+def test_roman_item_is_not_a_wrapped_label(tmp_path):
+    body = BODY[:3] + [[(0, "Basic and Diluted EPS (in Rs.)")],
+                       [(0, "ii Profit before tax"), (1, "200.00"), (2, "180.00"), (3, "150.00"), (4, "700.00")]]
+    v = _vals(extract_rules(_pdf(tmp_path, [_head() + body]))[0])
+    assert "eps_basic" not in v and v["profit_before_tax"].value == 200e7
+
+
+def test_llm_unit_must_match_page_layout(tmp_path):
+    """DRREDDY: the LLM said crore on a millions page; the page's own unit decides."""
+    from financials.pdf_rules import check_columns
+    from financials.store import Candidate
+    src = _pdf(tmp_path, [_head() + BODY])   # page says crore
+    c = Candidate("TCS", "consolidated", "Q", date(2025, 4, 1), END, "tax_expense",
+                  50e6, "INR", "50.00", 1, "llm", "bse_pdf", "TCS/x.pdf", "u", None)
+    from dataclasses import replace
+    ok, bad = check_columns(src, [c, replace(c, value=50e7)])
+    assert [x.value for x in ok] == [50e7]
+    assert bad[0]["reason"].startswith("unit")
+
+
+def test_total_eps_wins_over_continuing_block(tmp_path):
+    """TMPV FY25: EPS printed for continuing, discontinued, then all operations."""
+    def eps(b, d):
+        return [[(0, "(i) Basic EPS"), (1, b), (2, "1.00"), (3, "1.00"), (4, "1.00")],
+                [(0, "(ii) Diluted EPS"), (1, d), (2, "1.00"), (3, "1.00"), (4, "1.00")]]
+    body = BODY[:6] + [[(0, "Earnings per share from continuing operations")]] + eps("65.01", "64.97") \
+        + [[(0, "Earnings/ (loss) per share from discontinued operations")]] + eps("13.79", "13.78") \
+        + [[(0, "Earnings per share from continuing and discontinued")], [(0, "operations")]] \
+        + eps("78.80", "78.75")
+    v = _vals(extract_rules(_pdf(tmp_path, [_head() + body]))[0])
+    assert v["eps_basic"].value == 78.80 and v["eps_diluted"].value == 78.75
+
+
+def test_discontinued_eps_never_stands_in(tmp_path):
+    body = BODY[:6] + [[(0, "Earnings per share from discontinued operations")],
+                       [(0, "(i) Basic EPS"), (1, "13.79"), (2, "1.00"), (3, "1.00"), (4, "1.00")]]
+    assert "eps_basic" not in _vals(extract_rules(_pdf(tmp_path, [_head() + body]))[0])
+
+
+def test_cash_flow_page_skipped(tmp_path):
+    cf = _head()
+    cf[0] = [(0, "Standalone Statement of Cash Flows")]
+    cf_body = [[(0, "I. Operating activities")],
+               [(0, "Profit before tax"), (1, "999.00"), (2, "1.00"), (3, "1.00"), (4, "1.00")]]
+    v = _vals(extract_rules(_pdf(tmp_path, [cf + cf_body, _head() + BODY]))[0])
+    assert v["profit_before_tax"].value == 200e7
+
+
+def test_unreadable_total_eps_withdraws_continuing(tmp_path):
+    body = BODY[:6] + [[(0, "Earnings per share from continuing operations")],
+                       [(0, "(i) Basic EPS"), (1, "65.01"), (2, "1.00"), (3, "1.00"), (4, "1.00")],
+                       [(0, "Earnings per share from continuing and discontinued operations")],
+                       [(0, "(i) Basic EPS"), (1, "78,80"), (2, "1.00"), (3, "1.00"), (4, "1.00")]]
+    assert "eps_basic" not in _vals(extract_rules(_pdf(tmp_path, [_head() + body]))[0])
+
+
+def test_notes_table_skipped(tmp_path):
+    notes = [[(0, "Notes:- 1) The above results were reviewed by the Audit Committee.")]] + _head()[1:]
+    nb = [[(c, t.replace("12.34", "78.80")) for c, t in r] for r in BODY]
+    v = _vals(extract_rules(_pdf(tmp_path, [notes + nb]))[0], "standalone")
+    assert "eps_basic" not in v

@@ -37,6 +37,11 @@ def unit_multiplier(header_text: str) -> float | None:
     return None
 
 
+def units_in(text: str) -> set[float]:
+    """Every unit multiplier a page's text names."""
+    return {mult for rx, mult in _UNITS if rx.search(text or "")}
+
+
 def to_value(printed: str, metric: str, multiplier: float) -> float:
     v = parse_number(printed)
     if v is None:

@@ -8,7 +8,8 @@ from collections import defaultdict
 from dataclasses import replace
 from pathlib import Path
 
-from financials.checks import check_arithmetic, check_plausible, check_ratio, check_verbatim
+from financials.checks import (check_arithmetic, check_duplicates, check_plausible, check_ratio,
+                               check_verbatim)
 from financials.ixbrl import parse_ixbrl
 from financials.metrics import metrics_for
 from financials.numbers import parse_number
@@ -159,6 +160,16 @@ def build(sources_dir: Path, out_db: Path, use_llm: bool = True, client=None,
             filing.update(status="failed", reason=f"{type(e).__name__}: {e}")
         filings.append(filing)
 
+    # one printed figure under two metrics of a PDF filing (iXBRL tags concepts, not labels)
+    filed = defaultdict(list)
+    for c in rows:
+        if c.method != "xbrl":
+            filed[c.source_file, c.basis, c.period_type].append(c)
+    dup = set().union(*(check_duplicates(g) for g in filed.values()))
+    review += [review_row(c, f"duplicate: '{c.printed}' also stored as another metric")
+               for c in rows if id(c) in dup]
+    rows = [c for c in rows if id(c) not in dup]
+
     # plausibility across periods of the same company/basis/metric
     series = defaultdict(list)
     for c in rows:
@@ -166,7 +177,7 @@ def build(sources_dir: Path, out_db: Path, use_llm: bool = True, client=None,
     final = []
     for c in rows:
         others = [o.value for o in series[c.company, c.basis, c.period_type, c.metric] if o is not c]
-        reason = check_plausible(c, others)
+        reason = None if c.method == "xbrl" else check_plausible(c, others)
         (review.append(review_row(c, reason)) if reason else final.append(c))
 
     out_db = Path(out_db)

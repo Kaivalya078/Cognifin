@@ -1,0 +1,184 @@
+{
+ "report": {
+  "group:all": {
+   "total": 207,
+   "stored": 194,
+   "correct": 194,
+   "precision": 1.0,
+   "coverage": 0.9371980676328503
+  },
+  "group:bank": {
+   "total": 19,
+   "stored": 17,
+   "correct": 17,
+   "precision": 1.0,
+   "coverage": 0.8947368421052632
+  },
+  "group:insurer": {
+   "total": 19,
+   "stored": 17,
+   "correct": 17,
+   "precision": 1.0,
+   "coverage": 0.8947368421052632
+  },
+  "method:llm": {
+   "total": 25,
+   "stored": 25,
+   "correct": 25,
+   "precision": 1.0,
+   "coverage": 1.0
+  },
+  "method:rule": {
+   "total": 140,
+   "stored": 140,
+   "correct": 140,
+   "precision": 1.0,
+   "coverage": 1.0
+  },
+  "method:xbrl": {
+   "total": 63,
+   "stored": 63,
+   "correct": 63,
+   "precision": 1.0,
+   "coverage": 1.0
+  },
+  "overall": {
+   "total": 245,
+   "stored": 228,
+   "correct": 228,
+   "precision": 1.0,
+   "coverage": 0.9306122448979591
+  },
+  "source:ixbrl": {
+   "total": 63,
+   "stored": 63,
+   "correct": 63,
+   "precision": 1.0,
+   "coverage": 1.0
+  },
+  "source:pdf": {
+   "total": 182,
+   "stored": 165,
+   "correct": 165,
+   "precision": 1.0,
+   "coverage": 0.9065934065934066
+  }
+ },
+ "wrong": [],
+ "missing": [
+  [
+   "adaniports-2025q1-c",
+   "eps_basic"
+  ],
+  [
+   "adaniports-2025q1-c",
+   "eps_diluted"
+  ],
+  [
+   "tmpv-2025q4-c",
+   "eps_diluted"
+  ],
+  [
+   "tmpv-fy2025-c",
+   "eps_basic"
+  ],
+  [
+   "tmpv-fy2025-c",
+   "eps_diluted"
+  ],
+  [
+   "axisbank-2025q3-s",
+   "net_npa_pct"
+  ],
+  [
+   "kotakbank-2026q1-s",
+   "interest_earned"
+  ],
+  [
+   "hdfcbank-2026q2-s",
+   "profit_before_tax"
+  ],
+  [
+   "hdfcbank-2026q2-s",
+   "tax_expense"
+  ],
+  [
+   "hdfcbank-2026q2-s",
+   "net_profit"
+  ],
+  [
+   "sbilife-2026q2-s",
+   "first_year_premium"
+  ],
+  [
+   "sbilife-2026q2-s",
+   "solvency_ratio"
+  ],
+  [
+   "sbilife-2026q2-s",
+   "eps_basic"
+  ],
+  [
+   "sbilife-2026q2-s",
+   "eps_diluted"
+  ],
+  [
+   "bajfinance-2025q2-c",
+   "eps_basic"
+  ],
+  [
+   "lt-2026q2-c",
+   "eps_basic"
+  ],
+  [
+   "lt-2026q2-c",
+   "eps_diluted"
+  ]
+ ],
+ "suspects": [
+  [
+   "BAJAJFINSV",
+   "consolidated",
+   "Q",
+   "2025-09-30",
+   "37,40,293.00",
+   "revenue_from_operations",
+   "xbrl",
+   "total_income",
+   "xbrl"
+  ],
+  [
+   "BAJAJFINSV",
+   "consolidated",
+   "Q",
+   "2025-12-31",
+   "39,70,806.00",
+   "revenue_from_operations",
+   "xbrl",
+   "total_income",
+   "xbrl"
+  ],
+  [
+   "BAJAJFINSV",
+   "consolidated",
+   "Q",
+   "2026-06-30",
+   "42,03,690.00",
+   "revenue_from_operations",
+   "xbrl",
+   "total_income",
+   "xbrl"
+  ],
+  [
+   "JIOFIN",
+   "standalone",
+   "Q",
+   "2025-12-31",
+   "159.19",
+   "revenue_from_operations",
+   "llm",
+   "total_income",
+   "llm"
+  ]
+ ]
+}

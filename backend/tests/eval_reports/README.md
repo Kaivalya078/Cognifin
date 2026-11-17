@@ -28,7 +28,7 @@ No value was chosen by looking at golden-set scores.
 
 Answer key: `tests/financials_golden.json` (26 cases, 245 values: 20 PDF cases, 6 iXBRL; 4 banks, 2 insurers, 3 NBFCs; hand-drafted, spot-checked by the user, every value re-found on its source page).
 Scorer: `python -m tests.eval_financials --label <name>` over `index_cache/financials.duckdb`.
-Precision = stored values matching the key / key values stored. Coverage = key values stored / all key values. A match is within one rounding unit (₹1 lakh or 0.01%, whichever is larger; 0.006 for EPS, % and ratios).
+Precision = stored values matching the key / key values stored. Coverage = key values stored / all key values. A match is within one unit of the stored value's last printed digit in its unit ("1,234.56" in crore: ₹1 lakh; "4,082" in millions: ₹10 lakh) — v1–v6 used ₹1 lakh or 0.01%, whichever was larger, which let a last-digit misread of a large figure pass. The scorer also lists corpus-wide SUSPECTs: one printed figure stored as two metrics of one filing.
 Gate: precision ≥ 99%; coverage ≥ 90% overall, ≥ 80% bank and insurer metrics.
 
 | run | change | precision | coverage | all | bank | insurer | wrong |
@@ -38,7 +38,11 @@ Gate: precision ≥ 99%; coverage ≥ 90% overall, ≥ 80% bank and insurer metr
 | v3 | rules: undated header columns explain their numbers; OCR'd "croresl" unit; policyholders' account skipped for PBT/tax/profit; "Earnings per share: Basic and diluted"; OCR spaces beside separators; wrapped labels. Verbatim tolerates OCR spacing; LLM's wrong page corrected when the value is on exactly one sent page; LLM asked for every basis a page title names | 99.1% | 92.7% | 92.8% | 89.5% | 94.7% | 2 |
 | v4-ocr | rules: "a) Current tax" is an item, not a wrapped label; owners' share after a discontinued block wins. OCR (rapidocr) for image-only pages: failed files 22 → 14 | 99.1% | 92.2% | 92.8% | 89.5% | 89.5% | 2 |
 | v5-ocr-deskew | OCR cells deskewed by the median box slope (a 1.5° scan of SBILIFE's statement paired labels with the next row); text-layer pages read before OCR'd copies | 99.6% | 93.1% | 92.8% | 89.5% | 100.0% | 1 |
-| **v6** (shipped) | solvency normalised at extraction (percent ÷ 100, hundredth × 100) and anything outside 0.5–10x sent to review (the LLM had read "14,500" from the Fair Value Change row) | **100.0%** | **92.7%** | 92.8% | 89.5% | 94.7% | 0 |
+| v6 | solvency normalised at extraction (percent ÷ 100, hundredth × 100) and anything outside 0.5–10x sent to review (the LLM had read "14,500" from the Fair Value Change row) | **100.0%** | **92.7%** | 92.8% | 89.5% | 94.7% | 0 |
+
+| **v7-review-fixes** (shipped) | whole-branch review: the LLM's unit must be the only unit word on its cited page and the rules' unit on a laid-out page (NESTLEIND's "crore" on a ₹ million page, DRREDDY's crore on a millions page: 10× errors); a label no longer carries across pages and "ii Profit before tax" is an item (ADANIPORTS' PBT as EPS); EPS from the all-operations block, never discontinued-only (TMPV); diluted EPS above basic rejected (DRREDDY "109"); one figure under two metrics of a filing rejected (TITAN PBT as net profit, LT, BHARTIARTL, SBILIFE); cash-flow and notes tables skipped; plausibility needs ≥3 other periods and never rejects iXBRL. Scored with the stricter tolerance | **100.0%** | **93.1%** | 93.7% | 89.5% | 89.5% | 0 |
+
+Build v7: 372 files — 330 parsed, 20 partial, 22 failed; 5,243 rows (iXBRL 2,954, rules 1,491, LLM 798); 473 values held in `review`. The 8 extra failed files vs v6 are LLM-only filings whose pages print no unit word: their values cannot be checked, and NESTLEIND's were 10× off.
 
 Build v6: 372 files — 340 parsed, 18 partial, 14 failed; 5,513 rows (iXBRL, rules, LLM); 498 values held in `review`.
 The answer key has no scan-only case, so values read by OCR are guarded by the arithmetic and plausibility checks but not measured here.

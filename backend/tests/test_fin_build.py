@@ -130,11 +130,11 @@ def test_regulatory_deferral_skips_pbt_minus_tax_rule():
 
 
 def test_llm_asked_for_basis_the_rules_missed(tmp_path):
-    """Standalone page laid out by rules; the consolidated page has no unit row, so only the
-    LLM can read it. It must still be asked for consolidated."""
+    """Standalone page laid out by rules; the consolidated page states its unit only in a
+    footnote, so only the LLM can read it. It must still be asked for consolidated."""
     root = tmp_path / "q"
     (root / "TCS").mkdir(parents=True)
-    src = _pdf(tmp_path, [_head("Standalone") + BODY, _head("Consolidated", unit=None) + BODY], "s.pdf")
+    src = _pdf(tmp_path, [_head("Standalone") + BODY, _head("Consolidated", unit=None) + BODY + [[(0, "Note: all amounts in Rs. crore")]]], "s.pdf")
     shutil.copyfile(src.path, root / "TCS" / "2025-06.pdf")
     with open(root / "sources.csv", "w", newline="") as f:
         w = csv.writer(f)

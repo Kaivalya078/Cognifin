@@ -42,7 +42,8 @@ is worse than a missing one.
 - Segment revenue, full expense breakdown, balance sheet, cash flow.
 - NBFC-specific items (Bajaj Finance, Bajaj Finserv, Shriram, Jio Financial get the
   common items only), annual-report statement parsing.
-- OCR: SBIN Mar-2025 is an image-only PDF and stays a listed gap.
+- ~~OCR~~ — added at the owner's request (2026-11-17): image-only pages go through
+  rapidocr; results cached in `index_cache/financials_ocr_cache`.
 
 ## Anti-goals
 
@@ -62,7 +63,7 @@ Canonical metric names; amounts in INR, ratios in percent, EPS in INR per share.
 | Life insurers (LI filings) | `gross_premium`, `net_premium`, `first_year_premium`, `renewal_premium`, `single_premium`, `solvency_ratio` | INR / ratio |
 
 Banks have no `revenue_from_operations` line; it stays empty for them (not derived).
-`solvency_ratio` is stored as printed (e.g. 1.96), unit `ratio`. Return on assets
+`solvency_ratio` is stored as a multiple (e.g. 1.96; a printed 196% becomes 1.96), unit `ratio`. Return on assets
 is stored as printed for the period (quarterly, not annualised).
 
 ## Storage
@@ -110,9 +111,8 @@ URL and SHA-256 for every file, so the corpus is reproducible and auditable.
 
 ### iXBRL (203 files)
 
-The web pages are HTML tables of labelled rows; values are in actual rupees
-("INR (in Actuals)" — the "Level of rounding" row describes presentation and is ignored
-for conversion, but recorded). Header rows give symbol, basis, reporting period and
+The web pages are HTML tables of labelled rows; values are in the unit the "Level of rounding" row names
+(164 of 203 files are in Lakhs; the rest in Actuals), and converted from it. Header rows give symbol, basis, reporting period and
 audited flag. One label map per filing kind maps row labels to metrics; the
 "3 months ended" column is the quarter value and, in Q4 filings, the "year to date"
 column is the FY value. Dates come in `31-03-2026` and `31-Mar-2025` forms.
@@ -143,8 +143,10 @@ column is the FY value. Dates come in `31-03-2026` and `31-Mar-2025` forms.
 2. **Arithmetic**, where the parts exist: revenue + other income = total income;
    profit before tax − tax = net profit (allowing for exceptional items / share of
    associates when printed); tolerance one unit of the page's rounding.
-3. **Units:** the unit came from the page header; converted values in a plausible range
-   for the company (e.g. not 1000× the same metric in its other quarters).
+3. **Units:** the unit came from the page header. An LLM value's unit must be the only
+   unit word on its cited page and, on a page the rules laid out, the rules' unit.
+   PDF values more than 100× off the median of ≥3 other periods go to review (iXBRL is
+   never rejected this way). Diluted EPS above basic sends both to review.
 4. **Ratios:** percentages within 0–100.
 
 A failed check sends the candidate to `review`; if the rule value failed, the LLM is

@@ -68,3 +68,14 @@ def test_only_statement_pages_sent(tmp_path):
     fake = FakeClient([ITEM])
     extract_llm(_src(tmp_path), {3: PAGES[3]}, WANT, tmp_path / "c", client=fake)
     assert "1,234.50" in fake.prompts[0] and "board met" not in fake.prompts[0]
+
+
+def test_unit_claim_must_be_on_page(tmp_path):
+    fake = FakeClient([dict(ITEM, unit_header="(Rs. in lakhs)")])
+    assert extract_llm(_src(tmp_path), {3: PAGES[3]}, WANT, tmp_path / "c", client=fake) == []
+
+
+def test_page_with_two_unit_words_refused(tmp_path):
+    page = PAGES[3] + "\nSegment figures in Rs. millions"
+    fake = FakeClient([ITEM])
+    assert extract_llm(_src(tmp_path), {3: page}, WANT, tmp_path / "c", client=fake) == []

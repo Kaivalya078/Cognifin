@@ -7,7 +7,7 @@ from datetime import date
 from pathlib import Path
 
 from financials.metrics import METRICS
-from financials.numbers import parse_number, to_value, unit_multiplier
+from financials.numbers import parse_number, to_value, unit_multiplier, units_in
 from financials.sources import Source
 from financials.store import Candidate
 
@@ -85,6 +85,8 @@ def _to_candidates(src, pages, want, items) -> list[Candidate]:
         if key not in want or key in seen or page not in pages or key[2] not in METRICS:
             continue
         if parse_number(printed) is None or mult is None:   # no stated unit -> nothing stored
+            continue
+        if units_in(pages[page]) != {mult}:   # the claimed unit is the cited page's only one
             continue
         seen.add(key)
         start = _q_start(src.period_end) if key[1] == "Q" else date(src.period_end.year - 1, 4, 1)
