@@ -19,3 +19,11 @@ def test_hallucinated_citation_still_flagged():
     r = verify_citations(ANSWER + " Also chunk_99 says so.", IDS)
     assert r["invalid_citations"] == ["chunk_99"]
     assert extract_citations("see chunk_99", IDS) == []
+
+
+def test_fin_ids_are_citations():
+    ids = IDS + ["fin_1", "fin_12"]
+    ans = "Profit ₹1,221 crore [fin_1]. Revenue [fin_12]. Bogus [fin_9]."
+    assert extract_citations(ans, ids) == ["fin_1", "fin_12"]
+    r = verify_citations(ans, ids)
+    assert r["invalid_citations"] == ["fin_9"] and {"fin_1", "fin_12"} <= set(r["valid_citations"])

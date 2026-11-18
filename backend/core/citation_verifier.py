@@ -21,7 +21,7 @@ from typing import List, Dict
 logger = logging.getLogger(__name__)
 
 
-_REF = re.compile(r"chunk_\d+")
+_REF = re.compile(r"\b(?:chunk|fin)_\d+\b")   # fin_N: verified-figures rows (Phase 4)
 
 
 def bare_chunk_id(chunk_id: str) -> str:
@@ -55,7 +55,7 @@ def verify_citations(
         }
     """
     # Find all chunk_N references in the answer
-    found_refs = re.findall(r'chunk_\d+', answer)
+    found_refs = _REF.findall(answer)
     seen = set()
     unique_refs = []
     for ref in found_refs:
@@ -70,7 +70,7 @@ def verify_citations(
 
     # Count sentences and citation coverage
     sentences = [s.strip() for s in re.split(r'[.!?\n]', answer) if len(s.strip()) > 15]
-    cited_count = sum(1 for s in sentences if re.search(r'chunk_\d+', s))
+    cited_count = sum(1 for s in sentences if _REF.search(s))
 
     total = len(sentences)
     coverage = round(cited_count / total, 3) if total > 0 else 0.0

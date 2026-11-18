@@ -15,7 +15,7 @@ Phase: 2 (Generation Layer)
 import re
 from typing import List, Tuple
 
-from core.citation_verifier import bare_chunk_id
+from core.citation_verifier import _REF, bare_chunk_id
 
 
 # =============================================================================
@@ -180,9 +180,8 @@ def extract_citations(answer: str, available_chunk_ids: List[str]) -> List[str]:
     Returns:
         List of cited chunk IDs (only those that exist in context)
     """
-    # Find all chunk_N patterns in the answer
-    # Pattern: "chunk_" followed by one or more digits
-    found = re.findall(r"chunk_\d+", answer)
+    # Find all chunk_N / fin_N references in the answer
+    found = _REF.findall(answer)
     
     # Filter to only chunks that were actually in the context
     # This prevents hallucinated citations
