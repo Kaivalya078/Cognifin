@@ -50,7 +50,7 @@ Remaining misses (18 values): EPS and ratio rows the rules and LLM both left emp
 
 ## Numeric router (Phase 4)
 
-2026-11-18, `tests/eval_router.py` over `tests/router_golden.json` (41 cases, 15 end-to-end through `/chat` with gpt-4o-mini).
+2026-11-18, `tests/eval_router.py` over `tests/router_golden.json` (41 cases, 15 end-to-end through `/chat` with gpt-4o-mini), after the final-review fixes.
 
 Router, no LLM: 41 cases, hit rate 32/41, exact match 41/41 (100%).
 
@@ -59,8 +59,8 @@ Router, no LLM: 41 cases, hit rate 32/41, exact match 41/41 (100%).
 | TCS revenue trend | hit | 6 | 0 | 0 | 0 | - |
 | What was INFY's PAT in Q2 FY27? | hit | 0 | 0 | 1 | 0 | - |
 | INFY net profit FY26 | hit | 0 | 0 | 0 | 0 | - |
-| HDFCBANK gross NPA trend | hit | 6 | 0 | 0 | 0 | - |
-| HDFCBANK net NPA in Q2 FY27 | hit | 0 | 0 | 0 | 0 | - |
+| HDFCBANK gross NPA trend | hit | 2 | 0 | 0 | 0 | - |
+| HDFCBANK net NPA in Q2 FY27 | hit | 0 | 0 | 1 | 0 | - |
 | KOTAKBANK revenue | hit | 5 | 0 | 0 | 0 | - |
 | SBILIFE solvency ratio | hit | 4 | 0 | 0 | 0 | - |
 | HDFCLIFE gross premium FY26 | hit | 0 | 0 | 0 | 0 | - |
@@ -68,13 +68,14 @@ Router, no LLM: 41 cases, hit rate 32/41, exact match 41/41 (100%).
 | INFY standalone net profit | hit | 4 | 0 | 4 | 0 | - |
 | TCS net profit margin | miss | 0 | 0 | - | 0 | - |
 | TCS vs INFY revenue Q2 FY27 | hit | 2 | 0 | 3 | ₹32,469.0 crore | yes |
-| HDFCBANK vs ICICIBANK gross NPA | hit | 11 | 0 | 2 | 2.87%, 2.26% | NO |
+| HDFCBANK vs ICICIBANK gross NPA | hit | 7 | 0 | 0 | 0 | NO |
 | HDFCBANK vs RELIANCE revenue | hit | 13 | 0 | 0 | 0 | NO |
 | ITC vs MARUTI net profit FY26 | hit | 2 | 0 | 0 | 0 | NO |
-Chart values not equal to the DB: 0. Unmatched answer numbers: 3.
+
+Chart values not equal to the DB: 0 of 50 points. Unmatched answer numbers: 1.
 
 **Read with care.**
 - The 41 router cases were written alongside the alias list, so 100% shows the rules work as designed, not real-world coverage. Re-measure on questions from real users.
-- Chart values: 0 of 58 points differ from the table (the anti-goal).
+- The first run (before the review fixes) charted HDFCBANK gross NPA as a flat 0.00%: the Phase 3 iXBRL extractor stores 0.0 for ratios a filing doesn't disclose (56 such rows across bank ratios). The router now drops exact-zero rows. The extractor still writes them, so a rebuild fix is open.
 - Citations: gpt-4o-mini often writes the verified figures without the `[fin_N]` tag (sometimes with no citations at all). Uncited sentences are skipped by the number check (`checked` 0), and 3 of 4 comparisons fail "all companies cited" for this reason, even though their numbers match the rows.
-- `₹32,469.0 crore` is a derived difference (TCS minus INFY), a false flag of the regex check. `2.87%` / `2.26%` are the HDFCBANK/ICICIBANK GNPA comparison flags, not yet diagnosed.
+- `₹32,469.0 crore` is a derived difference (TCS minus INFY), a known false flag of the regex check.

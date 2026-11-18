@@ -129,6 +129,10 @@ class Lookup:
 
 
 def _select(rows: list[Row], spec: PeriodSpec) -> list[Row]:
+    # An exact 0.0 is how the iXBRL extractor records a ratio the filing didn't disclose
+    # (e.g. HDFCBANK consolidated GNPA); never present it as a verified figure.
+    # ponytail: guard here; fix the extractor + rebuild to remove the rows at the source.
+    rows = [r for r in rows if r.value != 0.0]
     if spec.ends is not None:
         return [r for r in rows if r.period_end in spec.ends]
     return rows[-spec.last_n:] if spec.last_n else rows

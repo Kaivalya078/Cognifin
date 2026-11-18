@@ -43,3 +43,27 @@ def test_uncited_sentences_ignored():
 
 def test_no_fin_ids_nothing_checked():
     assert check_numbers("Profit ₹1,221 crore [fin_1].", {}) == {"checked": 0, "unmatched": []}
+
+
+def test_growth_pct_counts_and_dates_not_flagged_even_with_pct_rows():
+    for txt in ["GNPA fell 15% to 1.23% [fin_2].", "GNPA rose 3% YoY to 1.23% [fin_2].",
+                "Over 12 months GNPA was 1.23% [fin_2].", "In 156 countries GNPA was 1.23% [fin_2].",
+                "As of 30.09.2026 GNPA was 1.23% [fin_2].", "As of 30/09/2026 GNPA was 1.23% [fin_2]."]:
+        assert check_numbers(txt, IDS)["unmatched"] == [], txt
+
+
+def test_pct_precision_follows_written_decimals():
+    assert check_numbers("GNPA was 1.2% [fin_2].", IDS)["unmatched"] == []      # 1.23 rounded to 1dp
+    assert check_numbers("GNPA was 1.26% [fin_2].", IDS)["unmatched"] == ["1.26%"]
+
+
+def test_matches_only_rows_cited_in_the_segment():
+    other = _row("gross_npa_pct", 1.60, "pct")
+    ids = {**IDS, "fin_3": (Series("Y", "gross_npa_pct", "gross_npa_pct", "consolidated", [other]), other)}
+    assert check_numbers("X GNPA was 1.60% [fin_2].", ids)["unmatched"] == ["1.60%"]
+    assert check_numbers("Y GNPA was 1.60% [fin_3].", ids)["unmatched"] == []
+
+
+def test_level_after_change_word_still_checked():
+    assert check_numbers("GNPA fell to 1.4% [fin_2].", IDS)["unmatched"] == ["1.4%"]
+    assert check_numbers("GNPA fell 15% to 1.4% [fin_2].", IDS)["unmatched"] == ["1.4%"]

@@ -113,7 +113,9 @@
    "metrics": {
     "HDFCBANK": "gross_npa_pct"
    },
-   "period_type": "Q"
+   "period_type": "Q",
+   "basis": "standalone",
+   "n_rows": 2
   },
   "e2e": true
  },

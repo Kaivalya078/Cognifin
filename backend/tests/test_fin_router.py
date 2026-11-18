@@ -87,3 +87,17 @@ def test_unknown_company_listed_missing(fin_db):
 def test_fy_and_last_n(fin_db):
     assert [r.period_type for r in route("TCS net profit FY26", ["TCS"], [], db=fin_db).series[0].rows] == ["FY"]
     assert len(route("TCS net profit last 2 quarters", ["TCS"], [], db=fin_db).series[0].rows) == 2
+
+
+def test_zero_rows_are_not_figures(tmp_path):
+    # iXBRL wrote 0.0 for undisclosed bank ratios; they must not outvote real standalone rows.
+    from datetime import date
+    from tests.conftest import fin_candidate as c
+    from financials.store import write_db
+    p = str(tmp_path / "z.duckdb")
+    write_db(p, [*[c("HDFCBANK", e, metric="gross_npa_pct", unit="pct", value=0.0)
+                   for e in (date(2025, 6, 30), date(2025, 9, 30), date(2025, 12, 31))],
+                 c("HDFCBANK", date(2025, 12, 31), metric="gross_npa_pct", unit="pct", basis="standalone", value=1.24)],
+             [], [])
+    s = route("HDFCBANK gross NPA", ["HDFCBANK"], [], db=p).series[0]
+    assert s.basis == "standalone" and [r.value for r in s.rows] == [1.24]

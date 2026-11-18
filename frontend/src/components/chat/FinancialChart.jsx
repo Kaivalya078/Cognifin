@@ -24,7 +24,7 @@ export default function FinancialChart({ chart, numbersCheck }) {
     const { series, display_unit: unit } = chart;
     const singlePeriod = series.every((s) => s.points.length === 1);
     const unmatched = numbersCheck?.unmatched || [];
-    const title = `${series[0].label} (${unit})`;
+    const title = `${chart.title || series[0].label} (${unit})`;
 
     let body;
     if (singlePeriod) {
@@ -77,6 +77,9 @@ export default function FinancialChart({ chart, numbersCheck }) {
             </div>
             <ResponsiveContainer width="100%" height={260}>{body}</ResponsiveContainer>
             <div className="chat-fin-chart-note">Verified figures from company filings · click a point to open the filing</div>
+            {chart.mixed_basis && (
+                <div className="chat-fin-chart-note">Companies are shown on different bases (consolidated vs standalone), so they aren&apos;t directly comparable.</div>
+            )}
             {unmatched.length > 0 && (
                 <div className="chat-fin-chart-note chat-fin-chart-warn">
                     {unmatched.length} number{unmatched.length > 1 ? 's' : ''} in this answer didn&apos;t match the verified table: {unmatched.join(', ')}

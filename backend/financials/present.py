@@ -63,11 +63,27 @@ def prepare(question: str, companies: list[str], years: list[str], db: str = DEF
             ids[f"fin_{len(ids) + 1}"] = (s, r)
     lines = {fid: f"[{fid}] {s.company} | {r.metric} | {period_label(r)} | {s.basis} | "
                   f"{fmt_value(r.value, r.unit)} | {_source(r)}" for fid, (s, r) in ids.items()}
-    block = "\n".join([_HEADER, *lines.values(), *(f"not in verified table: {c}" for c in lookup.missing)])
+    notes = [f"not in verified table: {c}" for c in lookup.missing]
+    if _mixed_basis(lookup.series):
+        bases = ", ".join(f"{s.company} {s.basis}" for s in lookup.series if s.requested == lookup.metrics[0])
+        notes.append(f"Note: bases differ between companies ({bases}); say so when comparing them.")
+    block = "\n".join([_HEADER, *lines.values(), *notes])
     evidence = [{"chunk_id": fid, "snippet": lines[fid], "page_number": r.page or 0,
                  "document_label": f"{s.company} results {period_label(r)}", "pdf_url": r.source_url}
                 for fid, (s, r) in ids.items()]
     return Prepared(lookup, ids, block, evidence)
+
+
+def _mixed_basis(series: list[Series]) -> bool:
+    """Do the charted (first requested metric) series use more than one basis?"""
+    first = series[0].requested if series else None
+    return len({s.basis for s in series if s.requested == first}) > 1
+
+
+def _series_name(s: Series, mixed: bool) -> str:
+    parts = ([_words(s.metric)] if s.metric != s.requested else []) \
+        + ([s.basis] if mixed or s.basis == "standalone" else [])
+    return s.company + (f" ({', '.join(parts)})" if parts else "")
 
 
 def build_chart(prep: Prepared) -> "dict | None":
@@ -77,10 +93,10 @@ def build_chart(prep: Prepared) -> "dict | None":
         return None
     unit = picked[0][2].unit
     display, div = _DISPLAY[unit]
+    mixed = _mixed_basis(prep.lookup.series)
     series: dict[int, dict] = {}
     for fid, s, r in picked:
-        name = s.company + (f" ({_words(s.metric)})" if s.metric != s.requested else "") \
-            + (" (standalone)" if s.basis == "standalone" else "")
+        name = _series_name(s, mixed)
         entry = series.setdefault(id(s), {"company": s.company, "name": name, "metric": s.metric,
                                           "requested": s.requested, "label": metric_label(s.metric),
                                           "basis": s.basis, "points": []})
@@ -88,7 +104,7 @@ def build_chart(prep: Prepared) -> "dict | None":
                                 "value": r.value / div, "source_url": r.source_url, "page": r.page,
                                 "fin_id": fid, "method": r.method})
     return {"unit": unit, "display_unit": display, "period_type": prep.lookup.period.period_type,
-            "series": list(series.values())}
+            "title": metric_label(first), "mixed_basis": mixed, "series": list(series.values())}
 
 
 def finish(prep: "Prepared | None", answer: str) -> dict:

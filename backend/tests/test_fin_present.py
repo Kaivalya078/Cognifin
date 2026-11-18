@@ -37,7 +37,7 @@ def test_no_chart_for_single_point(fin_db):
 def test_chart_first_metric_only_and_series_name(fin_db):
     c = build_chart(prepare("HDFCBANK vs RELIANCE revenue and EPS", ["HDFCBANK", "RELIANCE"], [], db=fin_db))
     assert {s["requested"] for s in c["series"]} == {"revenue_from_operations"}
-    assert any(s["name"] == "HDFCBANK (interest earned)" for s in c["series"])
+    assert any(s["name"] == "HDFCBANK (interest earned, consolidated)" for s in c["series"])
     assert any(s["name"] == "RELIANCE (standalone)" for s in c["series"])
 
 
@@ -68,3 +68,19 @@ def test_metric_label_keeps_acronyms():
     from financials.present import metric_label
     assert metric_label("gross_npa_pct") == "Gross NPA" and metric_label("eps_basic") == "EPS basic"
     assert metric_label("net_profit") == "Net profit"
+
+
+def test_mixed_bases_label_every_series_and_title_uses_requested_metric(fin_db):
+    p = prepare("TCS vs RELIANCE revenue", ["TCS", "RELIANCE"], [], db=fin_db)
+    assert p is not None
+    p2 = prepare("HDFCBANK vs RELIANCE revenue", ["HDFCBANK", "RELIANCE"], [], db=fin_db)
+    c = build_chart(p2)
+    names = {s["name"] for s in c["series"]}
+    assert names == {"HDFCBANK (interest earned, consolidated)", "RELIANCE (standalone)"}
+    assert c["title"] == "Revenue from operations" and c["mixed_basis"] is True
+    assert "bases differ" in p2.block
+
+
+def test_single_basis_names_unchanged(fin_db):
+    c = build_chart(prepare("TCS net profit", ["TCS"], [], db=fin_db))
+    assert c["series"][0]["name"] == "TCS" and c["mixed_basis"] is False and c["title"] == "Net profit"
