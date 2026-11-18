@@ -57,3 +57,105 @@ def parse_periods(question: str, years: list[str]) -> PeriodSpec:
     if years:
         return PeriodSpec("FY", sorted({date(int(y), 3, 31) for y in years}))
     return PeriodSpec("Q")
+
+
+# ---------------------------------------------------------------- metrics
+_ALIASES = {
+    "revenue_from_operations": ["revenue from operations", "revenue", "revenues", "sales", "topline",
+                                "top line", "turnover"],
+    "total_income": ["total income"],
+    "other_income": ["other income"],
+    "total_expenses": ["total expenses", "total expenditure", "expenses"],
+    "profit_before_tax": ["profit before tax", "pbt"],
+    "tax_expense": ["tax expense", "tax expenses", "tax"],
+    "net_profit": ["net profit", "profit after tax", "pat", "net income", "profit", "profits", "earnings"],
+    "net_profit_owners": ["profit attributable to owners", "profit attributable to shareholders",
+                          "profit attributable to equity holders"],
+    "eps_basic": ["basic eps", "eps", "earnings per share", "basic earnings per share"],
+    "eps_diluted": ["diluted eps", "diluted earnings per share"],
+    "interest_earned": ["interest earned", "interest income"],
+    "gross_npa_pct": ["gross npa", "gnpa", "npa"],
+    "net_npa_pct": ["net npa", "nnpa"],
+    "capital_adequacy_pct": ["capital adequacy", "capital adequacy ratio", "crar"],
+    "cet1_pct": ["cet1", "cet 1", "cet-1"],
+    "return_on_assets_pct": ["return on assets", "roa"],
+    "gross_premium": ["gross premium", "gross written premium", "gwp"],
+    "net_premium": ["net premium"],
+    "first_year_premium": ["first year premium", "first-year premium", "fyp"],
+    "renewal_premium": ["renewal premium"],
+    "single_premium": ["single premium"],
+    "solvency_ratio": ["solvency ratio", "solvency"],
+}
+_PHRASES = sorted(((p, m) for m, ps in _ALIASES.items() for p in ps), key=lambda pm: -len(pm[0]))
+# Terms we can't answer from the table: mask them and up to two words before them,
+# so "net profit margin" or "operating profit" doesn't fire net_profit.
+_AMBIGUOUS = re.compile(r"(?:\b[\w']+\s+){0,2}\b(?:margins?|nim|roe|roce|growth|ebitda|ebit|"
+                        r"operating\s+profit|gross\s+profit)\b", re.I)
+
+
+def detect_metrics(question: str) -> list[str]:
+    text = _AMBIGUOUS.sub(lambda m: " " * len(m.group()), question.lower())
+    hits: list[tuple[int, str]] = []
+    for phrase, metric in _PHRASES:
+        for m in re.finditer(rf"\b{re.escape(phrase)}\b", text):
+            hits.append((m.start(), metric))
+            text = _mask(text, m)
+    out: list[str] = []
+    for _, metric in sorted(hits):
+        if metric not in out:
+            out.append(metric)
+    return out[:3]
+
+
+# ---------------------------------------------------------------- routing
+from financials.query import DEFAULT_DB, Row, available, get_metric  # noqa: E402
+
+
+@dataclass
+class Series:
+    company: str
+    metric: str          # metric actually fetched
+    requested: str       # metric asked for (differs for a bank asked for revenue)
+    basis: str
+    rows: list[Row]
+
+
+@dataclass
+class Lookup:
+    metrics: list[str]
+    period: PeriodSpec
+    series: list[Series]
+    missing: list[str]   # companies with no rows: the LLM answers them from RAG
+
+
+def _select(rows: list[Row], spec: PeriodSpec) -> list[Row]:
+    if spec.ends is not None:
+        return [r for r in rows if r.period_end in spec.ends]
+    return rows[-spec.last_n:] if spec.last_n else rows
+
+
+def route(question: str, companies: list[str], years: list[str], db: str = DEFAULT_DB) -> "Lookup | None":
+    metrics = detect_metrics(question)
+    if not metrics or not companies:
+        return None
+    spec = parse_periods(question, years)
+    q = question.lower()
+    bases = (["standalone"] if "standalone" in q else ["consolidated"] if "consolidated" in q
+             else ["consolidated", "standalone"])
+    series, missing = [], []
+    for company in companies:
+        have = available(company, db=db)
+        found = False
+        for requested in metrics:
+            metric = ("interest_earned" if requested == "revenue_from_operations" and "interest_earned" in have
+                      else requested)
+            if metric not in have:
+                continue
+            picks = [(b, _select(get_metric(company, metric, b, spec.period_type, db=db), spec)) for b in bases]
+            basis, rows = max(picks, key=lambda p: len(p[1]))   # tie -> first, i.e. consolidated
+            if rows:
+                series.append(Series(company, metric, requested, basis, rows))
+                found = True
+        if not found:
+            missing.append(company)
+    return Lookup(metrics, spec, series, missing) if series else None

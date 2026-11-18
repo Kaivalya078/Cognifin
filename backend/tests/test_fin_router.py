@@ -39,3 +39,51 @@ def test_specific_period_beats_bare_year():
 
 def test_mixed_types_first_match_wins():
     assert parse_periods("FY26 and Q2 FY27", []).period_type == "FY"
+
+
+from financials.router import detect_metrics, route  # noqa: E402
+
+
+def test_aliases():
+    assert detect_metrics("What was TCS's PAT?") == ["net_profit"]
+    assert detect_metrics("sales and EPS") == ["revenue_from_operations", "eps_basic"]
+    assert detect_metrics("diluted EPS") == ["eps_diluted"]
+    assert detect_metrics("gross NPA and CET1") == ["gross_npa_pct", "cet1_pct"]
+    assert detect_metrics("profit before tax") == ["profit_before_tax"]   # not net_profit too
+    assert detect_metrics("net profit margin") == []   # margin is ambiguous -> nothing
+    assert detect_metrics("NIM and ROE") == []
+
+
+def test_route_basic(fin_db):
+    lk = route("TCS net profit trend", ["TCS"], [], db=fin_db)
+    assert [s.company for s in lk.series] == ["TCS"] and lk.series[0].basis == "consolidated"
+    assert len(lk.series[0].rows) == 3 and lk.missing == []
+
+
+def test_route_none_cases(fin_db):
+    assert route("TCS strategy", ["TCS"], [], db=fin_db) is None
+    assert route("net profit", [], [], db=fin_db) is None
+    assert route("TCS net profit Q1 FY24", ["TCS"], [], db=fin_db) is None
+
+
+def test_standalone_fallback_and_more_rows_wins(fin_db):
+    assert route("ITC net profit", ["ITC"], [], db=fin_db).series[0].basis == "standalone"
+    assert route("RELIANCE revenue", ["RELIANCE"], [], db=fin_db).series[0].basis == "standalone"
+    assert route("RELIANCE consolidated revenue", ["RELIANCE"], [], db=fin_db).series[0].basis == "consolidated"
+
+
+def test_bank_revenue_maps_to_interest_earned_per_company(fin_db):
+    lk = route("HDFCBANK vs RELIANCE revenue", ["HDFCBANK", "RELIANCE"], [], db=fin_db)
+    by = {s.company: s for s in lk.series}
+    assert by["HDFCBANK"].metric == "interest_earned" and by["HDFCBANK"].requested == "revenue_from_operations"
+    assert by["RELIANCE"].metric == "revenue_from_operations"
+
+
+def test_unknown_company_listed_missing(fin_db):
+    lk = route("TCS vs ACME net profit", ["TCS", "ACME"], [], db=fin_db)
+    assert [s.company for s in lk.series] == ["TCS"] and lk.missing == ["ACME"]
+
+
+def test_fy_and_last_n(fin_db):
+    assert [r.period_type for r in route("TCS net profit FY26", ["TCS"], [], db=fin_db).series[0].rows] == ["FY"]
+    assert len(route("TCS net profit last 2 quarters", ["TCS"], [], db=fin_db).series[0].rows) == 2
