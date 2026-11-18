@@ -2,6 +2,7 @@
 evidence items, chart data and the post-answer metadata."""
 from dataclasses import dataclass
 
+from financials.numcheck import check_numbers
 from financials.query import DEFAULT_DB, Row
 from financials.router import Lookup, Series, route
 
@@ -86,4 +87,4 @@ def finish(prep: "Prepared | None", answer: str) -> dict:
         return {"router": {"hit": False}, "chart": None, "numbers_check": None}
     return {"router": {"hit": True, "metrics": prep.lookup.metrics, "rows": len(prep.ids),
                        "missing": prep.lookup.missing},
-            "chart": build_chart(prep), "numbers_check": None}
+            "chart": build_chart(prep), "numbers_check": check_numbers(answer, prep.ids)}

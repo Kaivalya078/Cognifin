@@ -47,3 +47,10 @@ def test_prepare_miss(fin_db):
 
 def test_finish_miss():
     assert finish(None, "x") == {"router": {"hit": False}, "chart": None, "numbers_check": None}
+
+
+def test_finish_hit_runs_numbers_check(fin_db):
+    p = prepare("TCS net profit", ["TCS"], [], db=fin_db)
+    out = finish(p, "Profit was ₹500 crore [fin_1].")
+    assert out["router"]["hit"] is True and out["router"]["rows"] == 3
+    assert out["numbers_check"] == {"checked": 1, "unmatched": ["₹500 crore"]}
