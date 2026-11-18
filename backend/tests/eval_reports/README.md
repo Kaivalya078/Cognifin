@@ -47,3 +47,34 @@ Build v7: 372 files — 330 parsed, 20 partial, 22 failed; 5,243 rows (iXBRL 2,9
 Build v6: 372 files — 340 parsed, 18 partial, 14 failed; 5,513 rows (iXBRL, rules, LLM); 498 values held in `review`.
 The answer key has no scan-only case, so values read by OCR are guarded by the arithmetic and plausibility checks but not measured here.
 Remaining misses (18 values): EPS and ratio rows the rules and LLM both left empty, and values that failed verbatim/arithmetic (correctly or not) — see the `missing` list in the v6 report.
+
+## Numeric router (Phase 4)
+
+2026-11-18, `tests/eval_router.py` over `tests/router_golden.json` (41 cases, 15 end-to-end through `/chat` with gpt-4o-mini).
+
+Router, no LLM: 41 cases, hit rate 32/41, exact match 41/41 (100%).
+
+| Question | Router | Chart points | Chart ≠ DB | Numbers checked | Unmatched | All companies cited |
+|---|---|---|---|---|---|---|
+| TCS revenue trend | hit | 6 | 0 | 0 | 0 | - |
+| What was INFY's PAT in Q2 FY27? | hit | 0 | 0 | 1 | 0 | - |
+| INFY net profit FY26 | hit | 0 | 0 | 0 | 0 | - |
+| HDFCBANK gross NPA trend | hit | 6 | 0 | 0 | 0 | - |
+| HDFCBANK net NPA in Q2 FY27 | hit | 0 | 0 | 0 | 0 | - |
+| KOTAKBANK revenue | hit | 5 | 0 | 0 | 0 | - |
+| SBILIFE solvency ratio | hit | 4 | 0 | 0 | 0 | - |
+| HDFCLIFE gross premium FY26 | hit | 0 | 0 | 0 | 0 | - |
+| MARUTI turnover | hit | 5 | 0 | 0 | 0 | - |
+| INFY standalone net profit | hit | 4 | 0 | 4 | 0 | - |
+| TCS net profit margin | miss | 0 | 0 | - | 0 | - |
+| TCS vs INFY revenue Q2 FY27 | hit | 2 | 0 | 3 | ₹32,469.0 crore | yes |
+| HDFCBANK vs ICICIBANK gross NPA | hit | 11 | 0 | 2 | 2.87%, 2.26% | NO |
+| HDFCBANK vs RELIANCE revenue | hit | 13 | 0 | 0 | 0 | NO |
+| ITC vs MARUTI net profit FY26 | hit | 2 | 0 | 0 | 0 | NO |
+Chart values not equal to the DB: 0. Unmatched answer numbers: 3.
+
+**Read with care.**
+- The 41 router cases were written alongside the alias list, so 100% shows the rules work as designed, not real-world coverage. Re-measure on questions from real users.
+- Chart values: 0 of 58 points differ from the table (the anti-goal).
+- Citations: gpt-4o-mini often writes the verified figures without the `[fin_N]` tag (sometimes with no citations at all). Uncited sentences are skipped by the number check (`checked` 0), and 3 of 4 comparisons fail "all companies cited" for this reason, even though their numbers match the rows.
+- `₹32,469.0 crore` is a derived difference (TCS minus INFY), a false flag of the regex check. `2.87%` / `2.26%` are the HDFCBANK/ICICIBANK GNPA comparison flags, not yet diagnosed.

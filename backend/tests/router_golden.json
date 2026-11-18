@@ -1,0 +1,489 @@
+[
+ {
+  "q": "TCS revenue trend",
+  "companies": [
+   "TCS"
+  ],
+  "expect": {
+   "metrics": {
+    "TCS": "revenue_from_operations"
+   },
+   "period_type": "Q"
+  },
+  "e2e": true
+ },
+ {
+  "q": "TCS sales over the last 4 quarters",
+  "companies": [
+   "TCS"
+  ],
+  "expect": {
+   "metrics": {
+    "TCS": "revenue_from_operations"
+   },
+   "period_type": "Q",
+   "n_rows": 4
+  }
+ },
+ {
+  "q": "What was INFY's PAT in Q2 FY27?",
+  "companies": [
+   "INFY"
+  ],
+  "expect": {
+   "metrics": {
+    "INFY": "net_profit"
+   },
+   "period_type": "Q",
+   "n_rows": 1
+  },
+  "e2e": true
+ },
+ {
+  "q": "INFY net profit FY26",
+  "companies": [
+   "INFY"
+  ],
+  "expect": {
+   "metrics": {
+    "INFY": "net_profit"
+   },
+   "period_type": "FY",
+   "n_rows": 1
+  },
+  "e2e": true
+ },
+ {
+  "q": "ITC topline FY2025",
+  "companies": [
+   "ITC"
+  ],
+  "expect": {
+   "metrics": {
+    "ITC": "revenue_from_operations"
+   },
+   "period_type": "FY",
+   "n_rows": 1
+  }
+ },
+ {
+  "q": "ITC profit before tax for the quarter ended Sep 2026",
+  "companies": [
+   "ITC"
+  ],
+  "expect": {
+   "metrics": {
+    "ITC": "profit_before_tax"
+   },
+   "period_type": "Q",
+   "n_rows": 1
+  }
+ },
+ {
+  "q": "RELIANCE EPS trend",
+  "companies": [
+   "RELIANCE"
+  ],
+  "expect": {
+   "metrics": {
+    "RELIANCE": "eps_basic"
+   },
+   "period_type": "Q"
+  }
+ },
+ {
+  "q": "RELIANCE diluted EPS Q1 FY27",
+  "companies": [
+   "RELIANCE"
+  ],
+  "expect": {
+   "metrics": {
+    "RELIANCE": "eps_diluted"
+   },
+   "period_type": "Q",
+   "n_rows": 1
+  }
+ },
+ {
+  "q": "HDFCBANK gross NPA trend",
+  "companies": [
+   "HDFCBANK"
+  ],
+  "expect": {
+   "metrics": {
+    "HDFCBANK": "gross_npa_pct"
+   },
+   "period_type": "Q"
+  },
+  "e2e": true
+ },
+ {
+  "q": "HDFCBANK net NPA in Q2 FY27",
+  "companies": [
+   "HDFCBANK"
+  ],
+  "expect": {
+   "metrics": {
+    "HDFCBANK": "net_npa_pct"
+   },
+   "period_type": "Q",
+   "n_rows": 1
+  },
+  "e2e": true
+ },
+ {
+  "q": "AXISBANK capital adequacy ratio",
+  "companies": [
+   "AXISBANK"
+  ],
+  "expect": {
+   "metrics": {
+    "AXISBANK": "capital_adequacy_pct"
+   },
+   "period_type": "Q"
+  }
+ },
+ {
+  "q": "SBIN CET1 ratio",
+  "companies": [
+   "SBIN"
+  ],
+  "expect": {
+   "metrics": {
+    "SBIN": "cet1_pct"
+   },
+   "period_type": "Q"
+  }
+ },
+ {
+  "q": "AXISBANK return on assets",
+  "companies": [
+   "AXISBANK"
+  ],
+  "expect": {
+   "metrics": {
+    "AXISBANK": "return_on_assets_pct"
+   },
+   "period_type": "Q"
+  }
+ },
+ {
+  "q": "KOTAKBANK revenue",
+  "companies": [
+   "KOTAKBANK"
+  ],
+  "expect": {
+   "metrics": {
+    "KOTAKBANK": "interest_earned"
+   },
+   "period_type": "Q"
+  },
+  "e2e": true
+ },
+ {
+  "q": "SBIN interest income last 2 quarters",
+  "companies": [
+   "SBIN"
+  ],
+  "expect": {
+   "metrics": {
+    "SBIN": "interest_earned"
+   },
+   "period_type": "Q",
+   "n_rows": 2
+  }
+ },
+ {
+  "q": "SBILIFE solvency ratio",
+  "companies": [
+   "SBILIFE"
+  ],
+  "expect": {
+   "metrics": {
+    "SBILIFE": "solvency_ratio"
+   },
+   "period_type": "Q"
+  },
+  "e2e": true
+ },
+ {
+  "q": "HDFCLIFE gross premium FY26",
+  "companies": [
+   "HDFCLIFE"
+  ],
+  "expect": {
+   "metrics": {
+    "HDFCLIFE": "gross_premium"
+   },
+   "period_type": "FY",
+   "n_rows": 1
+  },
+  "e2e": true
+ },
+ {
+  "q": "SBILIFE first year premium trend",
+  "companies": [
+   "SBILIFE"
+  ],
+  "expect": {
+   "metrics": {
+    "SBILIFE": "first_year_premium"
+   },
+   "period_type": "Q"
+  }
+ },
+ {
+  "q": "HDFCLIFE renewal premium",
+  "companies": [
+   "HDFCLIFE"
+  ],
+  "expect": {
+   "metrics": {
+    "HDFCLIFE": "renewal_premium"
+   },
+   "period_type": "Q"
+  }
+ },
+ {
+  "q": "MARUTI turnover",
+  "companies": [
+   "MARUTI"
+  ],
+  "expect": {
+   "metrics": {
+    "MARUTI": "revenue_from_operations"
+   },
+   "period_type": "Q"
+  },
+  "e2e": true
+ },
+ {
+  "q": "BHARTIARTL total income Q3 FY26",
+  "companies": [
+   "BHARTIARTL"
+  ],
+  "expect": {
+   "metrics": {
+    "BHARTIARTL": "total_income"
+   },
+   "period_type": "Q",
+   "n_rows": 1
+  }
+ },
+ {
+  "q": "BHARTIARTL other income",
+  "companies": [
+   "BHARTIARTL"
+  ],
+  "expect": {
+   "metrics": {
+    "BHARTIARTL": "other_income"
+   },
+   "period_type": "Q"
+  }
+ },
+ {
+  "q": "APOLLOHOSP total expenses",
+  "companies": [
+   "APOLLOHOSP"
+  ],
+  "expect": {
+   "metrics": {
+    "APOLLOHOSP": "total_expenses"
+   },
+   "period_type": "Q"
+  }
+ },
+ {
+  "q": "TCS tax expense FY25",
+  "companies": [
+   "TCS"
+  ],
+  "expect": {
+   "metrics": {
+    "TCS": "tax_expense"
+   },
+   "period_type": "FY",
+   "n_rows": 1
+  }
+ },
+ {
+  "q": "TCS profit attributable to owners",
+  "companies": [
+   "TCS"
+  ],
+  "expect": {
+   "metrics": {
+    "TCS": "net_profit_owners"
+   },
+   "period_type": "Q"
+  }
+ },
+ {
+  "q": "INFY standalone net profit",
+  "companies": [
+   "INFY"
+  ],
+  "expect": {
+   "metrics": {
+    "INFY": "net_profit"
+   },
+   "period_type": "Q",
+   "basis": "standalone"
+  },
+  "e2e": true
+ },
+ {
+  "q": "TCS net profit margin",
+  "companies": [
+   "TCS"
+  ],
+  "expect": null,
+  "e2e": true
+ },
+ {
+  "q": "HDFCBANK NIM trend",
+  "companies": [
+   "HDFCBANK"
+  ],
+  "expect": null
+ },
+ {
+  "q": "TCS EBITDA",
+  "companies": [
+   "TCS"
+  ],
+  "expect": null
+ },
+ {
+  "q": "INFY revenue growth",
+  "companies": [
+   "INFY"
+  ],
+  "expect": null
+ },
+ {
+  "q": "TCS net profit Q1 FY24",
+  "companies": [
+   "TCS"
+  ],
+  "expect": null
+ },
+ {
+  "q": "TCS strategy and outlook",
+  "companies": [
+   "TCS"
+  ],
+  "expect": null
+ },
+ {
+  "q": "TCS revenue FY23",
+  "companies": [
+   "TCS"
+  ],
+  "expect": null
+ },
+ {
+  "q": "Who are TCS's promoters?",
+  "companies": [
+   "TCS"
+  ],
+  "expect": null
+ },
+ {
+  "q": "TCS vs INFY revenue Q2 FY27",
+  "companies": [
+   "TCS",
+   "INFY"
+  ],
+  "expect": {
+   "metrics": {
+    "TCS": "revenue_from_operations",
+    "INFY": "revenue_from_operations"
+   },
+   "period_type": "Q",
+   "n_rows": 2
+  },
+  "e2e": true
+ },
+ {
+  "q": "HDFCBANK vs ICICIBANK gross NPA",
+  "companies": [
+   "HDFCBANK",
+   "ICICIBANK"
+  ],
+  "expect": {
+   "metrics": {
+    "HDFCBANK": "gross_npa_pct",
+    "ICICIBANK": "gross_npa_pct"
+   },
+   "period_type": "Q"
+  },
+  "e2e": true
+ },
+ {
+  "q": "HDFCBANK vs RELIANCE revenue",
+  "companies": [
+   "HDFCBANK",
+   "RELIANCE"
+  ],
+  "expect": {
+   "metrics": {
+    "HDFCBANK": "interest_earned",
+    "RELIANCE": "revenue_from_operations"
+   },
+   "period_type": "Q"
+  },
+  "e2e": true
+ },
+ {
+  "q": "SBILIFE vs HDFCLIFE solvency",
+  "companies": [
+   "SBILIFE",
+   "HDFCLIFE"
+  ],
+  "expect": {
+   "metrics": {
+    "SBILIFE": "solvency_ratio",
+    "HDFCLIFE": "solvency_ratio"
+   },
+   "period_type": "Q"
+  }
+ },
+ {
+  "q": "ITC vs MARUTI net profit FY26",
+  "e2e": true,
+  "companies": [
+   "ITC",
+   "MARUTI"
+  ],
+  "expect": {
+   "metrics": {
+    "ITC": "net_profit",
+    "MARUTI": "net_profit"
+   },
+   "period_type": "FY",
+   "n_rows": 2
+  }
+ },
+ {
+  "q": "TCS and ACME net profit",
+  "companies": [
+   "TCS",
+   "ACME"
+  ],
+  "expect": {
+   "metrics": {
+    "TCS": "net_profit"
+   },
+   "period_type": "Q"
+  }
+ },
+ {
+  "q": "ICICIBANK capital adequacy ratio",
+  "companies": [
+   "ICICIBANK"
+  ],
+  "expect": null
+ }
+]
