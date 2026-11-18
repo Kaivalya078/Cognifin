@@ -116,7 +116,7 @@ Values in the chart are the row values converted to the display unit, with no ro
 - Rendered in `MessageList.jsx` under the answer, from `message.metadata.pipeline.chart`.
 - One company → line chart over periods. Several companies with one period each → grouped bar chart. Several companies over several periods → line chart, one line per company.
 - Tooltip: company, period label, value, "method: xbrl/rule/llm".
-- Click a point: PDF → open the existing `PDFViewerModal` at `page` (same URL rule as `EvidenceChunk`); iXBRL HTML → open `source_url` in a new tab.
+- Click a point: open `source_url` in a new tab, with `#page=N` for PDFs. (Changed while planning: the filings live on bseindia.com/nseindia.com, which we don't serve, and pdf.js in `PDFViewerModal` would hit CORS.)
 - Unmatched-numbers note: one muted line under the chart.
 
 ### 6. Wiring in `answer_question` (`backend/main.py`)

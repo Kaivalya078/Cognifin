@@ -54,3 +54,11 @@ def test_finish_hit_runs_numbers_check(fin_db):
     out = finish(p, "Profit was ₹500 crore [fin_1].")
     assert out["router"]["hit"] is True and out["router"]["rows"] == 3
     assert out["numbers_check"] == {"checked": 1, "unmatched": ["₹500 crore"]}
+
+
+def test_assistant_metadata_keeps_chart():
+    from financials.present import assistant_metadata
+    p = {"citations": ["fin_1"], "evidence": [], "metadata": {"chart": {"series": []}, "numbers_check": None}}
+    m = assistant_metadata(p)
+    assert m["citations"] == ["fin_1"] and m["evidence"] == []
+    assert m["pipeline"] == {"chart": {"series": []}, "numbers_check": None}

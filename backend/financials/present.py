@@ -7,7 +7,8 @@ from financials.query import DEFAULT_DB, Row
 from financials.router import Lookup, Series, route
 
 _HEADER = ("VERIFIED FIGURES (from company filings; these are authoritative — use these numbers exactly, "
-           "prefer them over chunk text for the same metric and period, and cite [fin_N]):")
+           "prefer them over chunk text for the same metric and period. Every sentence or table row that "
+           "uses one of these figures MUST cite it, e.g. [fin_3]):")
 _DISPLAY = {"INR": ("₹ crore", 1e7), "pct": ("%", 1), "ratio": ("×", 1), "INR_per_share": ("₹ per share", 1)}
 
 
@@ -88,3 +89,10 @@ def finish(prep: "Prepared | None", answer: str) -> dict:
     return {"router": {"hit": True, "metrics": prep.lookup.metrics, "rows": len(prep.ids),
                        "missing": prep.lookup.missing},
             "chart": build_chart(prep), "numbers_check": check_numbers(answer, prep.ids)}
+
+
+def assistant_metadata(payload: dict) -> dict:
+    """What persist_exchange saves; `pipeline` mirrors where the frontend reads live metadata."""
+    meta = payload.get("metadata", {})
+    return {"citations": payload["citations"], "evidence": payload["evidence"],
+            "pipeline": {"chart": meta.get("chart"), "numbers_check": meta.get("numbers_check")}}

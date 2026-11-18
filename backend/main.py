@@ -42,6 +42,7 @@ from core.metadata_schema import RetrievalResult
 # Phase 2: Generation layer
 from generation.openai_client import OpenAIClient
 from generation.prompt_builder import build_context, build_prompt, extract_citations
+from financials.present import assistant_metadata, finish, prepare as prepare_figures
 
 # Phase 2.5: Corpus architecture
 from core.corpus_manager import CorpusManager, new_session_corpus, discard
@@ -720,6 +721,18 @@ _STRUCTURED_PROMPTS = {"comparison": "compare", "compare": "compare",
                        "temporal": "trend", "trend": "trend"}
 
 
+def _prepare_figures(question: str, parsed):
+    """Financials-table rows for this question, or None. Never fails a chat."""
+    def get(key):
+        v = parsed.get(key) if isinstance(parsed, dict) else getattr(parsed, key, None)
+        return list(v or [])
+    try:
+        return prepare_figures(question, get("companies"), [str(y) for y in get("years")])
+    except Exception as e:
+        print(f"⚠️  Financials router skipped: {e}")
+        return None
+
+
 def answer_question(question: str, session_id: Optional[str] = None,
                     top_k: Optional[int] = None) -> dict:
     """
@@ -779,6 +792,7 @@ def answer_question(question: str, session_id: Optional[str] = None,
             )
 
         intent = iq.intent
+        parsed = iq   # companies/years for the financials router
         print(f"   Intent: {iq.intent} | Complexity: {iq.complexity} | "
               f"Strategy: {iq.retrieval_strategy} | Parse: {iq.parse_method}")
 
@@ -802,6 +816,12 @@ def answer_question(question: str, session_id: Optional[str] = None,
             intent = parsed.get("intent", "lookup") if isinstance(parsed, dict) else getattr(parsed, "intent", "lookup")
 
         context, chunk_ids = build_context(results)
+
+    # Verified figures from the financials table ride alongside the RAG chunks.
+    fin = _prepare_figures(question, parsed)
+    if fin:
+        context = fin.block + "\n\n" + context
+        chunk_ids = list(chunk_ids) + list(fin.ids)
 
     # Build the prompt and generate. Comparisons and trends get prompts that
     # demand tables over entities/periods; everything else keeps the generic
@@ -828,7 +848,7 @@ def answer_question(question: str, session_id: Optional[str] = None,
             pdf_url=r.pdf_url,
         ).model_dump()
         for r in results
-    ]
+    ] + [EvidenceItem(**e).model_dump() for e in (fin.evidence if fin else [])]
 
     total_ms = tracker.get_total_ms()
     breakdown = tracker.get_breakdown()
@@ -856,6 +876,7 @@ def answer_question(question: str, session_id: Optional[str] = None,
             "cached": False,
             "model": llm_client.model,
             "citation_check": citation_check,
+            **finish(fin, answer),
         },
         "follow_ups": follow_ups,
     }
@@ -871,7 +892,7 @@ def persist_exchange(user_id: str, conversation_id: Optional[str],
     assistant_msg = {
         "role": "assistant",
         "content": payload["answer"],
-        "metadata": {"citations": payload["citations"], "evidence": payload["evidence"]},
+        "metadata": assistant_metadata(payload),
         "timestamp": now_iso,
     }
     try:
