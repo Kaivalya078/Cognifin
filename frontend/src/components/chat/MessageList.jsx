@@ -16,6 +16,7 @@ import remarkGfm from 'remark-gfm';
 import { Copy, Check, ChevronDown, ChevronUp, FileText } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import PDFViewerModal from './PDFViewerModal';
+import FinancialChart from './FinancialChart';
 import LoadingIndicator from './LoadingIndicator';
 import { API_BASE } from '../../api';
 
@@ -140,6 +141,11 @@ function MessageBubble({ message, isLatest, onFollowUp }) {
                             </ReactMarkdown>
                         )}
                     </div>
+                )}
+
+                {/* Chart of verified figures from the financials table */}
+                {!isUser && !isStreaming && pipeline.chart && (
+                    <FinancialChart chart={pipeline.chart} numbersCheck={pipeline.numbers_check} />
                 )}
 
                 {/* Metadata Bar — confidence, latency, sources */}
@@ -355,6 +361,7 @@ function EvidenceChunk({ item }) {
     const pdfUrl = !item.pdf_url ? null
         : /^https?:\/\//.test(item.pdf_url) ? item.pdf_url
         : `${API_BASE}${item.pdf_url}`;
+    const isFiling = item.chunk_id?.startsWith('fin_');
 
     return (
         <>
@@ -375,7 +382,10 @@ function EvidenceChunk({ item }) {
                         {pdfUrl && (
                             <button
                                 className="chat-evidence-pdf-link"
-                                onClick={() => setPdfOpen(true)}
+                                onClick={() => (isFiling
+                                    // Verified-figure rows point at BSE/NSE filings we don't serve: open in a new tab
+                                    ? window.open(pdfUrl + (/\.pdf($|\?)/i.test(pdfUrl) && item.page_number > 0 ? `#page=${item.page_number}` : ''), '_blank', 'noopener')
+                                    : setPdfOpen(true))}
                             >
                                 <FileText size={12} />
                                 Open PDF{item.page_number > 0 ? ` (Page ${item.page_number})` : ''}

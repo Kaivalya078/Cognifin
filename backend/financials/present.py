@@ -37,6 +37,14 @@ def _words(metric: str) -> str:
     return metric.removesuffix("_pct").replace("_", " ")
 
 
+_ACRONYMS = {"npa": "NPA", "eps": "EPS", "cet1": "CET1"}
+
+
+def metric_label(metric: str) -> str:
+    words = _words(metric).capitalize().split()
+    return " ".join(_ACRONYMS.get(w.lower(), w) for w in words)
+
+
 @dataclass
 class Prepared:
     lookup: Lookup
@@ -74,7 +82,7 @@ def build_chart(prep: Prepared) -> "dict | None":
         name = s.company + (f" ({_words(s.metric)})" if s.metric != s.requested else "") \
             + (" (standalone)" if s.basis == "standalone" else "")
         entry = series.setdefault(id(s), {"company": s.company, "name": name, "metric": s.metric,
-                                          "requested": s.requested, "label": _words(s.metric).capitalize(),
+                                          "requested": s.requested, "label": metric_label(s.metric),
                                           "basis": s.basis, "points": []})
         entry["points"].append({"period_end": r.period_end.isoformat(), "label": period_label(r),
                                 "value": r.value / div, "source_url": r.source_url, "page": r.page,

@@ -62,3 +62,9 @@ def test_assistant_metadata_keeps_chart():
     m = assistant_metadata(p)
     assert m["citations"] == ["fin_1"] and m["evidence"] == []
     assert m["pipeline"] == {"chart": {"series": []}, "numbers_check": None}
+
+
+def test_metric_label_keeps_acronyms():
+    from financials.present import metric_label
+    assert metric_label("gross_npa_pct") == "Gross NPA" and metric_label("eps_basic") == "EPS basic"
+    assert metric_label("net_profit") == "Net profit"

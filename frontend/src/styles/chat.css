@@ -2322,3 +2322,17 @@
     }
 }
 
+
+/* Verified-figures chart (Phase 4) */
+.chat-fin-chart {
+    margin-top: 12px;
+    padding: 12px 8px 8px;
+    border: 1px solid var(--ai-border);
+    border-radius: 10px;
+    background: var(--ai-card);
+    min-width: 0;
+    align-self: stretch;
+}
+.chat-fin-chart-title { font-size: 13px; color: var(--text); margin: 0 6px 8px; }
+.chat-fin-chart-note { font-size: 11px; color: var(--text-muted); margin: 6px 6px 0; }
+.chat-fin-chart-warn { color: var(--red); }
