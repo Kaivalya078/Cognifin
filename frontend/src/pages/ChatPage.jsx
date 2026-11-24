@@ -105,6 +105,7 @@ export default function ChatPage() {
     const { isAuthenticated } = useAuth();
     const [isLoading, setIsLoading] = useState(false);
     const [streaming, setStreaming] = useState(null); // { stages, text } while answering
+    const [showUploadForm, setShowUploadForm] = useState(false);
     const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
     const [backendDown, setBackendDown] = useState(false);
     const [bannerDismissed, setBannerDismissed] = useState(false);
@@ -343,6 +344,7 @@ export default function ChatPage() {
                                 isLoading={isLoading}
                                 streaming={streaming}
                                 onFollowUp={handleSend}
+                                onRequestUpload={() => setShowUploadForm(true)}
                             />
                             <ChatInput
                                 onSend={handleSend}
@@ -350,6 +352,8 @@ export default function ChatPage() {
                                 isLoading={isLoading}
                                 uploadedFile={activeSession?.fileName || null}
                                 onClearUpload={handleClearUpload}
+                                showUploadForm={showUploadForm}
+                                setShowUploadForm={setShowUploadForm}
                             />
                         </>
                     ) : (
@@ -395,6 +399,8 @@ export default function ChatPage() {
                                 isLoading={isLoading}
                                 uploadedFile={activeSession?.fileName || null}
                                 onClearUpload={handleClearUpload}
+                                showUploadForm={showUploadForm}
+                                setShowUploadForm={setShowUploadForm}
                             />
                         </div>
                     )}
