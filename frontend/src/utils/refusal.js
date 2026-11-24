@@ -3,7 +3,8 @@
 // Keep in sync if that sentence changes.
 const REFUSAL = 'not available in the provided documents';
 
-/** True when the whole reply is the "not in the filings" refusal. */
+/** True when the whole reply is the "not in the filings" refusal (quotes / bold allowed). */
 export function isRefusal(text) {
-    return (text || '').trim().replace(/\.$/, '').toLowerCase() === REFUSAL;
+    const bare = (text || '').replace(/^["'*\s]+|["'*\s]+$/g, '').replace(/\.$/, '');
+    return bare.toLowerCase() === REFUSAL;
 }

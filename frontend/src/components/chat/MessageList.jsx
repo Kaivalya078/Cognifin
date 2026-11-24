@@ -44,6 +44,7 @@ export default function MessageList({ messages, isLoading, streaming, onFollowUp
                     message={msg}
                     onFollowUp={onFollowUp}
                     onRequestUpload={onRequestUpload}
+                    isLoading={isLoading}
                 />
             ))}
 
@@ -55,7 +56,7 @@ export default function MessageList({ messages, isLoading, streaming, onFollowUp
     );
 }
 
-function MessageBubble({ message, onFollowUp, onRequestUpload }) {
+function MessageBubble({ message, onFollowUp, onRequestUpload, isLoading }) {
     const isUser = message.role === 'user';
     const { user, isAuthenticated } = useAuth();
     const userName = user?.name || 'You';
@@ -106,14 +107,14 @@ function MessageBubble({ message, onFollowUp, onRequestUpload }) {
                 )}
 
                 {/* Not in the corpus: offer the existing upload instead of a dead end */}
-                {!isUser && isRefusal(message.content) && (
+                {!isUser && onRequestUpload && isRefusal(message.content) && (
                     <div className="chat-upload-card">
                         <p>
                             Cognifin&apos;s filings don&apos;t cover this yet. Have the company&apos;s
                             annual report? Upload the PDF to ask about it in this chat.
                         </p>
                         {isAuthenticated ? (
-                            <button type="button" className="follow-up-chip" onClick={onRequestUpload}>
+                            <button type="button" className="follow-up-chip" onClick={onRequestUpload} disabled={isLoading}>
                                 Upload a PDF
                             </button>
                         ) : (

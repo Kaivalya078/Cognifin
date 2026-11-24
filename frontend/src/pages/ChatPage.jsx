@@ -125,6 +125,9 @@ export default function ChatPage() {
     // Active session for current chat
     const activeSession = activeId ? sessions[activeId] : null;
 
+    // The upload panel belongs to the chat it was opened in: close it on New chat / switch.
+    useEffect(() => setShowUploadForm(false), [activeId]);
+
     // --- Health Check on Mount ---
     useEffect(() => {
         checkHealth()
@@ -181,6 +184,11 @@ export default function ChatPage() {
 
                 // If backend created a new conversation, store its id
                 if (data.conversation_id && data.conversation_id !== conversationId) {
+                    // A PDF uploaded before the first answer is keyed by the old (empty) id:
+                    // move it, or later questions in this chat silently lose the PDF.
+                    setSessions(prev => (prev[convId] && !prev[data.conversation_id])
+                        ? { ...prev, [data.conversation_id]: prev[convId] }
+                        : prev);
                     setConversationId(data.conversation_id);
                 }
 
@@ -344,7 +352,8 @@ export default function ChatPage() {
                                 isLoading={isLoading}
                                 streaming={streaming}
                                 onFollowUp={handleSend}
-                                onRequestUpload={() => setShowUploadForm(true)}
+                                // A chat that already has a PDF gets no upload card (it would replace that PDF)
+                                onRequestUpload={activeSession ? null : () => setShowUploadForm(true)}
                             />
                             <ChatInput
                                 onSend={handleSend}

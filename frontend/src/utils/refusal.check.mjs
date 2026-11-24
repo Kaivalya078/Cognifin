@@ -9,5 +9,7 @@ assert.equal(isRefusal('Revenue rose. Not available in the provided documents.')
 assert.equal(isRefusal('⚠️ Server error (500)'), false);
 assert.equal(isRefusal(''), false);
 assert.equal(isRefusal(undefined), false);
+assert.equal(isRefusal('"Not available in the provided documents."'), true);
+assert.equal(isRefusal('**Not available in the provided documents.**'), true);
 
 console.log('refusal.check: ok');
