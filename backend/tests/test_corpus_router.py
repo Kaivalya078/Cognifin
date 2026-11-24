@@ -10,21 +10,20 @@ Run with:
     python -m pytest test_corpus_router.py -v
 """
 
-import unittest
 import sys
+import unittest
 from pathlib import Path
+
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from dataclasses import dataclass, replace as dc_replace
-from unittest.mock import MagicMock
 from typing import List
+from unittest.mock import MagicMock
 
 from core.corpus_manager import CorpusManager
-from core.corpus_router import CorpusRouter, _merge_by_score, _apply_merge_strategy
-from core.metadata_schema import RetrievalResult
+from core.corpus_router import CorpusRouter, _merge_by_score
 from core.lookup_index import RetrievalScope
-from query.search_plan import SearchPlan, SubQuery, MergeStrategy
-
+from core.metadata_schema import RetrievalResult
+from query.search_plan import MergeStrategy, SearchPlan, SubQuery
 
 # =============================================================================
 # HELPERS
@@ -190,6 +189,7 @@ class TestDualCorpus(unittest.TestCase):
         """Merged global+session results are trimmed to RETRIEVAL_K (the
         reranker's candidate pool), not scope.top_k or final_top_k."""
         from unittest.mock import patch
+
         from config import settings
         g = make_results("g", [0.9, 0.7, 0.5])
         s = make_results("s", [0.8, 0.6, 0.4])

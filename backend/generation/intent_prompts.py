@@ -13,8 +13,7 @@ Author: FinSight AI Team
 Phase: 4 (Intelligent Query Understanding)
 """
 
-from typing import Tuple, Optional
-
+from typing import Tuple
 
 # =============================================================================
 # SHARED FORMATTING RULES (appended to every intent prompt)

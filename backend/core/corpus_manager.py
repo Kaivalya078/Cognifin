@@ -9,25 +9,32 @@ chunks occupy the contiguous range [vector_id_start, vector_id_end), which
 the registry records. Citations use "chunk_<vector_id>".
 """
 
-import os
 import json
-import shutil
 import logging
+import os
+import shutil
 import uuid
-from dataclasses import asdict, replace as dc_replace
+from dataclasses import asdict
+from dataclasses import replace as dc_replace
 from types import SimpleNamespace
-from typing import List, Dict, Callable, Optional
+from typing import Callable, Dict, List, Optional
 
 import numpy as np
 
 from config import settings
-from .chunk_store import ChunkStore, scope_to_where
-from .retriever_pipeline import RetrieverPipeline
+from query.search_plan import MergeStrategy, SearchPlan
+
 from .cache_utils import atomic_write_json
-from .retrieval_logger import log_retrieval_event
-from .metadata_schema import ChunkMetadata, DocumentRecord, RetrievalResult, create_default_metadata
+from .chunk_store import ChunkStore, scope_to_where
 from .lookup_index import RetrievalScope
-from query.search_plan import SearchPlan, MergeStrategy
+from .metadata_schema import (
+    ChunkMetadata,
+    DocumentRecord,
+    RetrievalResult,
+    create_default_metadata,
+)
+from .retrieval_logger import log_retrieval_event
+from .retriever_pipeline import RetrieverPipeline
 
 logger = logging.getLogger(__name__)
 

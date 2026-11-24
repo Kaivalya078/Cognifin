@@ -17,12 +17,11 @@ Author: FinSight AI Team
 Phase: 1 (Core Retrieval Fixes — Observability)
 """
 
-from config import settings
 import json
-import time
 import logging
-from typing import List, Optional
-from dataclasses import asdict
+import time
+
+from config import settings
 
 logger = logging.getLogger("finsight.retrieval")
 

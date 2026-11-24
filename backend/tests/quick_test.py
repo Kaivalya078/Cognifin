@@ -1,5 +1,6 @@
 """Quick test: metadata mapping (Test 3) + Test 2 info"""
-import json, os, urllib.request
+import json
+import urllib.request
 
 BASE_URL = "http://localhost:8000"
 QUERY = "What are the risk factors?"
@@ -15,6 +16,7 @@ resp = urllib.request.urlopen(req, timeout=60)
 results = json.loads(resp.read())["results"]
 
 import fitz
+
 doc = fitz.open("data/sample.pdf")
 full_text = ""
 for page in doc:

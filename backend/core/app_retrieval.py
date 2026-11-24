@@ -3,17 +3,17 @@ Global corpus loading and retrieval, shared by the API (main.py) and the
 retrieval scorer (tests/eval_retrieval.py) so both run exactly the same path.
 """
 
-import os
 import logging
+import os
 
 import psutil
 
 from config import settings
 from core.chunk_store import ChunkStore
 from core.corpus_manager import CorpusManager
-from core.retriever_pipeline import RetrieverPipeline
 from core.reranker import init_reranker
 from core.retrieval_pipeline_v2 import refine_results
+from core.retriever_pipeline import RetrieverPipeline
 from query.query_orchestrator import retrieve_context
 
 logger = logging.getLogger(__name__)

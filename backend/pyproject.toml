@@ -1,0 +1,18 @@
+# Lint config only (the backend is not a package). Run: ruff check .
+[tool.ruff]
+extend-exclude = ["venv"]
+
+[tool.ruff.lint]
+# Core errors + bugbear (real bugs) + import sorting. No pyupgrade: pure churn.
+select = ["E4", "E7", "E9", "F", "B", "I"]
+# B905: explicit zip(strict=) on working code is noise; strict=True would change behaviour.
+ignore = ["B905"]
+
+[tool.ruff.lint.flake8-bugbear]
+# FastAPI's dependency markers are meant to be call defaults.
+extend-immutable-calls = ["fastapi.Depends", "fastapi.File", "fastapi.Form", "fastapi.Query"]
+
+[tool.ruff.lint.per-file-ignores]
+# Test and eval scripts put backend/ on sys.path before importing it.
+# F811: fixtures imported from test_security for reuse look like redefinitions to ruff.
+"tests/*" = ["E402", "F811"]

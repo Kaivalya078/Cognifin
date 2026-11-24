@@ -20,11 +20,12 @@ Author: FinSight AI Team
 Phase: 3 (Recall Improvement Layer)
 """
 
-from config import settings
 import logging
-from typing import List, Dict, Optional
 from collections import Counter
 from dataclasses import replace as dc_replace
+from typing import Dict, List, Optional
+
+from config import settings
 
 logger = logging.getLogger(__name__)
 
@@ -103,7 +104,7 @@ def merge_results(
     chunk_map: Dict[str, object] = {}  # chunk_id → best RetrievalResult object
     source_counts: Dict[str, int] = {}  # chunk_id → number of lists it appears in
 
-    for list_idx, results in enumerate(non_empty):
+    for results in non_empty:
         for rank, result in enumerate(results):
             cid = result.chunk_id
             rrf_score = 1.0 / (rrf_k + rank + 1)  # rank is 0-based
@@ -153,7 +154,6 @@ def merge_results(
         company_counts[company_key] += 1
 
     # ── Logging ──
-    list_labels = labels or [f"list_{i}" for i in range(len(non_empty))]
     list_sizes = [len(rl) for rl in non_empty]
     multi_source = sum(1 for c in source_counts.values() if c > 1)
 

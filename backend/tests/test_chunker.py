@@ -43,7 +43,7 @@ def test_table_becomes_markdown_with_header(tmp_path):
     assert len(tables) == 1
     lines = body(tables[0]).splitlines()
     assert lines[0].startswith("|") and "Particulars" in lines[0]
-    assert any("231456" in l and "198234" in l for l in lines)
+    assert any("231456" in ln and "198234" in ln for ln in lines)
 
 
 def test_table_numbers_not_repeated_in_prose(tmp_path):
@@ -59,7 +59,7 @@ def test_long_table_splits_on_rows_and_repeats_header(tmp_path):
     for c in tables:
         lines = body(c).splitlines()
         assert "Particulars" in lines[0]
-        assert all(l.startswith("|") and l.endswith("|") for l in lines)  # no cut rows
+        assert all(ln.startswith("|") and ln.endswith("|") for ln in lines)  # no cut rows
         assert len(c.text) <= 1500
     items = [m for c in tables for m in re.findall(r"Line item (\d+)\|", c.text)]
     assert sorted(set(items), key=int) == [str(i) for i in range(42)]
@@ -213,13 +213,16 @@ def test_append_path_matches_cold_start_path(tmp_path):
 def test_image_only_pdf_is_rejected(tmp_path):
     import fitz
     path = tmp_path / "img.pdf"
-    doc = fitz.open(); doc.new_page(); doc.save(str(path))
+    doc = fitz.open()
+    doc.new_page()
+    doc.save(str(path))
     with pytest.raises(ValueError, match="no extractable text"):
         _corpus(tmp_path).add_document(str(path), company="ACME", document_type="Annual_Report", year="2024")
 
 
 def test_embed_texts_returns_float32_from_fp16_model(monkeypatch):
     import numpy as np
+
     from core.retriever_pipeline import RetrieverPipeline
     p = RetrieverPipeline()
     monkeypatch.setattr(p.model, "encode", lambda texts, **_: np.ones((len(texts), 4), dtype=np.float16))
@@ -229,6 +232,7 @@ def test_embed_texts_returns_float32_from_fp16_model(monkeypatch):
 
 def test_page_rows_public(tmp_path):
     import fitz
+
     from core.pdf_chunker import page_rows
     pdf = make_pdf(tmp_path / "r.pdf", [[("table", [["Particulars", "Q1", "Q2"],
                                                     ["Revenue", "1,234.5", "1,100.0"]])]])

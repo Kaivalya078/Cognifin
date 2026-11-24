@@ -21,29 +21,28 @@ Pipeline (Phase 4):
     → return (step_results, intelligent_query)
 """
 
-from config import settings
 import logging
 import time
-import asyncio
-from typing import Callable, List, Tuple, Dict, Optional
 from concurrent.futures import ThreadPoolExecutor
+from typing import Callable, Dict, List, Tuple
 
 import numpy as np
 
-from .query_understanding import parse_query, ParsedQuery
-from .search_plan_builder import build_plan
-from .search_plan import SearchPlan
-from .query_expander import expand_query
-from .multi_query import generate_multi_queries, is_multi_query_enabled
-from .intelligent_parser import (
-    IntelligentQuery, llm_parse_query, is_intelligent_parsing_enabled,
-)
-from .execution_planner import plan_execution, RetrievalStep
-from .context_assembler import assemble_context
+from config import settings
 from core.corpus_manager import CorpusManager
 from core.metadata_schema import RetrievalResult
 from core.result_merger import merge_results
 from core.retrieval_pipeline_v2 import refine_results
+
+from .execution_planner import RetrievalStep, plan_execution
+from .intelligent_parser import (
+    IntelligentQuery,
+    llm_parse_query,
+)
+from .multi_query import generate_multi_queries, is_multi_query_enabled
+from .query_expander import expand_query
+from .query_understanding import ParsedQuery, parse_query
+from .search_plan_builder import build_plan
 
 logger = logging.getLogger(__name__)
 

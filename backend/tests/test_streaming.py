@@ -10,8 +10,8 @@ import pytest
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from generation.streaming import sse, hold_follow_ups
 from generation.openai_client import OpenAIClient
+from generation.streaming import hold_follow_ups, sse
 
 
 def test_sse_frame():

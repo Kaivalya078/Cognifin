@@ -92,8 +92,9 @@ def test_fy_and_last_n(fin_db):
 def test_zero_rows_are_not_figures(tmp_path):
     # iXBRL wrote 0.0 for undisclosed bank ratios; they must not outvote real standalone rows.
     from datetime import date
-    from tests.conftest import fin_candidate as c
+
     from financials.store import write_db
+    from tests.conftest import fin_candidate as c
     p = str(tmp_path / "z.duckdb")
     write_db(p, [*[c("HDFCBANK", e, metric="gross_npa_pct", unit="pct", value=0.0)
                    for e in (date(2025, 6, 30), date(2025, 9, 30), date(2025, 12, 31))],

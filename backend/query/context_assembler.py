@@ -12,7 +12,7 @@ Phase: 4 (Intelligent Query Understanding)
 """
 
 import logging
-from typing import List, Dict, Tuple, Set
+from typing import Dict, List, Set, Tuple
 
 logger = logging.getLogger(__name__)
 

@@ -1,7 +1,7 @@
 """Crash-safe file writes for the index registry."""
 
-import os
 import json
+import os
 
 TMP_PREFIX = ".finsight_tmp_"
 

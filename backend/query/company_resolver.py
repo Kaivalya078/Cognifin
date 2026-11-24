@@ -16,8 +16,8 @@ Phase: 2.5 (Corpus Architecture)
 """
 
 from typing import List
-from metadata_schema import EntityRecord
 
+from metadata_schema import EntityRecord
 
 # =============================================================================
 # DEFAULT ENTITY (Phase 2.5)

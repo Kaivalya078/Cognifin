@@ -3,11 +3,11 @@ Chunking + embedding: turns a PDF into Chunks (core.pdf_chunker) and text
 into normalised vectors. Storage and search live in core.chunk_store.
 """
 
+import hashlib
+import json
+import logging
 import os
 import re
-import json
-import hashlib
-import logging
 import unicodedata
 from dataclasses import dataclass
 from typing import Dict, List

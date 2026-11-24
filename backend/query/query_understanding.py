@@ -31,11 +31,10 @@ Design:
 from __future__ import annotations
 
 import re
-
-from query.company_aliases import COMPANY_ALIASES
 from dataclasses import dataclass
 from typing import List, Literal, Tuple
 
+from query.company_aliases import COMPANY_ALIASES
 
 # =============================================================================
 # PARSED QUERY DATACLASS
@@ -131,8 +130,6 @@ def detect_companies(
     """
     matched: List[str] = []
     spans: List[Tuple[int, int]] = []
-    query_lower = query.lower()
-
     # Every surface form (the key itself + its aliases), longest first, so
     # "SBI Life" claims its span before "SBI" and "Tech Mahindra" before
     # "Mahindra"; the overlap check then stops the shorter form matching inside.

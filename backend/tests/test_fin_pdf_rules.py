@@ -315,7 +315,8 @@ def test_item_marker_is_not_a_wrapped_label(tmp_path):
 def test_owners_after_discontinued_block_wins(tmp_path):
     """TMPV: owners' share of continuing profit comes first; the total after the discontinued
     block is the figure."""
-    own = lambda v: [(0, "Shareholders of the Company"), (1, v), (2, "1.00"), (3, "1.00"), (4, "1.00")]
+    def own(v):
+        return [(0, "Shareholders of the Company"), (1, v), (2, "1.00"), (3, "1.00"), (4, "1.00")]
     body = BODY[:6] + [own("120.00"),
                        [(0, "Profit before tax from discontinued operation"), (1, "30.00"), (2, "1.00"),
                         (3, "1.00"), (4, "1.00")], own("140.00")] + BODY[6:]

@@ -17,11 +17,10 @@ Author: FinSight AI Team
 Phase: 2 (Retrieval Precision Layer)
 """
 
-from config import settings
 import logging
-from typing import List, Optional
 
-from core.reranker import rerank, is_reranker_ready
+from config import settings
+from core.reranker import is_reranker_ready, rerank
 from core.result_refiner import boost_by_metadata, deduplicate, enrich_context
 from core.retrieval_logger import log_rerank_event
 

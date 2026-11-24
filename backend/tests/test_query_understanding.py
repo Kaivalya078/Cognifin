@@ -12,19 +12,19 @@ Usage:
 
 import sys
 from pathlib import Path
+
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 import pytest
+
 from query.query_understanding import (
-    ParsedQuery,
-    detect_companies,
-    extract_years,
-    detect_document_types,
     classify_intent,
     clean_query,
+    detect_companies,
+    detect_document_types,
+    extract_years,
     parse_query,
 )
-
 
 # =============================================================================
 # FIXTURES

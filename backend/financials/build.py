@@ -8,8 +8,13 @@ from collections import defaultdict
 from dataclasses import replace
 from pathlib import Path
 
-from financials.checks import (check_arithmetic, check_duplicates, check_plausible, check_ratio,
-                               check_verbatim)
+from financials.checks import (
+    check_arithmetic,
+    check_duplicates,
+    check_plausible,
+    check_ratio,
+    check_verbatim,
+)
 from financials.ixbrl import parse_ixbrl
 from financials.metrics import metrics_for
 from financials.numbers import parse_number

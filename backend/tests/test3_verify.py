@@ -1,5 +1,8 @@
 """Test 3: Metadata Mapping - using correct page join method"""
-import fitz, urllib.request, json
+import json
+import urllib.request
+
+import fitz
 
 # Extract text EXACTLY as the pipeline does (join with \n\n)
 doc = fitz.open("data/sample.pdf")

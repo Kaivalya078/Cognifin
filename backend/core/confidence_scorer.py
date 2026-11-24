@@ -12,8 +12,8 @@ Author: FinSight AI Team
 Phase: 5 (Advanced RAG Layer)
 """
 
-import re
 import logging
+import re
 from typing import List, Tuple
 
 logger = logging.getLogger(__name__)
