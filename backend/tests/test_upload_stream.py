@@ -110,3 +110,29 @@ def test_embed_texts_without_progress_is_one_encode_call():
     rp.model = SimpleNamespace(encode=lambda texts, **kw: sizes.append(len(texts)) or np.ones((len(texts), 4)))
     rp.embed_texts(["t"] * 600)
     assert sizes == [600]
+
+
+def test_upload_failure_after_ingest_still_ends_the_stream(ingest):
+    """A failure outside add_document (here: registering the session) must
+    still put a terminal error on the queue, or the stream waits forever."""
+    import queue
+    main, make, seen = ingest
+    corpus = make()
+
+    def boom(sid, c):
+        raise RuntimeError("router full")
+    main.corpus_router.register_session = boom
+    tmp_dir = tempfile.mkdtemp(prefix="finsight_upload_")
+    tmp_path = os.path.join(tmp_dir, "upload.pdf")
+    open(tmp_path, "wb").write(PDF)
+    q, _, worker = main._start_ingest(corpus, tmp_dir, tmp_path, "ACME", "2024", "Annual_Report")
+    items = []
+    while True:
+        kind, data = q.get(timeout=5)
+        items.append((kind, data))
+        if kind in ("final", "error"):
+            break
+    assert items[-1] == ("error", {"detail": "Upload error: router full", "status": 500})
+    worker.join(5)
+    assert seen["discarded"] == [corpus]
+    assert not os.path.exists(tmp_dir)

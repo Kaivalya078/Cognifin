@@ -587,28 +587,35 @@ def _start_ingest(session_corpus, tmp_dir: str, tmp_path: str,
     abandoned = threading.Event()
 
     def work():
+        # Every path ends with exactly one terminal item, or the stream waits forever.
+        registered = False
         try:
             n = session_corpus.add_document(
                 pdf_path=tmp_path, company=company_name, document_type=document_type,
                 year=year, progress=lambda name, **info: q.put(("stage", {"name": name, **info})),
             )
-        except Exception as e:
-            discard(session_corpus)
+            shutil.rmtree(tmp_dir, ignore_errors=True)
+            if abandoned.is_set():
+                discard(session_corpus)
+                return
+            # ponytail: a client leaving after this point leaves an orphan session
+            # until the router evicts it; nothing else references it.
+            session_id = str(uuid4())
+            final = UploadResponse(
+                session_id=session_id, chunks=n, company=company_name,
+                year=year, document_type=document_type,
+            ).model_dump()
+            corpus_router.register_session(session_id, session_corpus)
+            registered = True
+            q.put(("final", final))
+        except BaseException as e:
+            if not registered:
+                try:
+                    discard(session_corpus)
+                except Exception:
+                    pass
             shutil.rmtree(tmp_dir, ignore_errors=True)
             q.put(("error", {"detail": f"Upload error: {e}", "status": 500}))
-            return
-        shutil.rmtree(tmp_dir, ignore_errors=True)
-        if abandoned.is_set():
-            discard(session_corpus)
-            return
-        # ponytail: a client leaving after this point leaves an orphan session
-        # until the router evicts it; nothing else references it.
-        session_id = str(uuid4())
-        corpus_router.register_session(session_id, session_corpus)
-        q.put(("final", UploadResponse(
-            session_id=session_id, chunks=n, company=company_name,
-            year=year, document_type=document_type,
-        ).model_dump()))
 
     worker = threading.Thread(target=work, daemon=True)
     worker.start()

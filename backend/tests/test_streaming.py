@@ -62,3 +62,20 @@ def test_generate_stream_maps_errors():
 
     with pytest.raises(RuntimeError, match="rate limit"):
         list(_client(chunks).generate_stream("s", "u"))
+
+
+def test_generate_stream_closes_upstream_when_abandoned():
+    """Closing the generator early must close the OpenAI stream, or the model
+    keeps generating (and billing) after the user has gone."""
+    class Upstream:
+        closed = False
+        def __iter__(self):
+            yield _chunk("a")
+            yield _chunk("b")
+        def close(self):
+            Upstream.closed = True
+
+    g = _client(lambda **kw: Upstream()).generate_stream("s", "u")
+    assert next(g) == "a"
+    g.close()
+    assert Upstream.closed

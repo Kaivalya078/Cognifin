@@ -123,6 +123,7 @@ class OpenAIClient:
                 "OpenAI API key is not configured. "
                 "Please set OPENAI_API_KEY in your .env file and restart the server."
             )
+        stream = None
         try:
             stream = self.client.chat.completions.create(
                 model=self.model,
@@ -140,6 +141,9 @@ class OpenAIClient:
                     yield text
         except Exception as e:
             raise _as_runtime_error(e)
+        finally:
+            # A closed tab closes this generator: stop the model generating (and billing).
+            getattr(stream, "close", lambda: None)()
 
 
 def _as_runtime_error(e: Exception) -> RuntimeError:
