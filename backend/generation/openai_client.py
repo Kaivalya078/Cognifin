@@ -113,15 +113,41 @@ class OpenAIClient:
             answer = response.choices[0].message.content.strip()
             return answer
             
-        except AuthenticationError:
-            raise RuntimeError(
-                "Invalid OpenAI API key. Please check OPENAI_API_KEY in your .env file."
-            )
-        except RateLimitError:
-            raise RuntimeError(
-                "OpenAI API rate limit exceeded. Please wait a moment and try again."
-            )
-        except APIError as e:
-            raise RuntimeError(f"OpenAI API error: {str(e)}")
         except Exception as e:
-            raise RuntimeError(f"Unexpected error calling OpenAI: {str(e)}")
+            raise _as_runtime_error(e)
+
+    def generate_stream(self, system_prompt: str, user_message: str):
+        """Like generate(), but yields the answer text as the model produces it."""
+        if not self.is_configured or self.client is None:
+            raise ValueError(
+                "OpenAI API key is not configured. "
+                "Please set OPENAI_API_KEY in your .env file and restart the server."
+            )
+        try:
+            stream = self.client.chat.completions.create(
+                model=self.model,
+                messages=[
+                    {"role": "system", "content": system_prompt},
+                    {"role": "user", "content": user_message}
+                ],
+                temperature=0,
+                max_tokens=1000,
+                stream=True,
+            )
+            for chunk in stream:
+                text = chunk.choices[0].delta.content if chunk.choices else None
+                if text:
+                    yield text
+        except Exception as e:
+            raise _as_runtime_error(e)
+
+
+def _as_runtime_error(e: Exception) -> RuntimeError:
+    """The one place OpenAI failures become user-facing messages."""
+    if isinstance(e, AuthenticationError):
+        return RuntimeError("Invalid OpenAI API key. Please check OPENAI_API_KEY in your .env file.")
+    if isinstance(e, RateLimitError):
+        return RuntimeError("OpenAI API rate limit exceeded. Please wait a moment and try again.")
+    if isinstance(e, APIError):
+        return RuntimeError(f"OpenAI API error: {str(e)}")
+    return RuntimeError(f"Unexpected error calling OpenAI: {str(e)}")
