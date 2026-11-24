@@ -7,6 +7,7 @@
  */
 
 import { getToken, clearSession } from './utils/auth';
+import { takeFrames } from './utils/sse';
 
 // Base URL from Vite env variable, fallback to localhost
 export const API_BASE = import.meta.env.VITE_API_BASE || "http://localhost:8000";
@@ -75,9 +76,10 @@ export async function checkHealth() {
 /**
  * POST and read an event stream (stage / token / final / error frames).
  * Calls onEvent(type, data) per frame; resolves with the final frame's data.
- * Non-OK responses and error frames throw Error(detail) with .status.
+ * Non-OK responses and error frames throw Error(detail) with .status;
+ * a dropped connection throws Error(lostMessage).
  */
-export async function streamPost(path, body, onEvent, timeoutMs) {
+export async function streamPost(path, body, onEvent, timeoutMs, lostMessage) {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
     const isForm = body instanceof FormData;
@@ -100,38 +102,32 @@ export async function streamPost(path, body, onEvent, timeoutMs) {
         const reader = response.body.getReader();
         const decoder = new TextDecoder();
         let buffer = "";
-        const lost = "Connection lost before the answer finished. Please try again.";
-        for (;;) {
-            let chunk;
-            try {
-                chunk = await reader.read();
-            } catch (e) {
-                if (e.name === "AbortError") throw e;
-                throw new Error(lost);
-            }
-            const { value, done } = chunk;
-            if (done) break;
-            buffer += decoder.decode(value, { stream: true });
-            let cut;
-            while ((cut = buffer.indexOf("\n\n")) !== -1) {
-                const frame = buffer.slice(0, cut);
-                buffer = buffer.slice(cut + 2);
-                let type = "message", data = "";
-                for (const line of frame.split("\n")) {
-                    if (line.startsWith("event: ")) type = line.slice(7);
-                    else if (line.startsWith("data: ")) data += line.slice(6);
+        try {
+            for (;;) {
+                let chunk;
+                try {
+                    chunk = await reader.read();
+                } catch (e) {
+                    if (e.name === "AbortError") throw e;
+                    throw new Error(lostMessage);
                 }
-                const parsed = JSON.parse(data);
-                if (type === "error") {
-                    const error = new Error(parsed.detail || "Something went wrong");
-                    error.status = parsed.status;
-                    throw error;
+                if (chunk.done) break;
+                const { frames, rest } = takeFrames(buffer + decoder.decode(chunk.value, { stream: true }));
+                buffer = rest;
+                for (const { type, data } of frames) {
+                    if (type === "error") {
+                        const error = new Error(data.detail || "Something went wrong");
+                        error.status = data.status;
+                        throw error;
+                    }
+                    onEvent?.(type, data);
+                    if (type === "final") return data;
                 }
-                onEvent?.(type, parsed);
-                if (type === "final") return parsed;
             }
+            throw new Error(lostMessage);
+        } finally {
+            reader.cancel().catch(() => {});
         }
-        throw new Error(lost);
     } finally {
         clearTimeout(timeoutId);
     }
@@ -143,7 +139,8 @@ export function askQuestionStream(question, sessionId, conversationId, onEvent) 
     const body = { question };
     if (sessionId) body.session_id = sessionId;
     if (conversationId) body.conversation_id = conversationId;
-    return streamPost("/chat/stream", body, onEvent, 120000);
+    return streamPost("/chat/stream", body, onEvent, 120000,
+        "Connection lost before the answer finished. Please try again.");
 }
 
 // ── Upload (protected) ──────────────────────────────────────
@@ -153,7 +150,8 @@ export function uploadPdf(file, companyName, year, onEvent) {
     formData.append('file', file);
     formData.append('company_name', companyName);
     if (year) formData.append('year', year);
-    return streamPost("/upload", formData, onEvent, 300000);
+    return streamPost("/upload", formData, onEvent, 300000,
+        "Connection lost before the upload finished. Please try again.");
 }
 
 // ── Conversations (protected) ───────────────────────────────
