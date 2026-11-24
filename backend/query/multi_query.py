@@ -22,9 +22,10 @@ Author: FinSight AI Team
 Phase: 3 (Recall Improvement Layer)
 """
 
-from config import settings
 import logging
 from typing import List, Optional
+
+from config import settings
 
 logger = logging.getLogger(__name__)
 

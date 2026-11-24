@@ -13,7 +13,6 @@ Endpoints:
 """
 
 from datetime import datetime, timezone
-from typing import Optional
 
 from bson import ObjectId
 from fastapi import APIRouter, Depends, HTTPException, Query
@@ -21,7 +20,6 @@ from pydantic import BaseModel, Field
 
 from auth import get_current_user
 from db import conversations_collection
-
 
 router = APIRouter(tags=["Conversations"])
 
@@ -70,7 +68,7 @@ def _oid(id_str: str) -> ObjectId:
     try:
         return ObjectId(id_str)
     except Exception:
-        raise HTTPException(status_code=400, detail="Invalid conversation ID format")
+        raise HTTPException(status_code=400, detail="Invalid conversation ID format") from None
 
 
 # ---------------------------------------------------------------------------

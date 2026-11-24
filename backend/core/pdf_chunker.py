@@ -175,7 +175,7 @@ def _page_elements(page) -> List[Tuple[float, str, str]]:
     sizes = [s["size"] for _, _, spans in kept for s in spans for _ in range(len(s["text"]))]
     body = statistics.median(sizes) if sizes else 0
 
-    for b, lines, spans in kept:
+    for _, lines, spans in kept:
         text = normalize_text(_LEADER.sub(" ", " ".join(
             " ".join(s["text"] for s in ln["spans"]) for ln in lines)))
         if not text:
@@ -207,7 +207,7 @@ def _sentences(paragraph: str, limit: int) -> List[str]:
 
 
 def _table_chunks(markdown: str, budget: int) -> List[str]:
-    lines = [l for l in markdown.splitlines() if l.strip()]
+    lines = [ln for ln in markdown.splitlines() if ln.strip()]
     if not lines:
         return []
     n_head = 2 if len(lines) > 1 and _MD_SEP.match(lines[1]) else 1
@@ -280,11 +280,12 @@ def chunk_pdf(pdf_path: str, target: int = None, hard_max: int = 1500) -> List[C
         for page_no, page in enumerate(doc, 1):
             heading_unused = False
 
+            # Called only within this iteration, and must see the *current* heading.
             def emit(body: str, form: str = "narrative"):
                 nonlocal heading_unused
-                text = f"{heading}\n{body}" if heading and body else (body or heading)
+                text = f"{heading}\n{body}" if heading and body else (body or heading)  # noqa: B023
                 out.append(Chunk(chunk_id="", text=text, start_char=0, end_char=len(text),
-                                 page_number=page_no, heading=heading, content_form=form))
+                                 page_number=page_no, heading=heading, content_form=form))  # noqa: B023
                 heading_unused = False
 
             packer = _Packer(target, hard_max)

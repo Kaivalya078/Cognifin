@@ -8,8 +8,8 @@ import numpy as np
 import pytest
 from fastapi.testclient import TestClient
 
-from tests.test_security import PDF, _auth, _upload
 from tests.test_chat_stream import events
+from tests.test_security import PDF, _auth, _upload
 
 
 class FakeCorpus:
@@ -118,7 +118,6 @@ def test_embed_texts_without_progress_is_one_encode_call():
 def test_upload_failure_after_ingest_still_ends_the_stream(ingest):
     """A failure outside add_document (here: registering the session) must
     still put a terminal error on the queue, or the stream waits forever."""
-    import queue
     main, make, seen = ingest
     corpus = make()
 

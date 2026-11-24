@@ -6,18 +6,18 @@
  * stores them in localStorage, and redirects to /chat.
  */
 
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import '../styles/auth.css';
 
 export default function AuthCallbackPage() {
-    const [error, setError] = useState('');
     const [searchParams] = useSearchParams();
     const navigate = useNavigate();
     const { loginWithToken } = useAuth();
 
-    useEffect(() => {
+    // Everything the URL says, decided during render: { token, user } or { error }.
+    const result = useMemo(() => {
         const token = searchParams.get('token');
         const userB64 = searchParams.get('user');
         const authError = searchParams.get('error');
@@ -30,34 +30,34 @@ export default function AuthCallbackPage() {
                 no_email: 'No email address found in your Google account.',
                 db_error: 'Server error during login. Please try again.',
             };
-            setError(errorMessages[authError] || 'Authentication failed.');
-            setTimeout(() => navigate('/login', { replace: true }), 3000);
-            return;
+            return { error: errorMessages[authError] || 'Authentication failed.' };
         }
 
         // Validate required params
         if (!token || !userB64) {
-            setError('Invalid callback — missing token or user data.');
-            setTimeout(() => navigate('/login', { replace: true }), 3000);
-            return;
+            return { error: 'Invalid callback — missing token or user data.' };
         }
 
         try {
             // Decode base64url user data
             const userJson = atob(userB64.replace(/-/g, '+').replace(/_/g, '/'));
-            const user = JSON.parse(userJson);
-
-            // Store session via AuthContext
-            loginWithToken(token, user);
-
-            // Navigate to chat (replace to clear callback from history)
-            navigate('/chat', { replace: true });
+            return { token, user: JSON.parse(userJson) };
         } catch (err) {
             console.error('Auth callback error:', err);
-            setError('Failed to process authentication. Please try again.');
-            setTimeout(() => navigate('/login', { replace: true }), 3000);
+            return { error: 'Failed to process authentication. Please try again.' };
         }
-    }, [searchParams, navigate, loginWithToken]);
+    }, [searchParams]);
+    const error = result.error || '';
+
+    useEffect(() => {
+        if (result.error) {
+            const t = setTimeout(() => navigate('/login', { replace: true }), 3000);
+            return () => clearTimeout(t);
+        }
+        // Store session via AuthContext, then leave the callback URL out of history
+        loginWithToken(result.token, result.user);
+        navigate('/chat', { replace: true });
+    }, [result, navigate, loginWithToken]);
 
     return (
         <div className="auth-callback-page">

@@ -12,18 +12,18 @@ Run with:
 
 import sys
 from pathlib import Path
+
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-import numpy as np
-import pytest
 from unittest.mock import MagicMock
 
-from core.metadata_schema import RetrievalResult
-from core.lookup_index import RetrievalScope
-from query.search_plan import SearchPlan, SubQuery, MergeStrategy
-from core.corpus_manager import CorpusManager
-from config import settings
+import numpy as np
 
+from config import settings
+from core.corpus_manager import CorpusManager
+from core.lookup_index import RetrievalScope
+from core.metadata_schema import RetrievalResult
+from query.search_plan import MergeStrategy, SearchPlan, SubQuery
 
 # =============================================================================
 # HELPERS

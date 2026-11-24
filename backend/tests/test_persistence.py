@@ -5,7 +5,6 @@ LanceDB index has been built; run after batch_ingest_annual_reports.py.
 
 import glob
 import json
-import os
 import sys
 from pathlib import Path
 

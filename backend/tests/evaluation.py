@@ -24,6 +24,7 @@ Stage: 10 (Retrieval Evaluation)
 
 import sys
 from pathlib import Path
+
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 import argparse
@@ -44,14 +45,13 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # Core pipeline imports (no FastAPI, no OpenAI)
-from core.retriever_pipeline import RetrieverPipeline
+from core.app_retrieval import load_global_corpus
 from core.corpus_manager import CorpusManager, new_session_corpus
 from core.corpus_router import CorpusRouter
 from core.metadata_schema import ChunkMetadata, RetrievalResult
+from core.retriever_pipeline import RetrieverPipeline
 from query.query_understanding import parse_query
 from query.search_plan_builder import build_plan
-from core.app_retrieval import load_global_corpus
-
 
 # =============================================================================
 # EVALUATION CASE DEFINITION

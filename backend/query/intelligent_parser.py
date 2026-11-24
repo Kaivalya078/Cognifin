@@ -16,12 +16,13 @@ Author: FinSight AI Team
 Phase: 4 (Intelligent Query Understanding)
 """
 
-from config import settings
 import json
 import logging
 import time
 from dataclasses import dataclass, field
-from typing import List, Dict, Optional, Tuple
+from typing import List
+
+from config import settings
 
 logger = logging.getLogger(__name__)
 

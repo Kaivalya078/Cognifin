@@ -21,7 +21,6 @@ Phase: 6 (Performance & Production)
 import time
 from contextlib import contextmanager
 from typing import Dict
-from collections import defaultdict
 
 
 class LatencyTracker:

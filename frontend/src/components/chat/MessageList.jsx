@@ -14,7 +14,9 @@ import { useEffect, useRef, useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { Copy, Check, ChevronDown, ChevronUp, FileText } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import { isRefusal } from '../../utils/refusal';
 import PDFViewerModal from './PDFViewerModal';
 import FinancialChart from './FinancialChart';
 import LoadingIndicator from './LoadingIndicator';
@@ -27,7 +29,7 @@ function formatTime(timestamp) {
     return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 }
 
-export default function MessageList({ messages, isLoading, streaming, onFollowUp }) {
+export default function MessageList({ messages, isLoading, streaming, onFollowUp, onRequestUpload }) {
     const bottomRef = useRef(null);
 
     useEffect(() => {
@@ -41,6 +43,8 @@ export default function MessageList({ messages, isLoading, streaming, onFollowUp
                     key={msg.id}
                     message={msg}
                     onFollowUp={onFollowUp}
+                    onRequestUpload={onRequestUpload}
+                    isLoading={isLoading}
                 />
             ))}
 
@@ -52,9 +56,9 @@ export default function MessageList({ messages, isLoading, streaming, onFollowUp
     );
 }
 
-function MessageBubble({ message, onFollowUp }) {
+function MessageBubble({ message, onFollowUp, onRequestUpload, isLoading }) {
     const isUser = message.role === 'user';
-    const { user } = useAuth();
+    const { user, isAuthenticated } = useAuth();
     const userName = user?.name || 'You';
     const userAvatar = user?.avatar || 'ME';
     const [copied, setCopied] = useState(false);
@@ -99,6 +103,23 @@ function MessageBubble({ message, onFollowUp }) {
                         <ReactMarkdown remarkPlugins={[remarkGfm]}>
                             {message.content}
                         </ReactMarkdown>
+                    </div>
+                )}
+
+                {/* Not in the corpus: offer the existing upload instead of a dead end */}
+                {!isUser && onRequestUpload && isRefusal(message.content) && (
+                    <div className="chat-upload-card">
+                        <p>
+                            Cognifin&apos;s filings don&apos;t cover this yet. Have the company&apos;s
+                            annual report? Upload the PDF to ask about it in this chat.
+                        </p>
+                        {isAuthenticated ? (
+                            <button type="button" className="follow-up-chip" onClick={onRequestUpload} disabled={isLoading}>
+                                Upload a PDF
+                            </button>
+                        ) : (
+                            <Link className="follow-up-chip" to="/login">Sign in to upload</Link>
+                        )}
                     </div>
                 )}
 

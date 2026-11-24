@@ -11,11 +11,12 @@ Author: FinSight AI Team
 Phase: 2 (Retrieval Precision Layer)
 """
 
-from config import settings
 import logging
-from typing import List, Dict, Optional, Set
 from collections import Counter
 from dataclasses import replace as dc_replace
+from typing import List, Optional
+
+from config import settings
 
 logger = logging.getLogger(__name__)
 

@@ -36,6 +36,7 @@ single_premium, gross_premium, net_premium, solvency_ratio."""
 
 def _client():
     from openai import OpenAI
+
     from config import settings
     return OpenAI(api_key=settings.OPENAI_API_KEY, base_url=settings.OPENAI_BASE_URL or None)
 

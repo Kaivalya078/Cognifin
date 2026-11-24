@@ -353,7 +353,7 @@ def test_uploaded_pdf_evidence_gets_no_dead_pdf_link(upload_ready):
     client, seen = upload_ready
     assert _upload(client, PDF, headers=_auth("alice")).status_code == 200
     assert seen["factory_called"]            # /upload builds its corpus via the session factory
-    from core.corpus_manager import new_session_corpus, discard
+    from core.corpus_manager import discard, new_session_corpus
     cm = new_session_corpus(SimpleNamespace(embedding_dim=4))
     try:
         assert cm.public_pdfs is False       # …which never advertises a PDF link
@@ -377,6 +377,7 @@ def test_stale_pre_lancedb_cache_is_replaced(remote_assets, tmp_path):
 
 def test_current_cache_is_not_redownloaded(remote_assets, tmp_path, monkeypatch):
     import json
+
     from core.retriever_pipeline import RetrieverPipeline
     asset_manager, _ = remote_assets
     cache_dir = tmp_path / "index_cache"

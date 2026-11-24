@@ -8,9 +8,10 @@
 import { useState, useRef, useEffect } from 'react';
 import { Send, Paperclip, X, Upload } from 'lucide-react';
 
-export default function ChatInput({ onSend, onUpload, isLoading, uploadedFile, onClearUpload }) {
+// showUploadForm lives in ChatPage so a "Not available" answer's card can open it too.
+export default function ChatInput({ onSend, onUpload, isLoading, uploadedFile, onClearUpload,
+                                    showUploadForm, setShowUploadForm }) {
     const [question, setQuestion] = useState('');
-    const [showUploadForm, setShowUploadForm] = useState(false);
     const [selectedFile, setSelectedFile] = useState(null);
     const [companyName, setCompanyName] = useState('');
     const [year, setYear] = useState(String(new Date().getFullYear()));

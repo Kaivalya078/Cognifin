@@ -6,7 +6,7 @@ from types import SimpleNamespace
 import pytest
 from fastapi.testclient import TestClient
 
-from tests.test_security import app_ready, limited, _auth  # noqa: F401  (fixtures)
+from tests.test_security import _auth, app_ready, limited  # noqa: F401  (fixtures)
 
 PAYLOAD = {"answer": "cached answer", "citations": [], "evidence": [],
            "metadata": {}, "follow_ups": []}
@@ -15,7 +15,7 @@ PAYLOAD = {"answer": "cached answer", "citations": [], "evidence": [],
 def events(text):
     out = []
     for frame in text.strip().split("\n\n"):
-        lines = dict(l.split(": ", 1) for l in frame.splitlines())
+        lines = dict(ln.split(": ", 1) for ln in frame.splitlines())
         out.append((lines["event"], json.loads(lines["data"])))
     return out
 

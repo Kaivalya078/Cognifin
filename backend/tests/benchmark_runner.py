@@ -15,11 +15,11 @@ Author: FinSight AI Team
 Phase: 7 (Evaluation & Monitoring)
 """
 
-import time
 import json
-import requests
-from typing import List, Dict, Optional
+import time
+from typing import List
 
+import requests
 
 # =============================================================================
 # BENCHMARK QUERIES
@@ -136,7 +136,6 @@ def _run_single(index: int, query_spec: dict) -> dict:
             confidence = data.get("confidence", 0)
             confidence_label = data.get("confidence_label", "")
             citations = data.get("citations", [])
-            answer_preview = data.get("answer", "")[:80]
 
             passed = actual_latency <= query_spec["latency_target_ms"]
 

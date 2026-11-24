@@ -1,7 +1,7 @@
 """Checks every candidate passes before it is stored. Each returns None on pass, else a reason."""
-from collections import defaultdict
 import re
 import statistics
+from collections import defaultdict
 
 from financials.store import Candidate
 

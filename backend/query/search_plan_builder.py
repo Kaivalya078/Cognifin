@@ -30,10 +30,10 @@ Design:
 
 from __future__ import annotations
 
-from .query_understanding import ParsedQuery
-from .search_plan import SearchPlan, SubQuery, MergeStrategy
 from core.lookup_index import RetrievalScope
 
+from .query_understanding import ParsedQuery
+from .search_plan import MergeStrategy, SearchPlan, SubQuery
 
 # =============================================================================
 # PUBLIC API

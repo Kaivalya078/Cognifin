@@ -12,14 +12,11 @@ Author: FinSight AI Team
 Phase: 2 (Generation Layer)
 """
 
-from config import settings
-from typing import Optional
 
 # OpenAI SDK (v1+)
-from openai import OpenAI, AuthenticationError, RateLimitError, APIError
+from openai import APIError, AuthenticationError, OpenAI, RateLimitError
 
-
-
+from config import settings
 
 # =============================================================================
 # OPENAI CLIENT WRAPPER
@@ -114,7 +111,7 @@ class OpenAIClient:
             return answer
             
         except Exception as e:
-            raise _as_runtime_error(e)
+            raise _as_runtime_error(e) from e
 
     def generate_stream(self, system_prompt: str, user_message: str):
         """Like generate(), but yields the answer text as the model produces it."""
@@ -140,7 +137,7 @@ class OpenAIClient:
                 if text:
                     yield text
         except Exception as e:
-            raise _as_runtime_error(e)
+            raise _as_runtime_error(e) from e
         finally:
             # A closed tab closes this generator: stop the model generating (and billing).
             getattr(stream, "close", lambda: None)()

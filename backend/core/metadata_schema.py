@@ -16,9 +16,8 @@ Phase: 2.5 (Corpus Architecture)
 """
 
 from dataclasses import dataclass, field
-from typing import List, Optional, Union
 from datetime import datetime
-
+from typing import List, Optional, Union
 
 # =============================================================================
 # CHUNK METADATA

@@ -28,15 +28,16 @@ from __future__ import annotations
 import logging
 import time
 from collections import OrderedDict
-from config import settings
 from dataclasses import replace as dc_replace
 from typing import Callable, Dict, List, Optional
 
 import numpy as np
 
+from config import settings
+from query.search_plan import MergeStrategy, SearchPlan
+
 from .corpus_manager import CorpusManager, discard
 from .metadata_schema import RetrievalResult
-from query.search_plan import SearchPlan, MergeStrategy
 
 logger = logging.getLogger(__name__)
 

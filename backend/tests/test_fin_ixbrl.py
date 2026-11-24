@@ -66,7 +66,9 @@ def test_ytd_only_in_q4():
     assert cands and not [c for c in cands if c.period_type == "FY"]
 
 
-@pytest.mark.skipif(not (SOURCES / "sources.csv").exists(), reason="no real sources")
+# sources.csv is committed but the filings it lists are not (CI has only the CSV).
+@pytest.mark.skipif(not (SOURCES / "sources.csv").exists()
+                    or not any(p.is_dir() for p in SOURCES.iterdir()), reason="no real sources")
 def test_all_real_files():
     bad = []
     for s in load_sources(SOURCES):

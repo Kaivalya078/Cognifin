@@ -16,20 +16,18 @@ Phase 1: Fixed imports, added progress logging
 """
 
 import os
-
-from config import settings
 import re
 import sys
 import time
-
 from pathlib import Path
+
+from config import settings
 
 # Add backend root to path so package imports work when run directly
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 
 from core.app_retrieval import open_for_ingest
-
 
 DATA_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "data")
 CACHE_DIR = settings.INDEX_CACHE_DIR

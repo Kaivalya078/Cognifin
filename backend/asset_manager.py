@@ -27,6 +27,7 @@ def cache_is_current(cache_dir: str) -> bool:
     have a registry, so its presence alone isn't enough.
     """
     import json
+
     from core.retriever_pipeline import RetrieverPipeline
     registry = os.path.join(cache_dir, MARKER)
     if not (os.path.isdir(os.path.join(cache_dir, "lancedb")) and os.path.exists(registry)):

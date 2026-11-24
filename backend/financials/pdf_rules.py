@@ -14,10 +14,9 @@ from pathlib import Path
 
 import fitz
 
-from core.pdf_chunker import page_rows
-from financials.ocr import read_pages
 from financials.metrics import METRICS
 from financials.numbers import parse_number, to_value, unit_multiplier
+from financials.ocr import read_pages
 from financials.sources import Source
 from financials.store import Candidate
 

@@ -14,9 +14,9 @@ Author: FinSight AI Team
 Phase: 5 (Advanced RAG Layer)
 """
 
-import re
 import logging
-from typing import List, Dict
+import re
+from typing import Dict, List
 
 logger = logging.getLogger(__name__)
 

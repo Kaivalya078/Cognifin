@@ -16,8 +16,8 @@ Author: FinSight AI Team
 Phase: 3 (Recall Improvement Layer)
 """
 
-import re
 import logging
+import re
 from typing import List, Set
 
 logger = logging.getLogger(__name__)

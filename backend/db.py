@@ -10,10 +10,11 @@ Collections:
 Author: FinSight AI Team
 """
 
-from config import settings
 from datetime import datetime, timezone
-from pymongo import MongoClient, ASCENDING, DESCENDING
 
+from pymongo import ASCENDING, DESCENDING, MongoClient
+
+from config import settings
 
 # ---------------------------------------------------------------------------
 # Connection

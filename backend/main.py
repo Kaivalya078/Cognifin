@@ -1,97 +1,105 @@
 import os
+import queue
 import re
-import time
 import shutil
-import logging
 import tempfile
 import threading
-import queue
-from uuid import uuid4
-from typing import List, Optional
+import time
 from contextlib import asynccontextmanager
 from datetime import datetime, timezone
+from typing import List, Optional
+from uuid import uuid4
 
 # FastAPI imports
-from fastapi import FastAPI, HTTPException, UploadFile, File, Form, Depends, Query, Request
-from fastapi.responses import JSONResponse, StreamingResponse
+from fastapi import (
+    Depends,
+    FastAPI,
+    File,
+    Form,
+    HTTPException,
+    Request,
+    UploadFile,
+)
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
-from starlette.middleware.sessions import SessionMiddleware
-from pydantic import BaseModel, Field, EmailStr
+from pydantic import BaseModel, EmailStr, Field
 from slowapi import Limiter
 from slowapi.errors import RateLimitExceeded
 from slowapi.util import get_remote_address
-from asset_manager import ensure_index_cache
+from starlette.middleware.sessions import SessionMiddleware
 
-# Auth + Database
-from db import users_collection, conversations_collection, ensure_indexes
+from asset_manager import ensure_index_cache
 from auth import (
-    hash_password,
-    verify_password,
+    JWT_SECRET,
     create_access_token,
     decode_access_token,
     get_current_user,
     get_optional_user,
+    hash_password,
+    verify_password,
 )
-from bson import ObjectId
+from config import settings
+from core.app_retrieval import load_global_corpus, retrieve_global
+from core.citation_verifier import verify_citations
 
-
-# Our retrieval pipeline
-from core.retriever_pipeline import RetrieverPipeline
-from core.metadata_schema import RetrievalResult
-
-# Phase 2: Generation layer
-from generation.openai_client import OpenAIClient
-from generation.streaming import sse, hold_follow_ups
-from generation.prompt_builder import build_context, build_prompt, extract_citations
-from financials.present import assistant_metadata, finish, prepare as prepare_figures
+# Phase 5: Confidence + citation verification
+from core.confidence_scorer import compute_confidence
 
 # Phase 2.5: Corpus architecture
-from core.corpus_manager import CorpusManager, new_session_corpus, discard
-
-# Stage 6: Query orchestration (parse → plan → execute)
-from query.query_orchestrator import retrieve_context, intelligent_retrieve
-from query.query_understanding import parse_query
-from query.search_plan_builder import build_plan
+from core.corpus_manager import CorpusManager, discard, new_session_corpus
 
 # Stage 8B: Multi-corpus routing
 from core.corpus_router import CorpusRouter
-from core.app_retrieval import load_global_corpus, retrieve_global
+from core.latency_tracker import LatencyTracker, latency_stats
+
+# Phase 2: Reranking + refinement
+# Phase 6: Performance (cache + latency)
+from core.response_cache import response_cache
+
+# Phase 1: Retrieval observability
+from core.retrieval_pipeline_v2 import refine_results
+
+# Our retrieval pipeline
+from core.retriever_pipeline import RetrieverPipeline
+
+# Auth + Database
+from db import ensure_indexes, users_collection
+from financials.present import assistant_metadata, finish
+from financials.present import prepare as prepare_figures
+from generation.intent_prompts import build_intent_prompt
+
+# Phase 2: Generation layer
+from generation.openai_client import OpenAIClient
+from generation.prompt_builder import build_context, build_prompt, extract_citations
+from generation.streaming import hold_follow_ups, sse
+from query.context_assembler import assemble_context
+
+# Phase 4: Intelligent query understanding
+from query.intelligent_parser import (
+    init_intelligent_parser,
+    is_intelligent_parsing_enabled,
+)
+
+# Phase 3: Recall improvement (multi-query, hybrid search, expansion)
+from query.multi_query import init_multi_query
+from query.query_expander import get_synonym_count
+
+# Stage 6: Query orchestration (parse → plan → execute)
+from query.query_orchestrator import intelligent_retrieve, retrieve_context
+from query.query_understanding import parse_query
+from query.search_plan_builder import build_plan
+from routers.conversations import (
+    append_to_conversation as db_append_to_conversation,
+)
+from routers.conversations import (
+    create_conversation as db_create_conversation,
+)
 
 # Conversation persistence
 from routers.conversations import (
     router as conversations_router,
-    create_conversation as db_create_conversation,
-    append_to_conversation as db_append_to_conversation,
 )
-
-# Phase 1: Retrieval observability
-from core.retrieval_logger import log_no_context_event
-
-# Phase 2: Reranking + refinement
-from core.reranker import is_reranker_ready
-from core.retrieval_pipeline_v2 import refine_results
-
-# Phase 3: Recall improvement (multi-query, hybrid search, expansion)
-from query.multi_query import init_multi_query, is_multi_query_enabled
-from query.query_expander import get_synonym_count
-
-# Phase 4: Intelligent query understanding
-from query.intelligent_parser import init_intelligent_parser, is_intelligent_parsing_enabled
-from query.context_assembler import assemble_context
-from generation.intent_prompts import build_intent_prompt
-
-# Phase 5: Confidence + citation verification
-from core.confidence_scorer import compute_confidence
-from core.citation_verifier import verify_citations
-
-# Phase 6: Performance (cache + latency)
-from core.response_cache import response_cache
-from core.latency_tracker import LatencyTracker, latency_stats
-
-from config import settings
-from auth import JWT_SECRET
-
 
 # =============================================================================
 # FOLLOW-UP QUESTION EXTRACTION
@@ -429,7 +437,7 @@ def _rate_limited(request: Request, exc: RateLimitExceeded):
 
 
 # Google OAuth router
-from routers.google_auth import router as google_auth_router
+from routers.google_auth import router as google_auth_router  # noqa: E402
 
 # Conversations router (user-scoped CRUD)
 app.include_router(conversations_router)
@@ -566,7 +574,7 @@ def upload_document(
         raise HTTPException(
             status_code=500,
             detail=f"Upload error: {str(e)}",
-        )
+        ) from e
     finally:
         # Clean up temp file (only when we failed before the stream took over)
         if tmp_dir and os.path.exists(tmp_dir):
@@ -735,12 +743,12 @@ def retrieve(request: Request, body: RetrieveRequest):
         )
 
     except KeyError as e:
-        raise HTTPException(status_code=404, detail=str(e))
+        raise HTTPException(status_code=404, detail=str(e)) from e
     except Exception as e:
         raise HTTPException(
             status_code=500,
             detail=f"Retrieval error: {str(e)}"
-        )
+        ) from e
 
 
 # =============================================================================
@@ -1036,7 +1044,7 @@ def chat(request: Request, body: ChatRequest,
     try:
         payload = answer_question(body.question, body.session_id, body.top_k)
     except Exception as e:
-        raise HTTPException(status_code=_error_status(e), detail=_error_detail(e))
+        raise HTTPException(status_code=_error_status(e), detail=_error_detail(e)) from e
 
     # Anonymous trial answers aren't saved; there is no account to save them to.
     conv_id = None

@@ -15,11 +15,11 @@ Author: FinSight AI Team
 Stage: 2 (Manual Ingestion)
 """
 
+import argparse
 import os
 import sys
-import argparse
-from pathlib import Path
 from datetime import datetime
+from pathlib import Path
 
 # Add backend root to path so package imports work when run directly
 sys.path.insert(0, str(Path(__file__).parent.parent))
@@ -119,7 +119,7 @@ def main():
     # ── Step 5: Ingest document ──────────────────────────────────────
     doc_id_preview = f"{company}_{doc_type}_{year}"
     print(f"📄 Ingesting: {doc_id_preview}")
-    print(f"   Loading and chunking PDF...")
+    print("   Loading and chunking PDF...")
     
     import time
     t_start = time.time()

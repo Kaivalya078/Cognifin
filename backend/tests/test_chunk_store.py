@@ -190,7 +190,6 @@ def test_orchestrator_keyword_hits_respect_scope(corpus, monkeypatch):
 
 
 def test_session_store_dir_removed_on_eviction(tmp_path, monkeypatch):
-    import os
     from config import settings
     from core.corpus_manager import new_session_corpus
     from core.corpus_router import CorpusRouter

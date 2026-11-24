@@ -71,7 +71,7 @@ def test_page_map_overrides_metadata_page():
 
 
 def test_legacy_page_lookup_by_start_offset():
-    from tests.legacy_page_map import page_starts, page_of
+    from tests.legacy_page_map import page_of, page_starts
     pages = ["alpha beta", "", "gamma", "delta"]      # page 2 is blank
     full, starts = page_starts(pages)
     assert full == "alpha beta gamma delta"

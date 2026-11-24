@@ -15,10 +15,11 @@ Author: FinSight AI Team
 Phase: 4 (Intelligent Query Understanding)
 """
 
-from config import settings
 import logging
 from dataclasses import dataclass, field
 from typing import List
+
+from config import settings
 
 from .intelligent_parser import IntelligentQuery
 

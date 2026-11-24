@@ -11,11 +11,11 @@ Requires: server running on http://localhost:8000
 """
 
 import json
-import time
-import sys
 import os
-import urllib.request
+import sys
+import time
 import urllib.error
+import urllib.request
 
 BASE_URL = "http://localhost:8000"
 QUERY = "What are the risk factors?"
@@ -51,7 +51,7 @@ def wait_for_server(max_wait=120):
             if health.get("indexed") and health.get("num_chunks", 0) > 0:
                 print(f" OK ({health['num_chunks']} chunks, {time.time()-start:.1f}s)")
                 return True
-        except:
+        except Exception:
             pass
         time.sleep(2)
         print(".", end="", flush=True)
@@ -190,7 +190,7 @@ def test_3_metadata_mapping():
         print(f"   {i+1}. {r['chunk_id']} — {status}")
         print(f"      Snippet start: \"{search_text[:60]}...\"")
         if not found:
-            print(f"      ⚠️  Could not locate this text in the PDF!")
+            print("      ⚠️  Could not locate this text in the PDF!")
             # Try fuzzy: find longest matching substring
             best_len = 0
             for start in range(0, min(len(snippet), 100), 10):
@@ -249,7 +249,7 @@ def main():
         else:
             print("   No upload/ingest endpoint found.")
             print("   Test 2 requires code-level changes or adding a second PDF manually.")
-    except:
+    except Exception:
         print("   Could not check OpenAPI spec.")
     
     results["test_2"] = None  # Not automated

@@ -12,11 +12,9 @@ Author: FinSight AI Team
 Phase: 2 (Generation Layer)
 """
 
-import re
 from typing import List, Tuple
 
 from core.citation_verifier import _REF, bare_chunk_id
-
 
 # =============================================================================
 # SYSTEM PROMPT TEMPLATE

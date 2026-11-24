@@ -12,6 +12,7 @@ import pytest  # noqa: E402
 def fin_candidate(company, end, metric="net_profit", basis="consolidated", ptype="Q", value=1.0,
                   unit="INR", url="https://bse/x.pdf", page=2):
     from datetime import date
+
     from financials.store import Candidate
     start = date(end.year - 1, 4, 1) if ptype == "FY" else date(end.year, end.month - 2, 1)
     return Candidate(company, basis, ptype, start, end, metric, value, unit, "1.00", page, "rule",
@@ -22,6 +23,7 @@ def fin_candidate(company, end, metric="net_profit", basis="consolidated", ptype
 def fin_db(tmp_path):
     """Small financials table shared by the router/present tests."""
     from datetime import date
+
     from financials.store import write_db
     c, d = fin_candidate, date
     p = str(tmp_path / "f.duckdb")

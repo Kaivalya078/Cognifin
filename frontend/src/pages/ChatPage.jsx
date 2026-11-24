@@ -99,12 +99,12 @@ export default function ChatPage() {
         selectConversation,
         deleteConversation,
         renameConversation,
-        refreshConversations,
     } = useConversations();
 
     const { isAuthenticated } = useAuth();
     const [isLoading, setIsLoading] = useState(false);
     const [streaming, setStreaming] = useState(null); // { stages, text } while answering
+    const [showUploadForm, setShowUploadForm] = useState(false);
     const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
     const [backendDown, setBackendDown] = useState(false);
     const [bannerDismissed, setBannerDismissed] = useState(false);
@@ -124,6 +124,9 @@ export default function ChatPage() {
     // Active session for current chat
     const activeSession = activeId ? sessions[activeId] : null;
 
+    // The upload panel belongs to the chat it was opened in: close it on New chat / switch.
+    useEffect(() => setShowUploadForm(false), [activeId]);
+
     // --- Health Check on Mount ---
     useEffect(() => {
         checkHealth()
@@ -139,7 +142,7 @@ export default function ChatPage() {
         const handleKeyboard = (e) => {
             if ((e.ctrlKey || e.metaKey) && e.key === 'n') {
                 e.preventDefault();
-                handleNewChat();
+                selectConversation(null); // same as handleNewChat (defined below)
                 toast('New chat created', { icon: '💬', duration: 1500 });
             }
             if ((e.ctrlKey || e.metaKey) && e.key === 'b') {
@@ -154,7 +157,7 @@ export default function ChatPage() {
         };
         window.addEventListener('keydown', handleKeyboard);
         return () => window.removeEventListener('keydown', handleKeyboard);
-    }, [activeId, deleteConversation]);
+    }, [activeId, deleteConversation, selectConversation]);
 
     // --- Send Message ---
     const handleSend = useCallback(
@@ -180,6 +183,11 @@ export default function ChatPage() {
 
                 // If backend created a new conversation, store its id
                 if (data.conversation_id && data.conversation_id !== conversationId) {
+                    // A PDF uploaded before the first answer is keyed by the old (empty) id:
+                    // move it, or later questions in this chat silently lose the PDF.
+                    setSessions(prev => (prev[convId] && !prev[data.conversation_id])
+                        ? { ...prev, [data.conversation_id]: prev[convId] }
+                        : prev);
                     setConversationId(data.conversation_id);
                 }
 
@@ -343,6 +351,8 @@ export default function ChatPage() {
                                 isLoading={isLoading}
                                 streaming={streaming}
                                 onFollowUp={handleSend}
+                                // A chat that already has a PDF gets no upload card (it would replace that PDF)
+                                onRequestUpload={activeSession ? null : () => setShowUploadForm(true)}
                             />
                             <ChatInput
                                 onSend={handleSend}
@@ -350,6 +360,8 @@ export default function ChatPage() {
                                 isLoading={isLoading}
                                 uploadedFile={activeSession?.fileName || null}
                                 onClearUpload={handleClearUpload}
+                                showUploadForm={showUploadForm}
+                                setShowUploadForm={setShowUploadForm}
                             />
                         </>
                     ) : (
@@ -395,6 +407,8 @@ export default function ChatPage() {
                                 isLoading={isLoading}
                                 uploadedFile={activeSession?.fileName || null}
                                 onClearUpload={handleClearUpload}
+                                showUploadForm={showUploadForm}
+                                setShowUploadForm={setShowUploadForm}
                             />
                         </div>
                     )}

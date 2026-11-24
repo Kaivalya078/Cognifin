@@ -9,15 +9,15 @@ Handles Google OAuth 2.0 login flow with two endpoints:
 Author: FinSight AI Team
 """
 
-import json
 import base64
+import json
 import logging
 
 from fastapi import APIRouter, HTTPException, status
 from starlette.requests import Request
 from starlette.responses import RedirectResponse
 
-from auth import oauth, create_access_token
+from auth import create_access_token, oauth
 from config import settings
 from db import upsert_google_user
 

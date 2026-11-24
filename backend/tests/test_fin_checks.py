@@ -1,6 +1,11 @@
 from datetime import date
 
-from financials.checks import check_arithmetic, check_plausible, check_ratio, check_verbatim
+from financials.checks import (
+    check_arithmetic,
+    check_plausible,
+    check_ratio,
+    check_verbatim,
+)
 from financials.store import Candidate
 
 

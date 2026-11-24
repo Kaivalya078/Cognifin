@@ -41,7 +41,7 @@ def judge(case, lk) -> str:
     return ""
 
 
-def part1() -> None:
+def part1() -> list:
     fails, hits = [], 0
     for case in CASES:
         lk = route(case["q"], case["companies"], extract_years(case["q"])[0])
@@ -52,6 +52,7 @@ def part1() -> None:
           f"exact match {len(CASES) - len(fails)}/{len(CASES)} ({100 * (len(CASES) - len(fails)) / len(CASES):.0f}%) |")
     for q, why in fails:
         print(f"  MISS  {q!r}: {why}")
+    return fails
 
 
 def _ask(api: str, q: str) -> dict:
@@ -102,7 +103,9 @@ if __name__ == "__main__":
     ap = argparse.ArgumentParser()
     ap.add_argument("--e2e", action="store_true")
     ap.add_argument("--api", default="http://localhost:8000")
+    ap.add_argument("--strict", action="store_true", help="exit 1 if any routing case fails (CI)")
     a = ap.parse_args()
-    part1()
+    if part1() and a.strict:
+        sys.exit(1)
     if a.e2e:
         part2(a.api)
