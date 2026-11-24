@@ -100,8 +100,16 @@ export async function streamPost(path, body, onEvent, timeoutMs) {
         const reader = response.body.getReader();
         const decoder = new TextDecoder();
         let buffer = "";
+        const lost = "Connection lost before the answer finished. Please try again.";
         for (;;) {
-            const { value, done } = await reader.read();
+            let chunk;
+            try {
+                chunk = await reader.read();
+            } catch (e) {
+                if (e.name === "AbortError") throw e;
+                throw new Error(lost);
+            }
+            const { value, done } = chunk;
             if (done) break;
             buffer += decoder.decode(value, { stream: true });
             let cut;
@@ -123,7 +131,7 @@ export async function streamPost(path, body, onEvent, timeoutMs) {
                 if (type === "final") return parsed;
             }
         }
-        throw new Error("Connection lost before the answer finished. Please try again.");
+        throw new Error(lost);
     } finally {
         clearTimeout(timeoutId);
     }
@@ -140,34 +148,12 @@ export function askQuestionStream(question, sessionId, conversationId, onEvent) 
 
 // ── Upload (protected) ──────────────────────────────────────
 
-export async function uploadPdf(file, companyName, year) {
+export function uploadPdf(file, companyName, year, onEvent) {
     const formData = new FormData();
     formData.append('file', file);
     formData.append('company_name', companyName);
     if (year) formData.append('year', year);
-
-    const token = getToken();
-    const headers = {};
-    if (token) headers["Authorization"] = `Bearer ${token}`;
-
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 300000);
-    try {
-        const response = await fetch(`${API_BASE}/upload`, {
-            method: 'POST',
-            headers,
-            body: formData,
-            signal: controller.signal,
-        });
-        handle401(response);
-        if (!response.ok) {
-            const errorData = await response.json().catch(() => null);
-            throw new Error(errorData?.detail || `Upload failed (${response.status})`);
-        }
-        return response.json();
-    } finally {
-        clearTimeout(timeoutId);
-    }
+    return streamPost("/upload", formData, onEvent, 300000);
 }
 
 // ── Conversations (protected) ───────────────────────────────

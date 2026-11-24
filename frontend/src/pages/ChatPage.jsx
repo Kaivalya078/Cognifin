@@ -5,7 +5,7 @@
  * Supports session-scoped PDF upload with a progress overlay.
  */
 
-import { useState, useCallback, useEffect, useRef } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { Toaster, toast } from 'react-hot-toast';
 import { askQuestionStream, checkHealth, uploadPdf, API_BASE } from '../api';
 import { useAuth } from '../context/AuthContext';
@@ -18,17 +18,25 @@ import { Sparkles, TrendingUp, BarChart2, Users, DollarSign } from 'lucide-react
 import '../styles/chat.css';
 import '../styles/api.css';
 
-// ── Upload progress stages (simulated while HTTP call runs) ──────
-const UPLOAD_STAGES = [
-    { label: 'Reading PDF pages',          pct: 8  },
-    { label: 'Splitting into chunks',      pct: 30 },
-    { label: 'Generating embeddings',      pct: 65 },
-    { label: 'Building vector index',      pct: 90 },
-    { label: 'Finalising session',         pct: 98 },
-];
+// ── Upload progress stages, driven by /upload's stream ──────────
+// Index = position in the list; the server names map onto it.
+const UPLOAD_STAGES = ['Uploading', 'Reading & chunking', 'Embedding', 'Indexing'];
+const STAGE_INDEX = { chunking: 1, embedding: 2, indexing: 3 };
+
+function uploadProgress(ev) {
+    if (ev.name === 'chunking') return { stage: 1, pct: 10, label: null };
+    if (ev.name === 'embedding') {
+        return {
+            stage: 2,
+            pct: Math.round(10 + (80 * ev.done) / ev.total),
+            label: `Embedding ${ev.done} / ${ev.total}`,
+        };
+    }
+    return { stage: STAGE_INDEX[ev.name] ?? 3, pct: 95, label: null };
+}
 
 // ── Upload Progress Overlay component ────────────────────────────
-function UploadProgressOverlay({ fileName, stageIndex, pct, done, error }) {
+function UploadProgressOverlay({ fileName, stageIndex, pct, stageLabel, done, error }) {
     return (
         <div className="upload-overlay">
             <div className="upload-overlay-card">
@@ -54,14 +62,16 @@ function UploadProgressOverlay({ fileName, stageIndex, pct, done, error }) {
                         <div className="upload-stages">
                             {UPLOAD_STAGES.map((s, i) => (
                                 <div
-                                    key={s.label}
+                                    key={s}
                                     className={`upload-stage ${
                                         i < stageIndex ? 'done' :
                                         i === stageIndex ? 'active' : ''
                                     }`}
                                 >
                                     <span className="upload-stage-dot" />
-                                    <span className="upload-stage-label">{s.label}</span>
+                                    <span className="upload-stage-label">
+                                        {i === stageIndex && stageLabel ? stageLabel : s}
+                                    </span>
                                 </div>
                             ))}
                         </div>
@@ -109,7 +119,7 @@ export default function ChatPage() {
     const [uploadPct, setUploadPct] = useState(0);
     const [uploadDone, setUploadDone] = useState(false);
     const [uploadError, setUploadError] = useState(null);
-    const stageTimer = useRef(null);
+    const [uploadStageLabel, setUploadStageLabel] = useState(null);
 
     // Active session for current chat
     const activeSession = activeId ? sessions[activeId] : null;
@@ -203,28 +213,20 @@ export default function ChatPage() {
             // Start progress overlay
             setUploadFileName(file.name);
             setUploadStage(0);
-            setUploadPct(UPLOAD_STAGES[0].pct);
+            setUploadPct(0);
+            setUploadStageLabel(null);
             setUploadDone(false);
             setUploadError(null);
             setUploading(true);
 
-            // Simulate stage progression while HTTP call runs
-            let stageIdx = 0;
-            const advanceStage = () => {
-                stageIdx += 1;
-                if (stageIdx < UPLOAD_STAGES.length) {
-                    setUploadStage(stageIdx);
-                    setUploadPct(UPLOAD_STAGES[stageIdx].pct);
-                    // Each stage takes progressively longer (back-loading for embeddings)
-                    const delays = [3000, 6000, 10000, 5000];
-                    stageTimer.current = setTimeout(advanceStage, delays[stageIdx - 1] ?? 4000);
-                }
-            };
-            stageTimer.current = setTimeout(advanceStage, 2500);
-
             try {
-                const result = await uploadPdf(file, companyName, year);
-                clearTimeout(stageTimer.current);
+                const result = await uploadPdf(file, companyName, year, (type, ev) => {
+                    if (type !== 'stage') return;
+                    const p = uploadProgress(ev);
+                    setUploadStage(p.stage);
+                    setUploadPct(p.pct);
+                    setUploadStageLabel(p.label);
+                });
 
                 // Lock progress at 100% and show done
                 setUploadStage(UPLOAD_STAGES.length);
@@ -249,7 +251,6 @@ export default function ChatPage() {
                 setTimeout(() => setUploading(false), 2000);
 
             } catch (err) {
-                clearTimeout(stageTimer.current);
                 setUploadError(err.message || 'Upload failed. Please try again.');
                 setTimeout(() => setUploading(false), 4000);
                 toast.error('Upload failed: ' + (err.message || 'Unknown error'), { duration: 4000 });
@@ -310,6 +311,7 @@ export default function ChatPage() {
                 <UploadProgressOverlay
                     fileName={uploadFileName}
                     stageIndex={uploadStage}
+                    stageLabel={uploadStageLabel}
                     pct={uploadPct}
                     done={uploadDone}
                     error={uploadError}
