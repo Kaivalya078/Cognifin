@@ -39,14 +39,16 @@ jobs:
       - name: Lint (ruff)
         run: ruff check .
 
+      # Committed 2 MB snapshot (used by the eval gates and the router tests); refresh after
+      # a financials rebuild:  cp index_cache/financials.duckdb tests/fixtures/
+      - name: Financials snapshot
+        run: mkdir -p index_cache && cp tests/fixtures/financials.duckdb index_cache/
+
       - name: Unit tests
         run: python -m pytest tests/test_*.py -q
 
-      # Committed 2 MB snapshot; refresh after a financials rebuild:
-      #   cp index_cache/financials.duckdb tests/fixtures/
       - name: Financials eval (gate)
         run: |
-          mkdir -p index_cache && cp tests/fixtures/financials.duckdb index_cache/
           set -o pipefail
           { echo '### Financials eval'; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
           python -m tests.eval_financials --label ci --min-precision 100 --min-coverage 93.1 \

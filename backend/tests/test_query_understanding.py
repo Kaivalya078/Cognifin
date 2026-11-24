@@ -389,8 +389,8 @@ class TestParseQuery:
 # COMPANY ALIASES (real registry keys are NSE symbols)
 # =============================================================================
 
-SYMBOLS = sorted(p.name for p in (Path(__file__).parent.parent / "data").iterdir()) if (
-    Path(__file__).parent.parent / "data").is_dir() else [
+# A fixed list, not backend/data/ folder names: those exist only on a machine with the corpus.
+SYMBOLS = [
     "TCS", "INFY", "HDFCBANK", "HDFCLIFE", "SBIN", "SBILIFE", "M&M", "TECHM",
     "KOTAKBANK", "LT", "BHARTIARTL", "BAJFINANCE", "BAJAJFINSV", "BAJAJ-AUTO",
     "HINDUNILVR", "DRREDDY", "RELIANCE", "TMPV", "TATASTEEL"]
