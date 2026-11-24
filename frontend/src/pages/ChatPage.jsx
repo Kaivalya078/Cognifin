@@ -7,7 +7,7 @@
 
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { Toaster, toast } from 'react-hot-toast';
-import { askQuestion, checkHealth, uploadPdf, API_BASE } from '../api';
+import { askQuestionStream, checkHealth, uploadPdf, API_BASE } from '../api';
 import { useAuth } from '../context/AuthContext';
 import useConversations from '../hooks/useConversations';
 import Sidebar from '../components/chat/Sidebar';
@@ -94,7 +94,7 @@ export default function ChatPage() {
 
     const { isAuthenticated } = useAuth();
     const [isLoading, setIsLoading] = useState(false);
-    const [lastQuery, setLastQuery] = useState('');
+    const [streaming, setStreaming] = useState(null); // { stages, text } while answering
     const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
     const [backendDown, setBackendDown] = useState(false);
     const [bannerDismissed, setBannerDismissed] = useState(false);
@@ -156,14 +156,17 @@ export default function ChatPage() {
                 : null;
 
             addMessage(convId, 'user', question);
-            setLastQuery(question);
+            setStreaming({ stages: [], text: '' });
             setIsLoading(true);
 
             // Pass session_id if this chat has one
             const sessionId = sessions[convId]?.sessionId || null;
 
             try {
-                const data = await askQuestion(question, sessionId, conversationId);
+                const data = await askQuestionStream(question, sessionId, conversationId, (type, ev) => {
+                    if (type === 'stage') setStreaming((s) => ({ ...s, stages: [...s.stages, ev] }));
+                    else if (type === 'token') setStreaming((s) => ({ ...s, text: s.text + ev.text }));
+                });
 
                 // If backend created a new conversation, store its id
                 if (data.conversation_id && data.conversation_id !== conversationId) {
@@ -184,6 +187,7 @@ export default function ChatPage() {
                 toast.error(errorMsg, { duration: 4000 });
             } finally {
                 setIsLoading(false);
+                setStreaming(null);
             }
         },
         [activeId, activeConversation, addMessage, setConversationId, sessions, isAuthenticated]
@@ -335,7 +339,7 @@ export default function ChatPage() {
                             <MessageList
                                 messages={activeConversation.messages}
                                 isLoading={isLoading}
-                                lastQuery={lastQuery}
+                                streaming={streaming}
                                 onFollowUp={handleSend}
                             />
                             <ChatInput

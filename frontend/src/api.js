@@ -70,20 +70,24 @@ export async function checkHealth() {
     return response.json();
 }
 
-// ── Chat (protected) ────────────────────────────────────────
+// ── Streaming (server-sent events over POST) ────────────────
 
-export async function askQuestion(question, sessionId = null, conversationId = null) {
+/**
+ * POST and read an event stream (stage / token / final / error frames).
+ * Calls onEvent(type, data) per frame; resolves with the final frame's data.
+ * Non-OK responses and error frames throw Error(detail) with .status.
+ */
+export async function streamPost(path, body, onEvent, timeoutMs) {
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 120000);
+    const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+    const isForm = body instanceof FormData;
+    const headers = isForm ? {} : authHeaders();
+    if (isForm && getToken()) headers["Authorization"] = `Bearer ${getToken()}`;
     try {
-        const body = { question };
-        if (sessionId) body.session_id = sessionId;
-        if (conversationId) body.conversation_id = conversationId;
-
-        const response = await fetch(`${API_BASE}/chat`, {
+        const response = await fetch(`${API_BASE}${path}`, {
             method: "POST",
-            headers: authHeaders(),
-            body: JSON.stringify(body),
+            headers,
+            body: isForm ? body : JSON.stringify(body),
             signal: controller.signal,
         });
         handle401(response);
@@ -93,10 +97,45 @@ export async function askQuestion(question, sessionId = null, conversationId = n
             error.status = response.status;
             throw error;
         }
-        return response.json();
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder();
+        let buffer = "";
+        for (;;) {
+            const { value, done } = await reader.read();
+            if (done) break;
+            buffer += decoder.decode(value, { stream: true });
+            let cut;
+            while ((cut = buffer.indexOf("\n\n")) !== -1) {
+                const frame = buffer.slice(0, cut);
+                buffer = buffer.slice(cut + 2);
+                let type = "message", data = "";
+                for (const line of frame.split("\n")) {
+                    if (line.startsWith("event: ")) type = line.slice(7);
+                    else if (line.startsWith("data: ")) data += line.slice(6);
+                }
+                const parsed = JSON.parse(data);
+                if (type === "error") {
+                    const error = new Error(parsed.detail || "Something went wrong");
+                    error.status = parsed.status;
+                    throw error;
+                }
+                onEvent?.(type, parsed);
+                if (type === "final") return parsed;
+            }
+        }
+        throw new Error("Connection lost before the answer finished. Please try again.");
     } finally {
         clearTimeout(timeoutId);
     }
+}
+
+// ── Chat (protected) ────────────────────────────────────────
+
+export function askQuestionStream(question, sessionId, conversationId, onEvent) {
+    const body = { question };
+    if (sessionId) body.session_id = sessionId;
+    if (conversationId) body.conversation_id = conversationId;
+    return streamPost("/chat/stream", body, onEvent, 120000);
 }
 
 // ── Upload (protected) ──────────────────────────────────────

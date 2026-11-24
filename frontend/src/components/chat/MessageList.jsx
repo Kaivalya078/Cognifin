@@ -4,8 +4,8 @@
  * Premium bubble layout:
  *   - USER  → right-aligned gold bubble
  *   - AI    → left-aligned navy card with gold left-border
- * Word-by-word typewriter for new AI messages (ChatGPT style).
- * Markdown is rendered only after the full response is received.
+ * The answer in progress streams in LoadingIndicator; finished messages
+ * render here as markdown.
  *
  * Includes: MetadataBar, PipelinePanel, FollowUpChips
  */
@@ -18,9 +18,8 @@ import { useAuth } from '../../context/AuthContext';
 import PDFViewerModal from './PDFViewerModal';
 import FinancialChart from './FinancialChart';
 import LoadingIndicator from './LoadingIndicator';
+import { STAGE_LABELS } from './stageLabels';
 import { API_BASE } from '../../api';
-
-const WORD_INTERVAL_MS = 22;
 
 function formatTime(timestamp) {
     if (!timestamp) return '';
@@ -28,33 +27,32 @@ function formatTime(timestamp) {
     return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 }
 
-export default function MessageList({ messages, isLoading, lastQuery, onFollowUp }) {
+export default function MessageList({ messages, isLoading, streaming, onFollowUp }) {
     const bottomRef = useRef(null);
 
     useEffect(() => {
-        bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
-    }, [messages, isLoading]);
+        bottomRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
+    }, [messages, isLoading, streaming?.text, streaming?.stages.length]);
 
     return (
         <div className="chat-messages">
-            {messages.map((msg, index) => (
+            {messages.map((msg) => (
                 <MessageBubble
                     key={msg.id}
                     message={msg}
-                    isLatest={index === messages.length - 1}
                     onFollowUp={onFollowUp}
                 />
             ))}
 
             {/* Loading indicator — appears as assistant message */}
-            {isLoading && <LoadingIndicator query={lastQuery} />}
+            {isLoading && <LoadingIndicator streaming={streaming} />}
 
             <div ref={bottomRef} />
         </div>
     );
 }
 
-function MessageBubble({ message, isLatest, onFollowUp }) {
+function MessageBubble({ message, onFollowUp }) {
     const isUser = message.role === 'user';
     const { user } = useAuth();
     const userName = user?.name || 'You';
@@ -62,33 +60,6 @@ function MessageBubble({ message, isLatest, onFollowUp }) {
     const [copied, setCopied] = useState(false);
     const [showEvidence, setShowEvidence] = useState(false);
     const [showPipeline, setShowPipeline] = useState(false);
-    const bubbleRef = useRef(null);
-
-    // ── Typewriter state ──────────────────────────────────────
-    const words = message.content.split(' ');
-    const [displayedCount, setDisplayedCount] = useState(
-        isLatest && !isUser ? 0 : words.length
-    );
-    const isStreaming = displayedCount < words.length;
-    const displayedText = words.slice(0, displayedCount).join(' ');
-
-    useEffect(() => {
-        if (isUser || !isLatest || displayedCount >= words.length) return;
-        const timer = setInterval(() => {
-            setDisplayedCount((prev) => {
-                if (prev >= words.length) { clearInterval(timer); return prev; }
-                return prev + 1;
-            });
-        }, WORD_INTERVAL_MS);
-        return () => clearInterval(timer);
-    }, [isLatest, isUser, words.length]); // eslint-disable-line
-
-    // Auto-scroll while streaming
-    useEffect(() => {
-        if (isStreaming) {
-            bubbleRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
-        }
-    }, [displayedCount, isStreaming]);
 
     const handleCopy = () => {
         navigator.clipboard.writeText(message.content);
@@ -103,7 +74,6 @@ function MessageBubble({ message, isLatest, onFollowUp }) {
 
     return (
         <div
-            ref={bubbleRef}
             className={`chat-msg ${isUser ? 'chat-msg-user' : 'chat-msg-assistant'}`}
         >
             {/* Avatar */}
@@ -118,9 +88,7 @@ function MessageBubble({ message, isLatest, onFollowUp }) {
                     <span className="chat-msg-role">
                         {isUser ? userName : 'Cognifin · Analyst'}
                     </span>
-                    {!isStreaming && (
-                        <span className="chat-msg-time">{formatTime(message.timestamp)}</span>
-                    )}
+                    <span className="chat-msg-time">{formatTime(message.timestamp)}</span>
                 </div>
 
                 {/* Bubble */}
@@ -128,33 +96,24 @@ function MessageBubble({ message, isLatest, onFollowUp }) {
                     <div className="chat-msg-text">{message.content}</div>
                 ) : (
                     <div className="chat-msg-text chat-msg-markdown">
-                        {isStreaming ? (
-                            /* Plain text while streaming — no markdown rendering */
-                            <>
-                                <span>{displayedText}</span>
-                                <span className="stream-cursor" />
-                            </>
-                        ) : (
-                            /* Full markdown rendering after streaming completes */
-                            <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                                {message.content}
-                            </ReactMarkdown>
-                        )}
+                        <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                            {message.content}
+                        </ReactMarkdown>
                     </div>
                 )}
 
                 {/* Chart of verified figures from the financials table */}
-                {!isUser && !isStreaming && pipeline.chart && (
+                {!isUser && pipeline.chart && (
                     <FinancialChart chart={pipeline.chart} numbersCheck={pipeline.numbers_check} />
                 )}
 
                 {/* Metadata Bar — confidence, latency, sources */}
-                {!isUser && !isStreaming && pipeline.confidence != null && (
+                {!isUser && pipeline.confidence != null && (
                     <MetadataBar pipeline={pipeline} />
                 )}
 
                 {/* Actions — only after streaming done */}
-                {!isUser && !isStreaming && (
+                {!isUser && (
                     <div className="chat-msg-actions">
                         {citations.length > 0 && (
                             <div className="chat-citations">
@@ -228,7 +187,7 @@ function MessageBubble({ message, isLatest, onFollowUp }) {
                 )}
 
                 {/* Follow-up question chips */}
-                {!isUser && !isStreaming && followUps.length > 0 && onFollowUp && (
+                {!isUser && followUps.length > 0 && onFollowUp && (
                     <div className="chat-follow-ups">
                         {followUps.map((q, i) => (
                             <button
@@ -279,13 +238,6 @@ function MetadataBar({ pipeline }) {
 // =============================================================================
 // PipelinePanel — Step-by-step latency breakdown with bar chart
 // =============================================================================
-
-const STAGE_LABELS = {
-    retrieval:              { icon: '🔍', label: 'Retrieval (FAISS + BM25)' },
-    reranking:              { icon: '🔄', label: 'Reranking' },
-    intelligent_retrieve:   { icon: '🧠', label: 'Intelligent Retrieval' },
-    context_assembly:       { icon: '📋', label: 'Context Assembly' },
-};
 
 function PipelinePanel({ breakdown, model }) {
     const stages = Object.entries(breakdown)
