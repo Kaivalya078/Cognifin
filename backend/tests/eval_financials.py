@@ -9,6 +9,7 @@ allows Rs 1 lakh, "4,082" in millions Rs 10 lakh. Values with no printed text: 0
 """
 import argparse
 import json
+import sys
 from collections import defaultdict
 from datetime import date, datetime
 from pathlib import Path
@@ -78,10 +79,22 @@ def evaluate(db: str, key_path: Path = HERE / "financials_golden.json") -> dict:
     return {"report": report, "wrong": wrong, "missing": misses, "suspects": suspects}
 
 
+def gate_failures(report: dict, min_precision: float, min_coverage: float) -> list[str]:
+    """CI gate: overall precision/coverage below the given percents, compared as printed (0.1%)."""
+    o, fails = report["overall"], []
+    if round(100 * (o["precision"] or 0), 1) < min_precision:
+        fails.append(f"precision {o['precision']:.1%} < {min_precision}%")
+    if round(100 * o["coverage"], 1) < min_coverage:
+        fails.append(f"coverage {o['coverage']:.1%} < {min_coverage}%")
+    return fails
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--db", default="index_cache/financials.duckdb")
     ap.add_argument("--label", default="run")
+    ap.add_argument("--min-precision", type=float, help="fail below this overall precision (%%)")
+    ap.add_argument("--min-coverage", type=float, help="fail below this overall coverage (%%)")
     a = ap.parse_args()
     res = evaluate(a.db)
     out = HERE / "eval_reports" / f"{datetime.now():%Y%m%d-%H%M%S}-{a.label}-financials.json"
@@ -95,6 +108,11 @@ def main():
     for s in res["suspects"]:
         print("SUSPECT", *s)
     print(f"report: {out}")
+    if a.min_precision is not None or a.min_coverage is not None:
+        fails = gate_failures(res["report"], a.min_precision or 0, a.min_coverage or 0)
+        for f in fails:
+            print("GATE FAILED:", f)
+        sys.exit(1 if fails else 0)
 
 
 if __name__ == "__main__":
