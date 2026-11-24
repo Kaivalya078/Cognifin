@@ -292,7 +292,8 @@ def fake_pipeline(monkeypatch):
 
     monkeypatch.setattr(main, "corpus_manager", SimpleNamespace(is_indexed=True, chunk_metadata={}))
     monkeypatch.setattr(main, "pipeline", SimpleNamespace(chunks=[]))
-    monkeypatch.setattr(main, "llm_client", SimpleNamespace(is_configured=True, model="t", generate=generate))
+    monkeypatch.setattr(main, "llm_client", SimpleNamespace(is_configured=True, model="t", generate=generate,
+                        generate_stream=lambda s, u: iter([generate(s, u)])))
     monkeypatch.setattr(main, "retrieve_global", retrieve_global)
     monkeypatch.setattr(main, "is_intelligent_parsing_enabled", lambda: False)
     main.response_cache.invalidate_all()

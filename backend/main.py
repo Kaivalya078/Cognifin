@@ -12,7 +12,7 @@ from datetime import datetime, timezone
 
 # FastAPI imports
 from fastapi import FastAPI, HTTPException, UploadFile, File, Form, Depends, Query, Request
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, StreamingResponse
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from starlette.middleware.sessions import SessionMiddleware
@@ -41,6 +41,7 @@ from core.metadata_schema import RetrievalResult
 
 # Phase 2: Generation layer
 from generation.openai_client import OpenAIClient
+from generation.streaming import sse, hold_follow_ups
 from generation.prompt_builder import build_context, build_prompt, extract_citations
 from financials.present import assistant_metadata, finish, prepare as prepare_figures
 
@@ -418,7 +419,7 @@ app.state.limiter = limiter
 
 @app.exception_handler(RateLimitExceeded)
 def _rate_limited(request: Request, exc: RateLimitExceeded):
-    if request.url.path == "/chat" and _rate_key(request).startswith("ip:"):
+    if request.url.path in ("/chat", "/chat/stream") and _rate_key(request).startswith("ip:"):
         detail = (f"You've used your {settings.ANON_FREE_QUESTIONS} free questions for today. "
                   "Sign in to keep asking.")
     else:
@@ -735,8 +736,24 @@ def _prepare_figures(question: str, parsed):
 
 def answer_question(question: str, session_id: Optional[str] = None,
                     top_k: Optional[int] = None) -> dict:
+    """The final payload of answer_events (what /chat, eval and pre-warm use)."""
+    for kind, data in answer_events(question, session_id, top_k):
+        if kind == "final":
+            return data
+    raise RuntimeError("Answer pipeline ended without a result")
+
+
+def _stage(tracker: LatencyTracker, name: str):
+    return ("stage", {"name": name, "ms": tracker.get_breakdown()[name]})
+
+
+def answer_events(question: str, session_id: Optional[str] = None,
+                  top_k: Optional[int] = None):
     """
-    Run the RAG pipeline, or serve it from the response cache.
+    Run the RAG pipeline, or serve it from the response cache, as events:
+    ("stage", {name, ms}) per tracked step, ("token", {text}) per streamed
+    piece of the answer, then ("final", payload). A cache hit is only "final".
+    Nothing is cached unless the LLM stream completed.
 
     Returns a user-independent payload (answer, citations, evidence, metadata,
     follow_ups). The prompt carries no per-user context, so one cached answer is
@@ -746,7 +763,8 @@ def answer_question(question: str, session_id: Optional[str] = None,
     cached = response_cache.get(question, session_id)
     if cached:
         print(f"⚡ Cache HIT for: '{question[:60]}...'")
-        return {**cached, "metadata": {**cached.get("metadata", {}), "cached": True}}
+        yield "final", {**cached, "metadata": {**cached.get("metadata", {}), "cached": True}}
+        return
 
     tracker = LatencyTracker()
     top_k = top_k if top_k is not None else settings.TOP_K
@@ -767,6 +785,7 @@ def answer_question(question: str, session_id: Optional[str] = None,
                 embed_query=lambda q: pipeline.embed_query(q),
                 session_id=session_id,
             )
+        yield _stage(tracker, "retrieval")
 
         with tracker.track("reranking"):
             results = refine_results(
@@ -776,6 +795,7 @@ def answer_question(question: str, session_id: Optional[str] = None,
                 corpus=corpus_manager,
                 final_k=final_k,
             )
+        yield _stage(tracker, "reranking")
 
         context, chunk_ids = build_context(results)
 
@@ -790,6 +810,7 @@ def answer_question(question: str, session_id: Optional[str] = None,
                 pipeline=pipeline,
                 default_top_k=top_k,
             )
+        yield _stage(tracker, "intelligent_retrieve")
 
         intent = iq.intent
         parsed = iq   # companies/years for the financials router
@@ -798,6 +819,7 @@ def answer_question(question: str, session_id: Optional[str] = None,
 
         with tracker.track("context_assembly"):
             context, chunk_ids = assemble_context(step_results, intent=iq.intent)
+        yield _stage(tracker, "context_assembly")
 
         results = []
         for step_r in step_results.values():
@@ -811,6 +833,7 @@ def answer_question(question: str, session_id: Optional[str] = None,
                 question, pipeline=pipeline, corpus_manager=corpus_manager,
                 top_k=top_k, final_k=final_k,
             )
+        yield _stage(tracker, "retrieval")
 
         if parsed:
             intent = parsed.get("intent", "lookup") if isinstance(parsed, dict) else getattr(parsed, "intent", "lookup")
@@ -832,7 +855,16 @@ def answer_question(question: str, session_id: Optional[str] = None,
     else:
         system_prompt, user_message = build_prompt(context, question)
     print(f"🤖 Generating answer with {llm_client.model}...")
-    raw_answer = llm_client.generate(system_prompt, user_message)
+    raw = []
+
+    def deltas():
+        for d in llm_client.generate_stream(system_prompt, user_message):
+            raw.append(d)
+            yield d
+
+    for text in hold_follow_ups(deltas()):
+        yield "token", {"text": text}
+    raw_answer = "".join(raw).strip()
 
     answer, follow_ups = extract_follow_ups(raw_answer)
     citations = extract_citations(answer, chunk_ids)
@@ -881,7 +913,7 @@ def answer_question(question: str, session_id: Optional[str] = None,
         "follow_ups": follow_ups,
     }
     response_cache.set(question, payload, session_id)
-    return payload
+    yield "final", payload
 
 
 def persist_exchange(user_id: str, conversation_id: Optional[str],
@@ -907,17 +939,23 @@ def persist_exchange(user_id: str, conversation_id: Optional[str],
     return conversation_id
 
 
-@app.post(
-    "/chat",
-    response_model=ChatResponse,
-    tags=["Generation"],
-    summary="RAG Chat",
-    description="Ask a question and get an AI-generated answer grounded in the document."
-)
-@limiter.limit(_chat_limit)
-def chat(request: Request, body: ChatRequest,
-         current_user: Optional[dict] = Depends(get_optional_user)):
-    """Answer (fresh or cached), then persist to the caller's conversation."""
+def _error_status(e: Exception) -> int:
+    """HTTP status for a pipeline failure (shared by /chat and /chat/stream)."""
+    if isinstance(e, KeyError):
+        return 404
+    if isinstance(e, ValueError):
+        return 503
+    if isinstance(e, RuntimeError):
+        return 502
+    return 500
+
+
+def _error_detail(e: Exception) -> str:
+    known = isinstance(e, (KeyError, ValueError, RuntimeError))
+    return str(e) if known else f"Generation error: {str(e)}"
+
+
+def _require_chat_ready() -> None:
     if corpus_manager is None or not corpus_manager.is_indexed:
         raise HTTPException(
             status_code=503,
@@ -929,16 +967,27 @@ def chat(request: Request, body: ChatRequest,
             detail="OpenAI API key is not configured. Please set OPENAI_API_KEY in your .env file and restart the server."
         )
 
+
+SSE_HEADERS = {"Cache-Control": "no-cache", "X-Accel-Buffering": "no"}
+
+
+@app.post(
+    "/chat",
+    response_model=ChatResponse,
+    tags=["Generation"],
+    summary="RAG Chat",
+    description="Ask a question and get an AI-generated answer grounded in the document."
+)
+@limiter.shared_limit(_chat_limit, scope="chat")
+def chat(request: Request, body: ChatRequest,
+         current_user: Optional[dict] = Depends(get_optional_user)):
+    """Answer (fresh or cached), then persist to the caller's conversation."""
+    _require_chat_ready()
+
     try:
         payload = answer_question(body.question, body.session_id, body.top_k)
-    except KeyError as e:
-        raise HTTPException(status_code=404, detail=str(e))
-    except ValueError as e:
-        raise HTTPException(status_code=503, detail=str(e))
-    except RuntimeError as e:
-        raise HTTPException(status_code=502, detail=str(e))
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Generation error: {str(e)}")
+        raise HTTPException(status_code=_error_status(e), detail=_error_detail(e))
 
     # Anonymous trial answers aren't saved; there is no account to save them to.
     conv_id = None
@@ -947,6 +996,35 @@ def chat(request: Request, body: ChatRequest,
             current_user["user_id"], body.conversation_id, body.question, payload
         )
     return ChatResponse(**payload, conversation_id=conv_id)
+
+
+@app.post(
+    "/chat/stream",
+    tags=["Generation"],
+    summary="RAG Chat (streamed)",
+    description="Like /chat, as server-sent events: stage, token, then final (or error).",
+)
+@limiter.shared_limit(_chat_limit, scope="chat")
+def chat_stream(request: Request, body: ChatRequest,
+                current_user: Optional[dict] = Depends(get_optional_user)):
+    _require_chat_ready()
+
+    def gen():
+        try:
+            for kind, data in answer_events(body.question, body.session_id, body.top_k):
+                if kind != "final":
+                    yield sse(kind, data)
+                    continue
+                conv_id = None
+                if current_user:
+                    conv_id = persist_exchange(
+                        current_user["user_id"], body.conversation_id, body.question, data
+                    )
+                yield sse("final", ChatResponse(**data, conversation_id=conv_id).model_dump())
+        except Exception as e:
+            yield sse("error", {"detail": _error_detail(e), "status": _error_status(e)})
+
+    return StreamingResponse(gen(), media_type="text/event-stream", headers=SSE_HEADERS)
 
 
 # =============================================================================
