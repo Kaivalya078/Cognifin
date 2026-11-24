@@ -5,6 +5,7 @@ import shutil
 import logging
 import tempfile
 import threading
+import queue
 from uuid import uuid4
 from typing import List, Optional
 from contextlib import asynccontextmanager
@@ -483,10 +484,9 @@ def health_check():
 
 @app.post(
     "/upload",
-    response_model=UploadResponse,
     tags=["Upload"],
     summary="Upload PDF",
-    description="Upload a PDF document for session-scoped retrieval.",
+    description="Upload a PDF for session-scoped retrieval. Streams server-sent events: stage (chunking, embedding done/total, indexing), then final (UploadResponse) or error.",
 )
 @limiter.limit("5/hour")
 def upload_document(
@@ -554,28 +554,10 @@ def upload_document(
         # Isolated corpus on a temporary store (shares embedding model weights);
         # the router deletes the store when the session is evicted.
         session_corpus = new_session_corpus(RetrieverPipeline())
-        try:
-            num_chunks = session_corpus.add_document(
-                pdf_path=tmp_path,
-                company=company_name,
-                document_type=document_type,
-                year=year,
-            )
-        except Exception:
-            discard(session_corpus)
-            raise
-
-        # Generate session ID and register
-        session_id = str(uuid4())
-        corpus_router.register_session(session_id, session_corpus)
-
-        return UploadResponse(
-            session_id=session_id,
-            chunks=num_chunks,
-            company=company_name,
-            year=year,
-            document_type=document_type,
-        )
+        events = _ingest_events(session_corpus, tmp_dir, tmp_path,
+                                company_name, year, document_type)
+        tmp_dir = None  # the stream owns the temp dir from here
+        return StreamingResponse(events, media_type="text/event-stream", headers=SSE_HEADERS)
 
     except HTTPException:
         raise
@@ -585,9 +567,56 @@ def upload_document(
             detail=f"Upload error: {str(e)}",
         )
     finally:
-        # Clean up temp file
+        # Clean up temp file (only when we failed before the stream took over)
         if tmp_dir and os.path.exists(tmp_dir):
             shutil.rmtree(tmp_dir, ignore_errors=True)
+
+
+def _ingest_events(session_corpus, tmp_dir: str, tmp_path: str,
+                   company_name: str, year: str, document_type: str):
+    """Ingest an uploaded PDF in a worker thread, yielding SSE progress frames.
+
+    Ends with a final UploadResponse frame or an error frame. Whatever happens,
+    including the client disconnecting, the temp dir is removed and an
+    unregistered corpus is discarded.
+    """
+    q: queue.Queue = queue.Queue()
+
+    def work():
+        try:
+            n = session_corpus.add_document(
+                pdf_path=tmp_path, company=company_name, document_type=document_type,
+                year=year, progress=lambda name, **info: q.put(("stage", {"name": name, **info})),
+            )
+            q.put(("done", n))
+        except Exception as e:
+            q.put(("error", e))
+
+    worker = threading.Thread(target=work, daemon=True)
+    worker.start()
+    registered = False
+    try:
+        while True:
+            kind, data = q.get()
+            if kind == "stage":
+                yield sse("stage", data)
+            elif kind == "error":
+                yield sse("error", {"detail": f"Upload error: {data}", "status": 500})
+                return
+            else:
+                session_id = str(uuid4())
+                corpus_router.register_session(session_id, session_corpus)
+                registered = True
+                yield sse("final", UploadResponse(
+                    session_id=session_id, chunks=data, company=company_name,
+                    year=year, document_type=document_type,
+                ).model_dump())
+                return
+    finally:
+        worker.join()
+        if not registered:
+            discard(session_corpus)
+        shutil.rmtree(tmp_dir, ignore_errors=True)
 
 
 # =============================================================================

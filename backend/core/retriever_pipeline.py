@@ -86,15 +86,26 @@ class RetrieverPipeline:
         logger.info("Prepared %d chunks", len(chunks))
         return chunks
 
-    def embed_texts(self, texts: List[str], instruction: str = None) -> np.ndarray:
+    def embed_texts(self, texts: List[str], instruction: str = None,
+                    progress=None) -> np.ndarray:
         """L2-normalised float32 vectors, shape (len(texts), embedding_dim).
 
         instruction: query prefix for asymmetric models (bge); never for documents.
+        progress: optional callback(done, total). Only /upload passes it; it
+        encodes in slices, which can shift floats ~1e-6 (encode length-sorts
+        per call), so the global index path never does.
         """
         if instruction:
             texts = [f"{instruction} {t}" for t in texts]
-        vectors = self.model.encode(texts, batch_size=EMBEDDING_BATCH_SIZE,
-                                    show_progress_bar=False, convert_to_numpy=True)
+        kw = dict(batch_size=EMBEDDING_BATCH_SIZE, show_progress_bar=False, convert_to_numpy=True)
+        if progress is None:
+            vectors = self.model.encode(texts, **kw)
+        else:
+            parts = []
+            for i in range(0, len(texts), 256):
+                parts.append(self.model.encode(texts[i:i + 256], **kw))
+                progress(min(i + 256, len(texts)), len(texts))
+            vectors = np.concatenate(parts) if parts else np.zeros((0, self.embedding_dim))
         # float32 even when an fp16 model (GPU ingestion) returns float16.
         vectors = np.ascontiguousarray(vectors, dtype=np.float32)
         norms = np.linalg.norm(vectors, axis=1, keepdims=True)

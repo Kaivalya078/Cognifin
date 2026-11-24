@@ -86,8 +86,12 @@ class CorpusManager:
         source_type: str = "pdf",
         authority: int = 100,
         source_class: str = "official",
+        progress=None,
     ) -> int:
         """Chunk, embed and store one PDF; returns its chunk count.
+
+        progress: optional callback(stage_name, **info) for /upload's live
+        progress: "chunking", "embedding" (done=, total=), "indexing".
 
         Raises ValueError if company + document_type + year is already
         registered, or if the PDF has no extractable text.
@@ -103,8 +107,11 @@ class CorpusManager:
         document_label = f"{company}_{document_type}_{year}_v{version}"
         logger.info("Adding document to corpus: %s", document_label)
 
+        report = progress or (lambda *a, **k: None)
+        report("chunking")
         chunks = self.retriever.prepare_document(pdf_path)
-        vectors = self.retriever.embed_texts([c.text for c in chunks])
+        embed_progress = (lambda d, t: progress("embedding", done=d, total=t)) if progress else None
+        vectors = self.retriever.embed_texts([c.text for c in chunks], progress=embed_progress)
         start = self._total_vectors
 
         metas = []
@@ -120,6 +127,7 @@ class CorpusManager:
             chunk.chunk_id = f"chunk_{start + i}"
             metas.append(m)
 
+        report("indexing")
         self.store.add(chunks, metas, vectors)
         end = start + len(chunks)
         self._total_vectors = end
