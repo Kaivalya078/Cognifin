@@ -586,13 +586,18 @@ def _start_ingest(session_corpus, tmp_dir: str, tmp_path: str,
     q: queue.Queue = queue.Queue()
     abandoned = threading.Event()
 
+    def report(name, **info):
+        if abandoned.is_set():  # client gone: stop embedding at the next slice
+            raise RuntimeError("upload abandoned by the client")
+        q.put(("stage", {"name": name, **info}))
+
     def work():
         # Every path ends with exactly one terminal item, or the stream waits forever.
         registered = False
         try:
             n = session_corpus.add_document(
                 pdf_path=tmp_path, company=company_name, document_type=document_type,
-                year=year, progress=lambda name, **info: q.put(("stage", {"name": name, **info})),
+                year=year, progress=report,
             )
             shutil.rmtree(tmp_dir, ignore_errors=True)
             if abandoned.is_set():

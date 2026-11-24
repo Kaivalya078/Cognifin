@@ -79,3 +79,14 @@ def test_generate_stream_closes_upstream_when_abandoned():
     assert next(g) == "a"
     g.close()
     assert Upstream.closed
+
+
+@pytest.mark.parametrize("line", [" [FOLLOW_UP]: x", "- [FOLLOW_UP]: x", "**[FOLLOW_UP]:** x", "* [FOLLOW_UP]: x"])
+def test_hold_follow_ups_drops_decorated_markers(line):
+    out = "".join(hold_follow_ups(["Answer.\n", line[:3], line[3:], "\n"]))
+    assert out == "Answer.\n"
+
+
+def test_hold_follow_ups_releases_bullets_and_rules():
+    out = "".join(hold_follow_ups(["- Rev", "enue up\n", "**Bold**\n", "---\n"]))
+    assert out == "- Revenue up\n**Bold**\n---\n"

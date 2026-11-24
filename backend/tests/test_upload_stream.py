@@ -17,6 +17,7 @@ class FakeCorpus:
         self.fail = fail
         self.gate = gate  # threading.Event: hold ingestion after "chunking"
         self.pdf_path = None
+        self.finished = False
 
     def add_document(self, pdf_path, progress=None, **_):
         self.pdf_path = pdf_path
@@ -27,6 +28,7 @@ class FakeCorpus:
             raise self.fail
         progress("embedding", done=2, total=3)
         progress("indexing")
+        self.finished = True
         return 3
 
 
@@ -91,6 +93,7 @@ def test_upload_disconnect_discards_corpus(ingest):
     worker.join(5)
     assert seen["discarded"] == [corpus] and seen["registered"] == []
     assert not os.path.exists(tmp_dir)
+    assert not corpus.finished  # ingestion stopped at the next progress report
 
 
 def test_embed_texts_progress_matches_total():
