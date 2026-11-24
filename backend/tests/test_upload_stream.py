@@ -13,13 +13,16 @@ from tests.test_chat_stream import events
 
 
 class FakeCorpus:
-    def __init__(self, fail=None):
+    def __init__(self, fail=None, gate=None):
         self.fail = fail
+        self.gate = gate  # threading.Event: hold ingestion after "chunking"
         self.pdf_path = None
 
     def add_document(self, pdf_path, progress=None, **_):
         self.pdf_path = pdf_path
         progress("chunking")
+        if self.gate:
+            self.gate.wait(5)
         if self.fail:
             raise self.fail
         progress("embedding", done=2, total=3)
@@ -32,8 +35,8 @@ def ingest(monkeypatch):
     import main
     seen = {"discarded": [], "registered": []}
 
-    def make(fail=None):
-        corpus = FakeCorpus(fail)
+    def make(fail=None, gate=None):
+        corpus = FakeCorpus(fail, gate)
         seen["corpus"] = corpus
         monkeypatch.setattr(main, "new_session_corpus", lambda _r: corpus)
         return corpus
@@ -70,14 +73,22 @@ def test_upload_ingest_error_is_event(ingest):
 
 
 def test_upload_disconnect_discards_corpus(ingest):
+    """Client leaves mid-ingest: the stream closes without waiting on the worker,
+    and the worker discards the corpus and removes the temp dir itself."""
+    import threading
     main, make, seen = ingest
-    corpus = make()
+    gate = threading.Event()
+    corpus = make(gate=gate)
     tmp_dir = tempfile.mkdtemp(prefix="finsight_upload_")
     tmp_path = os.path.join(tmp_dir, "upload.pdf")
     open(tmp_path, "wb").write(PDF)
-    g = main._ingest_events(corpus, tmp_dir, tmp_path, "ACME", "2024", "Annual_Report")
-    next(g)  # first progress event, then the client goes away
-    g.close()
+    q, abandoned, worker = main._start_ingest(corpus, tmp_dir, tmp_path, "ACME", "2024", "Annual_Report")
+    g = main._ingest_stream(q, abandoned)
+    next(g)    # "chunking", then the client goes away
+    g.close()  # must not block on the (still gated) worker
+    assert worker.is_alive()
+    gate.set()
+    worker.join(5)
     assert seen["discarded"] == [corpus] and seen["registered"] == []
     assert not os.path.exists(tmp_dir)
 

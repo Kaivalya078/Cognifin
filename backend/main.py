@@ -554,10 +554,11 @@ def upload_document(
         # Isolated corpus on a temporary store (shares embedding model weights);
         # the router deletes the store when the session is evicted.
         session_corpus = new_session_corpus(RetrieverPipeline())
-        events = _ingest_events(session_corpus, tmp_dir, tmp_path,
-                                company_name, year, document_type)
-        tmp_dir = None  # the stream owns the temp dir from here
-        return StreamingResponse(events, media_type="text/event-stream", headers=SSE_HEADERS)
+        q, abandoned, _ = _start_ingest(session_corpus, tmp_dir, tmp_path,
+                                        company_name, year, document_type)
+        tmp_dir = None  # the worker owns the temp dir from here
+        return StreamingResponse(_ingest_stream(q, abandoned),
+                                 media_type="text/event-stream", headers=SSE_HEADERS)
 
     except HTTPException:
         raise
@@ -572,15 +573,18 @@ def upload_document(
             shutil.rmtree(tmp_dir, ignore_errors=True)
 
 
-def _ingest_events(session_corpus, tmp_dir: str, tmp_path: str,
-                   company_name: str, year: str, document_type: str):
-    """Ingest an uploaded PDF in a worker thread, yielding SSE progress frames.
+def _start_ingest(session_corpus, tmp_dir: str, tmp_path: str,
+                  company_name: str, year: str, document_type: str):
+    """Ingest an uploaded PDF on a worker thread that owns all cleanup.
 
-    Ends with a final UploadResponse frame or an error frame. Whatever happens,
-    including the client disconnecting, the temp dir is removed and an
-    unregistered corpus is discarded.
+    Returns (queue, abandoned, thread). The queue receives ("stage", info)
+    items, then ("final", UploadResponse dict) or ("error", {detail, status}).
+    The worker removes the temp dir before reporting the end, and discards the
+    corpus on failure or when the stream was abandoned, so the response
+    stream never has to wait for it.
     """
     q: queue.Queue = queue.Queue()
+    abandoned = threading.Event()
 
     def work():
         try:
@@ -588,35 +592,39 @@ def _ingest_events(session_corpus, tmp_dir: str, tmp_path: str,
                 pdf_path=tmp_path, company=company_name, document_type=document_type,
                 year=year, progress=lambda name, **info: q.put(("stage", {"name": name, **info})),
             )
-            q.put(("done", n))
         except Exception as e:
-            q.put(("error", e))
+            discard(session_corpus)
+            shutil.rmtree(tmp_dir, ignore_errors=True)
+            q.put(("error", {"detail": f"Upload error: {e}", "status": 500}))
+            return
+        shutil.rmtree(tmp_dir, ignore_errors=True)
+        if abandoned.is_set():
+            discard(session_corpus)
+            return
+        # ponytail: a client leaving after this point leaves an orphan session
+        # until the router evicts it; nothing else references it.
+        session_id = str(uuid4())
+        corpus_router.register_session(session_id, session_corpus)
+        q.put(("final", UploadResponse(
+            session_id=session_id, chunks=n, company=company_name,
+            year=year, document_type=document_type,
+        ).model_dump()))
 
     worker = threading.Thread(target=work, daemon=True)
     worker.start()
-    registered = False
+    return q, abandoned, worker
+
+
+def _ingest_stream(q: queue.Queue, abandoned: threading.Event):
+    """SSE frames from an ingest queue; marks the ingest abandoned if closed early."""
     try:
         while True:
             kind, data = q.get()
-            if kind == "stage":
-                yield sse("stage", data)
-            elif kind == "error":
-                yield sse("error", {"detail": f"Upload error: {data}", "status": 500})
-                return
-            else:
-                session_id = str(uuid4())
-                corpus_router.register_session(session_id, session_corpus)
-                registered = True
-                yield sse("final", UploadResponse(
-                    session_id=session_id, chunks=data, company=company_name,
-                    year=year, document_type=document_type,
-                ).model_dump())
+            yield sse(kind, data)
+            if kind in ("final", "error"):
                 return
     finally:
-        worker.join()
-        if not registered:
-            discard(session_corpus)
-        shutil.rmtree(tmp_dir, ignore_errors=True)
+        abandoned.set()
 
 
 # =============================================================================
