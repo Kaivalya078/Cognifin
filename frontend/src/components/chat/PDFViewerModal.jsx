@@ -5,7 +5,7 @@
  * then draws yellow highlight boxes over words matching the chunk snippet.
  */
 
-import { useEffect, useRef, useState, useCallback } from 'react';
+import { useEffect, useRef, useState, useCallback, useMemo } from 'react';
 import { X, ChevronLeft, ChevronRight, ZoomIn, ZoomOut, ExternalLink } from 'lucide-react';
 import * as pdfjsLib from 'pdfjs-dist';
 import pdfjsWorker from 'pdfjs-dist/build/pdf.worker.min.mjs?url';
@@ -21,7 +21,8 @@ const DEFAULT_SCALE = 1.2;  // lower = faster render
 export default function PDFViewerModal({ pdfUrl, pageNumber, chunkText, onClose }) {
     const canvasRef = useRef(null);
     const containerRef = useRef(null);
-    const pdfRef = useRef(null);
+    // State, not a ref: the page render must re-run once the document has loaded.
+    const [pdfDoc, setPdfDoc] = useState(null);
     const renderTaskRef = useRef(null);
 
     const [currentPage, setCurrentPage] = useState(pageNumber || 1);
@@ -30,15 +31,16 @@ export default function PDFViewerModal({ pdfUrl, pageNumber, chunkText, onClose 
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
-    // Tokenise chunk text into meaningful words for highlight matching
-    const highlightWords = chunkText
+    // Tokenise chunk text into meaningful words for highlight matching.
+    // Memoised: a new array every render would re-render the PDF page every render.
+    const highlightWords = useMemo(() => (chunkText
         ? chunkText
               .replace(/[^a-zA-Z0-9\s₹%.,]/g, ' ')
               .split(/\s+/)
               .map(w => w.trim().toLowerCase())
               .filter(w => w.length > 4)
               .slice(0, 30) // cap to avoid perf issues with huge snippets
-        : [];
+        : []), [chunkText]);
 
     // ── Load PDF document once ────────────────────────────────────
     useEffect(() => {
@@ -59,7 +61,7 @@ export default function PDFViewerModal({ pdfUrl, pageNumber, chunkText, onClose 
             .promise
             .then(pdf => {
                 if (cancelled) return;
-                pdfRef.current = pdf;
+                setPdfDoc(pdf);
                 setTotalPages(pdf.numPages);
                 setCurrentPage(Math.min(Math.max(1, pageNumber || 1), pdf.numPages));
             })
@@ -72,21 +74,21 @@ export default function PDFViewerModal({ pdfUrl, pageNumber, chunkText, onClose 
 
     // ── Render page whenever page / scale / pdf changes ──────────
     const renderPage = useCallback(async () => {
-        if (!pdfRef.current) return;
+        if (!pdfDoc) return;
         const canvas = canvasRef.current;
         if (!canvas) return;
 
         // Cancel any in-progress render to avoid "Cannot use the same canvas
         // during multiple render() operations" error
         if (renderTaskRef.current) {
-            try { renderTaskRef.current.cancel(); } catch (_) { /* already done */ }
+            try { renderTaskRef.current.cancel(); } catch { /* already done */ }
             renderTaskRef.current = null;
         }
 
         setLoading(true);
         setError(null);
         try {
-            const page = await pdfRef.current.getPage(currentPage);
+            const page = await pdfDoc.getPage(currentPage);
             const viewport = page.getViewport({ scale });
 
             // Set canvas dimensions
@@ -148,7 +150,7 @@ export default function PDFViewerModal({ pdfUrl, pageNumber, chunkText, onClose 
         } finally {
             setLoading(false);
         }
-    }, [currentPage, scale, highlightWords]);
+    }, [pdfDoc, currentPage, scale, highlightWords]);
 
     useEffect(() => {
         renderPage();

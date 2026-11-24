@@ -5,26 +5,21 @@
  * Uses JWT tokens from the backend (replaces old static-credential auth).
  */
 
-import { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import { createContext, useContext, useState, useCallback } from 'react';
 import { loginUser as apiLogin, registerUser as apiRegister } from '../api';
 import { saveSession, loadSession, clearSession } from '../utils/auth';
 
 const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
-    const [user, setUser] = useState(null);
-    const [isAuthenticated, setIsAuthenticated] = useState(false);
-    const [isLoading, setIsLoading] = useState(true);
-
-    // Restore session from localStorage on mount
-    useEffect(() => {
+    // Restore the stored session during the first render (no signed-out flash).
+    const [restored] = useState(() => {
         const session = loadSession();
-        if (session?.user && session?.token) {
-            setUser(session.user);
-            setIsAuthenticated(true);
-        }
-        setIsLoading(false);
-    }, []);
+        return session?.user && session?.token ? session.user : null;
+    });
+    const [user, setUser] = useState(restored);
+    const [isAuthenticated, setIsAuthenticated] = useState(!!restored);
+    const isLoading = false; // kept in the context value for existing consumers
 
     // Login via backend POST /login
     const login = useCallback(async (email, password) => {

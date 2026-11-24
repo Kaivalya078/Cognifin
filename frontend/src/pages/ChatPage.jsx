@@ -99,7 +99,6 @@ export default function ChatPage() {
         selectConversation,
         deleteConversation,
         renameConversation,
-        refreshConversations,
     } = useConversations();
 
     const { isAuthenticated } = useAuth();
@@ -143,7 +142,7 @@ export default function ChatPage() {
         const handleKeyboard = (e) => {
             if ((e.ctrlKey || e.metaKey) && e.key === 'n') {
                 e.preventDefault();
-                handleNewChat();
+                selectConversation(null); // same as handleNewChat (defined below)
                 toast('New chat created', { icon: '💬', duration: 1500 });
             }
             if ((e.ctrlKey || e.metaKey) && e.key === 'b') {
@@ -158,7 +157,7 @@ export default function ChatPage() {
         };
         window.addEventListener('keydown', handleKeyboard);
         return () => window.removeEventListener('keydown', handleKeyboard);
-    }, [activeId, deleteConversation]);
+    }, [activeId, deleteConversation, selectConversation]);
 
     // --- Send Message ---
     const handleSend = useCallback(
