@@ -34,7 +34,7 @@ import re
 from dataclasses import dataclass
 from typing import List, Literal, Tuple
 
-from query.company_aliases import COMPANY_ALIASES
+from query.company_aliases import COMPANY_ALIASES, NOT_BARE
 
 # =============================================================================
 # PARSED QUERY DATACLASS
@@ -135,7 +135,7 @@ def detect_companies(
     # "Mahindra"; the overlap check then stops the shorter form matching inside.
     surfaces = sorted(
         ((name, company) for company in known_companies
-         for name in [company, *COMPANY_ALIASES.get(company, [])]),
+         for name in [*([] if company in NOT_BARE else [company]), *COMPANY_ALIASES.get(company, [])]),
         key=lambda nc: len(nc[0]), reverse=True,
     )
 
