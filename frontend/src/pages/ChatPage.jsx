@@ -8,17 +8,30 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Toaster, toast } from 'react-hot-toast';
-import { askQuestionStream, checkHealth, uploadPdf, API_BASE } from '../api';
+import { askQuestionStream, checkHealth, uploadPdf } from '../api';
 import { useAuth } from '../context/AuthContext';
 import useConversations from '../hooks/useConversations';
 import Sidebar from '../components/chat/Sidebar';
 import ChatHeader from '../components/chat/ChatHeader';
 import MessageList from '../components/chat/MessageList';
 import ChatInput from '../components/chat/ChatInput';
-import { Sparkles, TrendingUp, BarChart2, Users, DollarSign } from 'lucide-react';
+import SourcePane from '../components/chat/SourcePane';
+import ChatErrorBoundary from '../components/chat/ChatErrorBoundary';
+import { AlertTriangle, X } from 'lucide-react';
+import { pdfUrlOf, openFiling, isFiling, sourceLabel } from '../utils/sources';
+import { bare } from '../utils/citations';
 import { readQuestionParam } from '../utils/landing';
-import '../styles/chat.css';
-import '../styles/api.css';
+import '../styles/chat-v2.css';
+
+// Must match SHOWCASE_QUESTIONS in backend/main.py (pre-answered at startup, so instant).
+const SUGGESTED = [
+    "What was TCS's consolidated revenue from operations in FY2024?",
+    'When did the amalgamation of HDFC Limited with HDFC Bank become effective?',
+    'Which acquisitions did the Infosys board approve in fiscal 2025?',
+    "What was Hindustan Unilever's profit after tax in FY2025?",
+];
+
+const NARROW = '(max-width: 899px)';
 
 // ── Upload progress stages, driven by /upload's stream ──────────
 // Index = position in the list; the server names map onto it.
@@ -40,53 +53,59 @@ function uploadProgress(ev) {
 // ── Upload Progress Overlay component ────────────────────────────
 function UploadProgressOverlay({ fileName, stageIndex, pct, stageLabel, done, error }) {
     return (
-        <div className="upload-overlay">
-            <div className="upload-overlay-card">
-                <div className="upload-overlay-title">
-                    {done ? '✓ Analysis ready' : 'Processing PDF'}
-                </div>
-                <div className="upload-overlay-file">{fileName}</div>
-
+        <div className="cx-overlay" role="status" aria-live="polite">
+            <div className="cx-overlay-card">
+                <p className="cx-overlay-title">{error ? 'Upload failed' : done ? 'Analysis ready' : 'Processing PDF'}</p>
+                <p className="cx-overlay-file">{fileName}</p>
                 {error ? (
-                    <div className="upload-overlay-error">{error}</div>
+                    <p className="cx-overlay-error">{error}</p>
                 ) : (
                     <>
-                        {/* Progress bar */}
-                        <div className="upload-progress-bar-wrap">
-                            <div
-                                className="upload-progress-bar-fill"
-                                style={{ width: `${pct}%` }}
-                            />
+                        <div className="cx-progress" aria-hidden="true">
+                            <div className="cx-progress-fill" style={{ width: `${pct}%` }} />
                         </div>
-                        <div className="upload-progress-pct">{pct}%</div>
-
-                        {/* Stage indicators */}
-                        <div className="upload-stages">
+                        <ol className="cx-stages">
                             {UPLOAD_STAGES.map((s, i) => (
-                                <div
-                                    key={s}
-                                    className={`upload-stage ${
-                                        i < stageIndex ? 'done' :
-                                        i === stageIndex ? 'active' : ''
-                                    }`}
-                                >
-                                    <span className="upload-stage-dot" />
-                                    <span className="upload-stage-label">
-                                        {i === stageIndex && stageLabel ? stageLabel : s}
-                                    </span>
-                                </div>
+                                <li key={s} className={i < stageIndex ? 'is-done' : i === stageIndex ? 'is-active' : ''}>
+                                    {i === stageIndex && stageLabel ? stageLabel : s}
+                                </li>
                             ))}
-                        </div>
-
-                        {done && (
-                            <div className="upload-overlay-done">
-                                Start asking questions about this PDF!
-                            </div>
-                        )}
+                        </ol>
+                        {done && <p className="cx-overlay-done">Ask about this PDF in this chat.</p>}
                     </>
                 )}
             </div>
         </div>
+    );
+}
+
+function useMediaQuery(query) {
+    const [match, setMatch] = useState(() => window.matchMedia(query).matches);
+    useEffect(() => {
+        const mq = window.matchMedia(query);
+        const on = () => setMatch(mq.matches);
+        mq.addEventListener('change', on);
+        return () => mq.removeEventListener('change', on);
+    }, [query]);
+    return match;
+}
+
+// The mobile source sheet: a native modal dialog (focus trap, Escape, inert page).
+function SourceSheet({ titleId, onClose, children }) {
+    const ref = useRef(null);
+    useEffect(() => {
+        const d = ref.current;
+        if (d && !d.open) d.showModal();
+        return () => d?.open && d.close();
+    }, []);
+    return (
+        <dialog ref={ref} className="cx-sheet" aria-labelledby={titleId}
+            onCancel={(e) => { e.preventDefault(); onClose(); }}
+            // A close that skipped cancel (Android back). Ignored when already reopened:
+            // the cleanup's close() fires its event after a remount's showModal().
+            onClose={(e) => { if (!e.currentTarget.open) onClose(); }}>
+            {children}
+        </dialog>
     );
 }
 
@@ -100,6 +119,7 @@ export default function ChatPage() {
         setConversationId,
         selectConversation,
         deleteConversation,
+        undoDelete,
         renameConversation,
     } = useConversations();
 
@@ -107,7 +127,7 @@ export default function ChatPage() {
     const [isLoading, setIsLoading] = useState(false);
     const [streaming, setStreaming] = useState(null); // { stages, text } while answering
     const [showUploadForm, setShowUploadForm] = useState(false);
-    const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+    const [sidebarCollapsed, setSidebarCollapsed] = useState(() => window.matchMedia(NARROW).matches);
     const [backendDown, setBackendDown] = useState(false);
     const [bannerDismissed, setBannerDismissed] = useState(false);
 
@@ -122,6 +142,64 @@ export default function ChatPage() {
     const [uploadDone, setUploadDone] = useState(false);
     const [uploadError, setUploadError] = useState(null);
     const [uploadStageLabel, setUploadStageLabel] = useState(null);
+
+    // The cited page open beside the answer: { item, anchor } (anchor gets focus back on close).
+    const [source, setSource] = useState(null);
+    const listWasCollapsed = useRef(false);
+    const isNarrow = useMediaQuery(NARROW);
+
+    // A ref mirror so these callbacks stay stable (the activeId effect must not re-run on open).
+    const sourceRef = useRef(null);
+    sourceRef.current = source;
+    const collapsedRef = useRef(sidebarCollapsed);
+    collapsedRef.current = sidebarCollapsed;
+
+    const openSource = useCallback((item, anchor) => {
+        if (isFiling(item)) { openFiling(item); return; }
+        if (!sourceRef.current) {
+            listWasCollapsed.current = collapsedRef.current;
+            setSidebarCollapsed(true);
+        }
+        setSource({ item: { ...item }, anchor }); // fresh object: re-clicking a chip jumps back to its page
+    }, []);
+
+    const closeSource = useCallback((refocus = true) => {
+        const prev = sourceRef.current;
+        if (!prev) return;
+        setSidebarCollapsed(listWasCollapsed.current);
+        setSource(null);
+        if (refocus) setTimeout(() => prev.anchor?.focus?.(), 0);
+    }, []);
+
+    // Ctrl+B while a source is open changes what the list returns to on close.
+    const toggleSidebar = useCallback(() => {
+        setSidebarCollapsed((c) => !c);
+        listWasCollapsed.current = !listWasCollapsed.current;
+    }, []);
+
+    // A source belongs to the chat it was opened in. Keyed on the conversation itself:
+    // guests never get an activeId, but New chat still clears their conversation.
+    const convKey = activeConversation?.id ?? null;
+    useEffect(() => closeSource(false), [convKey, closeSource]);
+
+    // Escape closes the desktop pane (the mobile dialog handles its own Escape).
+    useEffect(() => {
+        if (!source || isNarrow) return;
+        // Not when Escape is cancelling something in the chat list (rename, menu).
+        const onKey = (e) => {
+            if (e.key === 'Escape' && !e.defaultPrevented && !e.target.closest?.('.cx-side')) closeSource();
+        };
+        window.addEventListener('keydown', onKey);
+        return () => window.removeEventListener('keydown', onKey);
+    }, [source, isNarrow, closeSource]);
+
+    // Escape closes the narrow-screen chat list overlay.
+    useEffect(() => {
+        if (sidebarCollapsed || !isNarrow) return;
+        const onKey = (e) => { if (e.key === 'Escape' && !e.defaultPrevented && e.target.tagName !== 'INPUT') toggleSidebar(); };
+        window.addEventListener('keydown', onKey);
+        return () => window.removeEventListener('keydown', onKey);
+    }, [sidebarCollapsed, isNarrow, toggleSidebar]);
 
     // Active session for current chat
     const activeSession = activeId ? sessions[activeId] : null;
@@ -139,27 +217,42 @@ export default function ChatPage() {
             });
     }, []);
 
+    // Every delete path: gone from view at once, Undo for 5s, then the server delete.
+    const handleDelete = useCallback((id) => {
+        deleteConversation(id);
+        toast((t) => (
+            <span className="cx-toast">
+                Chat deleted
+                <button type="button" onClick={() => {
+                    toast.dismiss(t.id);
+                    if (!undoDelete(id)) toast('Already deleted');
+                }}>Undo</button>
+            </span>
+        ), { duration: 5000 });
+    }, [deleteConversation, undoDelete]);
+
     // --- Keyboard Shortcuts ---
     useEffect(() => {
         const handleKeyboard = (e) => {
             if ((e.ctrlKey || e.metaKey) && e.key === 'n') {
                 e.preventDefault();
                 selectConversation(null); // same as handleNewChat (defined below)
-                toast('New chat created', { icon: '💬', duration: 1500 });
+                toast('New chat', { duration: 1500 });
             }
             if ((e.ctrlKey || e.metaKey) && e.key === 'b') {
                 e.preventDefault();
-                setSidebarCollapsed((prev) => !prev);
+                toggleSidebar();
             }
-            if ((e.ctrlKey || e.metaKey) && e.key === 'Backspace' && activeId) {
+            // Not while typing: there Ctrl+Backspace deletes a word.
+            const typing = /^(INPUT|TEXTAREA)$/.test(e.target.tagName);
+            if ((e.ctrlKey || e.metaKey) && e.key === 'Backspace' && activeId && !typing) {
                 e.preventDefault();
-                deleteConversation(activeId);
-                toast('Chat deleted', { icon: '🗑️', duration: 1500 });
+                handleDelete(activeId);
             }
         };
         window.addEventListener('keydown', handleKeyboard);
         return () => window.removeEventListener('keydown', handleKeyboard);
-    }, [activeId, deleteConversation, selectConversation]);
+    }, [activeId, handleDelete, selectConversation, toggleSidebar]);
 
     // --- Send Message ---
     const handleSend = useCallback(
@@ -202,8 +295,8 @@ export default function ChatPage() {
             } catch (err) {
                 const errorMsg = err.message || 'Something went wrong. Is the backend running?';
                 // Anonymous trial used up: offer the way forward, not just an error
-                const signIn = err.status === 429 && !isAuthenticated ? ' [Sign in →](/login)' : '';
-                addMessage(convId, 'assistant', `⚠️ ${errorMsg}${signIn}`, {});
+                const signIn = err.status === 429 && !isAuthenticated ? ' [Sign in](/login) to keep asking.' : '';
+                addMessage(convId, 'assistant', `${errorMsg}${signIn}`, {});
                 toast.error(errorMsg, { duration: 4000 });
             } finally {
                 setIsLoading(false);
@@ -266,7 +359,7 @@ export default function ChatPage() {
                 addMessage(
                     convId,
                     'assistant',
-                    `✅ **${file.name}** has been processed — ${result.chunks} chunks indexed.\n\nYou can now ask questions about this document. It's only available in this chat.`,
+                    `**${file.name}** is ready: ${result.chunks} passages indexed. Ask about it in this chat.`,
                     {}
                 );
 
@@ -289,45 +382,30 @@ export default function ChatPage() {
             delete next[activeId];
             return next;
         });
-        toast('PDF session cleared — back to global corpus', { icon: '🗂️', duration: 2000 });
+        toast('PDF removed from this chat', { duration: 2000 });
     };
 
-    const handleNewChat = () => {
-        selectConversation(null);
-    };
+    // On narrow screens the list is an overlay: picking a chat closes it.
+    const foldIfNarrow = () => { if (window.matchMedia(NARROW).matches) setSidebarCollapsed(true); };
+    const handleNewChat = () => { selectConversation(null); foldIfNarrow(); };
+    const handleSelect = (id) => { selectConversation(id); foldIfNarrow(); };
 
     return (
-        <div className="chat-page">
+        <div className="cx-page">
             <Toaster
                 position="top-center"
                 toastOptions={{
                     style: {
-                        background: '#1a1a2e',
-                        color: '#fff',
-                        border: '1px solid rgba(255,255,255,0.08)',
-                        borderRadius: '12px',
-                        fontSize: '14px',
+                        background: 'var(--cf-glass-strong)',
+                        backdropFilter: 'var(--cf-blur)',
+                        color: 'var(--cf-ink)',
+                        border: '1px solid var(--cf-line)',
+                        borderRadius: 'var(--cf-r-md)',
+                        fontFamily: 'var(--cf-font-sans)',
+                        fontSize: '13px',
                     },
                 }}
             />
-
-            {/* Health Banner */}
-            {backendDown && !bannerDismissed && (
-                <div className="health-banner">
-                    <span className="health-banner-icon">⚠️</span>
-                    <span className="health-banner-text">
-                        <strong>Backend unavailable.</strong> The API at{' '}
-                        <code>{API_BASE}</code> isn't responding — it may still be starting up.
-                    </span>
-                    <button
-                        className="health-banner-dismiss"
-                        onClick={() => setBannerDismissed(true)}
-                        title="Dismiss"
-                    >
-                        ×
-                    </button>
-                </div>
-            )}
 
             {/* Upload Progress Overlay */}
             {uploading && (
@@ -342,92 +420,85 @@ export default function ChatPage() {
             )}
 
             {/* Sidebar + Main row */}
-            <div className="chat-body">
+            <div className="cx-body">
                 <Sidebar
                     conversations={conversations}
                     activeId={activeId}
-                    onSelect={selectConversation}
+                    onSelect={handleSelect}
                     onNewChat={handleNewChat}
-                    onDelete={deleteConversation}
+                    onDelete={handleDelete}
                     onRename={renameConversation}
                     isCollapsed={sidebarCollapsed}
-                    onToggleCollapse={() => setSidebarCollapsed(!sidebarCollapsed)}
+                    onToggleCollapse={toggleSidebar}
                 />
 
-                <main className={`chat-main ${sidebarCollapsed ? 'sidebar-collapsed' : ''}`}>
-                    {activeConversation && activeConversation.messages.length > 0 ? (
-                        <>
-                            <ChatHeader
-                                onToggleSidebar={() => setSidebarCollapsed(!sidebarCollapsed)}
-                                sidebarCollapsed={sidebarCollapsed}
-                            />
-                            <MessageList
-                                messages={activeConversation.messages}
-                                isLoading={isLoading}
-                                streaming={streaming}
-                                onFollowUp={handleSend}
-                                // A chat that already has a PDF gets no upload card (it would replace that PDF)
-                                onRequestUpload={activeSession ? null : () => setShowUploadForm(true)}
-                            />
-                            <ChatInput
-                                onSend={handleSend}
-                                onUpload={handleUpload}
-                                isLoading={isLoading}
-                                uploadedFile={activeSession?.fileName || null}
-                                onClearUpload={handleClearUpload}
-                                showUploadForm={showUploadForm}
-                                setShowUploadForm={setShowUploadForm}
-                            />
-                        </>
-                    ) : (
-                        <div className="chat-welcome">
-                            <div className="chat-welcome-content">
-                                <div className="chat-welcome-icon">
-                                    <TrendingUp size={38} />
-                                </div>
-                                <h1>Cognifin</h1>
-                                <p>Your AI-powered financial analyst — trained on NIFTY 50 annual reports. Ask about financials, risk factors, shareholding, and market insights.</p>
+                {/* Narrow screens: the open list is an overlay; tapping outside closes it */}
+                {!sidebarCollapsed && isNarrow && (
+                    <button type="button" className="cx-scrim" aria-label="Close chat list" onClick={toggleSidebar} />
+                )}
 
-                                <div className="chat-welcome-prompts">
-                                    <h3>Suggested questions</h3>
-                                    <div className="chat-prompt-cards">
-                                        {/* Must match SHOWCASE_QUESTIONS in backend/main.py (pre-warmed, instant) */}
-                                        {[
-                                            { icon: <BarChart2 size={15} />, text: 'Compare TCS and Infosys revenue and profit' },
-                                            { icon: <TrendingUp size={15} />, text: 'What are the key risk factors?' },
-                                            { icon: <Users size={15} />, text: 'Who are the promoters and their shareholding?' },
-                                            { icon: <DollarSign size={15} />, text: 'Summarise the financial highlights' },
-                                        ].map(({ icon, text }) => (
-                                            <button
-                                                key={text}
-                                                className="chat-prompt-card"
-                                                onClick={() => handleSend(text)}
-                                            >
-                                                {icon}
-                                                <span>{text}</span>
-                                            </button>
-                                        ))}
-                                    </div>
-                                </div>
-
-                                <div className="chat-shortcuts">
-                                    <span>⌨️ Shortcuts:</span>
-                                    <kbd>Ctrl+N</kbd> New Chat
-                                    <kbd>Ctrl+B</kbd> Toggle Sidebar
-                                </div>
-                            </div>
-                            <ChatInput
-                                onSend={handleSend}
-                                onUpload={handleUpload}
-                                isLoading={isLoading}
-                                uploadedFile={activeSession?.fileName || null}
-                                onClearUpload={handleClearUpload}
-                                showUploadForm={showUploadForm}
-                                setShowUploadForm={setShowUploadForm}
-                            />
+                <main className="cx-main">
+                    {sidebarCollapsed && <ChatHeader onToggleSidebar={toggleSidebar} />}
+                    {/* A slim row inside the column, so the input never leaves the screen */}
+                    {backendDown && !bannerDismissed && (
+                        <div className="cx-banner" role="status">
+                            <AlertTriangle size={14} aria-hidden="true" />
+                            <span>Can&apos;t reach the server. It may still be starting up.</span>
+                            <button type="button" className="cx-icon-btn is-small" onClick={() => setBannerDismissed(true)}
+                                aria-label="Dismiss">
+                                <X size={12} />
+                            </button>
                         </div>
                     )}
+                    <ChatErrorBoundary key={convKey}>
+                    {activeConversation && activeConversation.messages.length > 0 ? (
+                        <MessageList
+                            messages={activeConversation.messages}
+                            isLoading={isLoading}
+                            streaming={streaming}
+                            onFollowUp={handleSend}
+                            // A chat that already has a PDF gets no upload card (it would replace that PDF)
+                            onRequestUpload={activeSession ? null : () => setShowUploadForm(true)}
+                            onOpenSource={openSource}
+                            activeSourceId={source ? bare(source.item.chunk_id) : null}
+                        />
+                    ) : (
+                        <div className="cx-welcome">
+                            <h1 className="cx-welcome-title">Ask about any NIFTY 50 company&apos;s filings.</h1>
+                            <ul className="cx-suggested" aria-label="Suggested questions">
+                                {SUGGESTED.map((text) => (
+                                    <li key={text}>
+                                        <button type="button" className="cx-followup" onClick={() => handleSend(text)}>{text}</button>
+                                    </li>
+                                ))}
+                            </ul>
+                            <p className="cx-shortcuts">
+                                Shortcuts: <kbd>Ctrl+N</kbd> new chat, <kbd>Ctrl+B</kbd> chat list
+                            </p>
+                        </div>
+                    )}
+                    </ChatErrorBoundary>
+                    <ChatInput
+                        onSend={handleSend}
+                        onUpload={handleUpload}
+                        isLoading={isLoading}
+                        uploadedFile={activeSession?.fileName || null}
+                        onClearUpload={handleClearUpload}
+                        showUploadForm={showUploadForm}
+                        setShowUploadForm={setShowUploadForm}
+                    />
                 </main>
+
+                {source && <ChatErrorBoundary>{(() => {
+                    const pane = (
+                        <SourcePane item={source.item} pdfUrl={pdfUrlOf(source.item)}
+                            onClose={() => closeSource()} titleId="cx-source-title" />
+                    );
+                    return isNarrow
+                        ? <SourceSheet titleId="cx-source-title" onClose={() => closeSource()}>{pane}</SourceSheet>
+                        : <aside className="cx-source"
+                            aria-label={`${sourceLabel(source.item)}, page ${source.item.page_number || 1}`}>{pane}</aside>;
+                })()}</ChatErrorBoundary>}
             </div>
         </div>
     );

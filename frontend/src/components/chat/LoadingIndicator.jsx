@@ -1,54 +1,28 @@
 /**
- * LoadingIndicator Component
- * ===========================
- * The in-progress assistant message while /chat/stream runs:
- *   - before the first word: the pipeline stages the server has finished
- *   - after: the answer as it streams in
+ * LoadingIndicator — the answer in progress while /chat/stream runs:
+ * a plain stage line before the first word, then the answer as it streams in.
+ * Chips stay inert until the answer is finished (MessageList makes them live).
  */
 
 import ReactMarkdown from 'react-markdown';
-import { linkCitations } from '../../utils/citations';
 import remarkGfm from 'remark-gfm';
-import { STAGE_LABELS } from './stageLabels';
+import { linkCitations } from '../../utils/citations';
+import { stageLine } from '../../utils/chatFormat';
 
-
-function StageLine({ stages }) {
-    if (stages.length === 0) return <span className="loading-message visible">Searching filings…</span>;
-    return (
-        <span className="loading-message visible">
-            {stages.map((s) => `${(STAGE_LABELS[s.name] || { label: s.name }).label} ✓ ${Math.round(s.ms)} ms`).join(' · ')}
-            {' · Writing answer…'}
-        </span>
-    );
-}
+const INERT = { a: ({ children }) => <span className="cx-chip is-inert">{children}</span> };
 
 export default function LoadingIndicator({ streaming }) {
     const { stages = [], text = '' } = streaming || {};
     return (
-        <div className="chat-msg chat-msg-assistant">
-            <div className="chat-msg-avatar">
-                <span>FA</span>
-            </div>
-            <div className="chat-msg-content">
-                <div className="chat-msg-header">
-                    <span className="chat-msg-role">Cognifin · Analyst</span>
+        <article className="cx-a" aria-busy="true">
+            {text ? (
+                <div className="cx-prose">
+                    <ReactMarkdown remarkPlugins={[remarkGfm]} components={INERT}>{linkCitations(text, null)}</ReactMarkdown>
+                    <span className="cx-cursor" aria-hidden="true" />
                 </div>
-                {text ? (
-                    <div className="chat-msg-text chat-msg-markdown">
-                        <ReactMarkdown remarkPlugins={[remarkGfm]} components={{ a: ({ children }) => <span className="cite-chip">{children}</span> }}>{linkCitations(text, null)}</ReactMarkdown>
-                        <span className="stream-cursor" />
-                    </div>
-                ) : (
-                    <div className="chat-msg-text chat-loading-indicator">
-                        <StageLine stages={stages} />
-                        <span className="loading-dots">
-                            <span className="loading-dot" />
-                            <span className="loading-dot" />
-                            <span className="loading-dot" />
-                        </span>
-                    </div>
-                )}
-            </div>
-        </div>
+            ) : (
+                <p className="cx-stage" role="status">{stageLine(stages)}</p>
+            )}
+        </article>
     );
 }

@@ -185,6 +185,7 @@ export async function deleteConversationApi(id) {
     const response = await fetch(`${API_BASE}/conversations/${id}`, {
         method: "DELETE",
         headers: authHeaders(),
+        keepalive: true,  // a delete flushed on pagehide must outlive the page
     });
     handle401(response);
     if (!response.ok) {

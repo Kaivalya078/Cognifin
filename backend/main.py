@@ -759,10 +759,10 @@ def retrieve(request: Request, body: RetrieveRequest):
 # The suggested questions on the chat welcome screen (frontend ChatPage.jsx).
 # Keep the two lists identical: a pinned cache hit needs the exact text.
 SHOWCASE_QUESTIONS = [
-    "Compare TCS and Infosys revenue and profit",
-    "What are the key risk factors?",
-    "Who are the promoters and their shareholding?",
-    "Summarise the financial highlights",
+    "What was TCS's consolidated revenue from operations in FY2024?",
+    "When did the amalgamation of HDFC Limited with HDFC Bank become effective?",
+    "Which acquisitions did the Infosys board approve in fiscal 2025?",
+    "What was Hindustan Unilever's profit after tax in FY2025?",
 ]
 
 
