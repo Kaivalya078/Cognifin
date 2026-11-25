@@ -63,7 +63,8 @@ def import_scratch(xbrl_manifest: Path, xbrl_cache: Path, results_dir: Path,
             dst.parent.mkdir(parents=True, exist_ok=True)
             shutil.copyfile(results_dir / sym / dst.name, dst)
             rows.append([sym, end.isoformat(), "PDF", "", f"{sym}/{dst.name}",
-                         BSE_URL + pname.split("=", 1)[1], _sha(dst)])
+                         pname if pname.startswith("http") else BSE_URL + pname.split("=", 1)[1],
+                         _sha(dst)])
     with open(out_dir / "sources.csv", "w", newline="", encoding="utf-8") as f:
         w = csv.writer(f, lineterminator="\n")
         w.writerow(COLS)

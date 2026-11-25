@@ -41,6 +41,16 @@ def test_hash_mismatch_raises(tmp_path):
         load_sources(out)
 
 
+def test_results_link_may_be_a_full_url(tmp_path):
+    # Companies not listed on BSE (BSE Ltd itself) file results on NSE only.
+    man, xcache, res, links = _scratch(tmp_path)
+    url = "https://nsearchives.nseindia.com/corporate/BSE1_07082025181717_NSEIntimation.pdf"
+    links.write_text(f"TCS,6/2025,{url}\n")
+    out = tmp_path / "out"
+    import_scratch(man, xcache, res, links, out)
+    assert [s.url for s in load_sources(out) if s.kind == "PDF"] == [url]
+
+
 def test_dates_both_formats():
     assert parse_manifest_date("31-03-2026") == date(2026, 3, 31)
     assert parse_manifest_date("31-Mar-2025") == date(2025, 3, 31)
