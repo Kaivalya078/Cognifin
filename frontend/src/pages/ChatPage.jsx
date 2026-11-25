@@ -5,7 +5,8 @@
  * Supports session-scoped PDF upload with a progress overlay.
  */
 
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { Toaster, toast } from 'react-hot-toast';
 import { askQuestionStream, checkHealth, uploadPdf, API_BASE } from '../api';
 import { useAuth } from '../context/AuthContext';
@@ -15,6 +16,7 @@ import ChatHeader from '../components/chat/ChatHeader';
 import MessageList from '../components/chat/MessageList';
 import ChatInput from '../components/chat/ChatInput';
 import { Sparkles, TrendingUp, BarChart2, Users, DollarSign } from 'lucide-react';
+import { readQuestionParam } from '../utils/landing';
 import '../styles/chat.css';
 import '../styles/api.css';
 
@@ -212,6 +214,19 @@ export default function ChatPage() {
     );
 
     // --- Upload PDF ---
+    // Opened from the landing page's ask bar as /chat?q=...: send it once, then drop q
+    // from the URL so a refresh doesn't resend. The ref guards StrictMode's double effect.
+    const location = useLocation();
+    const navigate = useNavigate();
+    const handedOff = useRef(false);
+    useEffect(() => {
+        const q = readQuestionParam(location.search);
+        if (!q || handedOff.current) return;
+        handedOff.current = true;
+        navigate('/chat', { replace: true });
+        handleSend(q);
+    }, [location.search, navigate, handleSend]);
+
     const handleUpload = useCallback(
         async (file, companyName, year) => {
             // Make sure we have a conversation to attach the session to
