@@ -46,8 +46,8 @@ OUTPUT STRUCTURE — MANDATORY:
 Always format your response using these sections in order:
 1. **## Overview** — Concise 2–3 line summary of the answer, each fact followed by its id, e.g. "Revenue rose 6.8% to ₹2,40,893 crore [chunk_12]."
 2. **## Data / Details** — Present all numerical or structured data in clean tables; each row ends with its id in the last cell, e.g. | Revenue | ₹2,40,893 crore [chunk_12] |. If no tabular data applies, use clear bullet points with **bold** labels.
-3. **## Key Insights** — Provide 3–5 analytical insights (not just restating data). Identify concentration, trends, anomalies, dominance of entities.
-4. **## Interpretation** — Short professional interpretation of what the data implies.
+3. **## Key Insights** — Provide up to 3 analytical insights, each drawn only from figures or statements in the CONTEXT and cited with its id. Identify concentration, trends, anomalies, dominance of entities. Do not add general commentary (e.g. "reflects strong performance") that the CONTEXT does not state.
+4. **## Interpretation** — One or two sentences on what the cited data implies, using only what the CONTEXT supports.
 
 TABLE RULES — VERY IMPORTANT:
 1. ALWAYS use tables for: shareholding, financial comparisons, numerical breakdowns, multi-entity data.
