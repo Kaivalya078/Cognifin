@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Menu, X } from 'lucide-react';
 import '../../styles/landing-v2.css';
@@ -15,10 +15,15 @@ export function Wordmark() {
 
 export default function Navbar() {
     const [open, setOpen] = useState(false);
+    const menuBtn = useRef(null);
 
     useEffect(() => {
         if (!open) return undefined;
-        const onKey = (e) => e.key === 'Escape' && setOpen(false);
+        const onKey = (e) => {
+            if (e.key !== 'Escape') return;
+            setOpen(false);
+            menuBtn.current?.focus();  // don't drop focus to <body>
+        };
         window.addEventListener('keydown', onKey);
         return () => window.removeEventListener('keydown', onKey);
     }, [open]);
@@ -35,6 +40,7 @@ export default function Navbar() {
                 <div className="cf-nav-links">{LINKS.map((l) => item(l, 'cf-nav-link'))}</div>
                 <Link to="/chat" className="cf-btn cf-btn-ghost cf-nav-cta">Open app</Link>
                 <button
+                    ref={menuBtn}
                     type="button"
                     className="cf-nav-menu"
                     aria-label="Menu"
@@ -46,10 +52,10 @@ export default function Navbar() {
                 </button>
             </nav>
             {open && (
-                <div id="cf-nav-sheet" className="cf-nav-sheet">
+                <nav id="cf-nav-sheet" className="cf-nav-sheet" aria-label="Main (menu)">
                     {LINKS.map((l) => item(l, 'cf-nav-sheet-link'))}
                     <Link to="/chat" className="cf-btn cf-btn-solid" onClick={close}>Open app</Link>
-                </div>
+                </nav>
             )}
         </header>
     );

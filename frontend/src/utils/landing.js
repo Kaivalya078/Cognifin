@@ -18,7 +18,7 @@ export function readQuestionParam(search) {
 export function proofItems(m) {
   const faith = m?.answers?.faithfulness;
   const correct = m?.answers?.correctness;
-  const companies = m?.golden_set?.companies;
+  const companies = m?.index?.companies;  // indexed = covered (not the eval set's count)
   const filings = m?.index?.documents;
   if (![faith, correct, companies, filings].every(isNum)) return null;
   return [

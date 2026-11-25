@@ -10,7 +10,7 @@ function Sparkline({ rows }) {
     const y = (v) => 82 - ((v - lo) / (hi - lo)) * 66;
     const pts = rows.map((r, i) => `${x(i)},${y(r.value)}`).join(' ');
     return (
-        <svg className="cf-spark" viewBox="0 0 300 112" role="presentation">
+        <svg className="cf-spark" viewBox="0 0 300 112" aria-hidden="true" focusable="false">
             <line x1="0" y1="90" x2="300" y2="90" className="cf-spark-axis" />
             <polyline points={pts} className="cf-spark-line" />
             {rows.map((r, i) => (
@@ -46,8 +46,11 @@ export default function ProductWindow() {
                     <Sparkline rows={P.rows} />
                 </div>
                 <div className="cf-window-source">
-                    <p className="cf-window-source-head">Verified figures · INFY consolidated net profit, ₹ crore</p>
                     <table className="cf-window-table">
+                        <caption className="cf-window-source-head">Verified figures · INFY consolidated net profit</caption>
+                        <thead>
+                            <tr><th scope="col">Quarter</th><th scope="col">₹ crore</th><th scope="col">Source</th></tr>
+                        </thead>
                         <tbody>
                             {P.rows.map((r) => (
                                 <tr key={r.quarter} className={r === last ? 'is-hit' : undefined}>

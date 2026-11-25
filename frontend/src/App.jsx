@@ -23,8 +23,9 @@ function AnimatedRoutes() {
 
   return (
     <AnimatePresence mode="wait">
-      <Suspense fallback={null}>
-      <Routes location={location} key={location.pathname}>
+      {/* The key lives on Suspense, AnimatePresence's direct child, so route exits still animate. */}
+      <Suspense key={location.pathname} fallback={null}>
+      <Routes location={location}>
         <Route path="/" element={
           <PageTransition>
             <LandingPage />

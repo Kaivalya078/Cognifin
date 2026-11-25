@@ -15,7 +15,9 @@ assert.equal(chatHref(undefined), '/chat');
 const items = proofItems(metrics);
 assert.equal(items.length, 4);
 for (const it of items) assert.ok(it.value && it.label && !/undefined|NaN|—/.test(it.value));
-assert.equal(items[2].value, String(metrics.golden_set.companies));
+assert.equal(items[2].value, String(metrics.index.companies));
+// "Covered" means indexed, not "in the eval set": the two can differ after a corpus rebuild.
+assert.equal(proofItems({ ...metrics, golden_set: { ...metrics.golden_set, companies: 40 }, index: { ...metrics.index, companies: 95 } })[2].value, '95');
 assert.equal(items[3].value, String(metrics.index.documents));
 assert.equal(proofItems({}), null);
 assert.equal(proofItems(null), null);
