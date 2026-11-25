@@ -1,0 +1,143 @@
+/* Phase 6.2 chat app — smoked glass on the --cf tokens (styles/tokens.css).
+   Classes are prefixed cx- so nothing here collides with legacy rules. */
+
+/* ── Source pane (desktop) ─────────────────────────────────────── */
+.cx-source {
+  flex: 0 0 45%;
+  min-width: 0;
+  height: 100vh;
+  border-left: 1px solid var(--cf-line);
+  background: var(--cf-glass-strong);
+  backdrop-filter: var(--cf-blur);
+  -webkit-backdrop-filter: var(--cf-blur);
+  animation: cx-slide-in 180ms ease-out;
+}
+
+@keyframes cx-slide-in {
+  from { transform: translateX(24px); opacity: 0; }
+  to { transform: none; opacity: 1; }
+}
+
+/* ── Source sheet (mobile, native <dialog>) ────────────────────── */
+.cx-sheet {
+  width: 100vw;
+  max-width: 100vw;
+  height: 100dvh;
+  max-height: 100dvh;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  color: var(--cf-ink);
+  background: var(--cf-glass-strong);
+  backdrop-filter: var(--cf-blur);
+  -webkit-backdrop-filter: var(--cf-blur);
+}
+.cx-sheet::backdrop { background: rgba(6, 7, 12, 0.7); }
+
+/* ── Pane contents ─────────────────────────────────────────────── */
+.cx-pane {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  color: var(--cf-ink);
+  font-family: var(--cf-font-sans);
+}
+
+.cx-pane-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--cf-line);
+}
+
+.cx-pane-title {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  min-width: 0;
+}
+.cx-pane-doc {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 13px;
+  font-weight: 500;
+}
+.cx-pane-page {
+  flex-shrink: 0;
+  font: 400 12px var(--cf-font-mono);
+  color: var(--cf-sub);
+}
+
+.cx-pane-tools { display: flex; gap: 2px; flex-shrink: 0; }
+
+.cx-pane-body {
+  flex: 1;
+  overflow: auto;
+  padding: 16px;
+}
+
+.cx-pane-sheet {
+  position: relative;
+  width: fit-content;
+  max-width: 100%;
+  margin: 0 auto;
+  border-radius: var(--cf-r-sm);
+  overflow: hidden;
+}
+.cx-pane-canvas {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  background: #fff;
+}
+/* Skeleton while a page renders: dim the canvas, sweep a hairline */
+.cx-pane-sheet.is-loading { min-height: 60vh; min-width: min(100%, 420px); background: var(--cf-bg-raised); }
+.cx-pane-sheet.is-loading .cx-pane-canvas { opacity: 0.25; }
+.cx-pane-sheet.is-loading::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent, var(--cf-grid), transparent);
+  animation: cx-sweep 1.2s linear infinite;
+}
+@keyframes cx-sweep { from { transform: translateX(-100%); } to { transform: translateX(100%); } }
+
+.cx-pane-error { color: var(--cf-sub); font-size: 14px; }
+.cx-pane-error a { color: var(--cf-gold); }
+
+/* ── Shared controls ───────────────────────────────────────────── */
+.cx-icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border: 0;
+  border-radius: var(--cf-r-sm);
+  background: transparent;
+  color: var(--cf-sub);
+  cursor: pointer;
+}
+.cx-icon-btn:hover:not(:disabled) { color: var(--cf-ink); background: var(--cf-line); }
+.cx-icon-btn:disabled { opacity: 0.35; cursor: default; }
+
+.cx-chip.is-active {
+  color: var(--cf-bg);
+  background: var(--cf-gold);
+  border-color: var(--cf-gold);
+}
+
+:where(.cx-page, .cx-source, .cx-sheet) :focus-visible,
+.cx-icon-btn:focus-visible,
+.cx-chip:focus-visible {
+  outline: 2px solid var(--cf-gold);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cx-source { animation: none; }
+  .cx-pane-sheet.is-loading::after { animation: none; }
+}

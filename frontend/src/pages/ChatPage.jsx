@@ -15,10 +15,14 @@ import Sidebar from '../components/chat/Sidebar';
 import ChatHeader from '../components/chat/ChatHeader';
 import MessageList from '../components/chat/MessageList';
 import ChatInput from '../components/chat/ChatInput';
+import SourcePane from '../components/chat/SourcePane';
+import { pdfUrlOf, openFiling, isFiling, sourceLabel } from '../utils/sources';
+import { bare } from '../utils/citations';
 import { Sparkles, TrendingUp, BarChart2, Users, DollarSign } from 'lucide-react';
 import { readQuestionParam } from '../utils/landing';
 import '../styles/chat.css';
 import '../styles/api.css';
+import '../styles/chat-v2.css';
 
 // ── Upload progress stages, driven by /upload's stream ──────────
 // Index = position in the list; the server names map onto it.
@@ -90,6 +94,33 @@ function UploadProgressOverlay({ fileName, stageIndex, pct, stageLabel, done, er
     );
 }
 
+function useMediaQuery(query) {
+    const [match, setMatch] = useState(() => window.matchMedia(query).matches);
+    useEffect(() => {
+        const mq = window.matchMedia(query);
+        const on = () => setMatch(mq.matches);
+        mq.addEventListener('change', on);
+        return () => mq.removeEventListener('change', on);
+    }, [query]);
+    return match;
+}
+
+// The mobile source sheet: a native modal dialog (focus trap, Escape, inert page).
+function SourceSheet({ titleId, onClose, children }) {
+    const ref = useRef(null);
+    useEffect(() => {
+        const d = ref.current;
+        if (d && !d.open) d.showModal();
+        return () => d?.open && d.close();
+    }, []);
+    return (
+        <dialog ref={ref} className="cx-sheet" aria-labelledby={titleId}
+            onCancel={(e) => { e.preventDefault(); onClose(); }}>
+            {children}
+        </dialog>
+    );
+}
+
 export default function ChatPage() {
     const {
         conversations,
@@ -123,6 +154,53 @@ export default function ChatPage() {
     const [uploadError, setUploadError] = useState(null);
     const [uploadStageLabel, setUploadStageLabel] = useState(null);
 
+    // The cited page open beside the answer: { item, anchor } (anchor gets focus back on close).
+    const [source, setSource] = useState(null);
+    const listWasCollapsed = useRef(false);
+    const isNarrow = useMediaQuery('(max-width: 899px)');
+
+    // A ref mirror so these callbacks stay stable (the activeId effect must not re-run on open).
+    const sourceRef = useRef(null);
+    sourceRef.current = source;
+    const collapsedRef = useRef(sidebarCollapsed);
+    collapsedRef.current = sidebarCollapsed;
+
+    const openSource = useCallback((item, anchor) => {
+        if (isFiling(item)) { openFiling(item); return; }
+        if (!sourceRef.current) {
+            listWasCollapsed.current = collapsedRef.current;
+            setSidebarCollapsed(true);
+        }
+        setSource({ item, anchor });
+    }, []);
+
+    const closeSource = useCallback((refocus = true) => {
+        const prev = sourceRef.current;
+        if (!prev) return;
+        setSidebarCollapsed(listWasCollapsed.current);
+        setSource(null);
+        if (refocus) setTimeout(() => prev.anchor?.focus?.(), 0);
+    }, []);
+
+    // Ctrl+B while a source is open changes what the list returns to on close.
+    const toggleSidebar = useCallback(() => {
+        setSidebarCollapsed((c) => !c);
+        listWasCollapsed.current = !listWasCollapsed.current;
+    }, []);
+
+    // A source belongs to the chat it was opened in. Keyed on the conversation itself:
+    // guests never get an activeId, but New chat still clears their conversation.
+    const convKey = activeConversation?.id ?? null;
+    useEffect(() => closeSource(false), [convKey, closeSource]);
+
+    // Escape closes the desktop pane (the mobile dialog handles its own Escape).
+    useEffect(() => {
+        if (!source || isNarrow) return;
+        const onKey = (e) => { if (e.key === 'Escape') closeSource(); };
+        window.addEventListener('keydown', onKey);
+        return () => window.removeEventListener('keydown', onKey);
+    }, [source, isNarrow, closeSource]);
+
     // Active session for current chat
     const activeSession = activeId ? sessions[activeId] : null;
 
@@ -149,7 +227,7 @@ export default function ChatPage() {
             }
             if ((e.ctrlKey || e.metaKey) && e.key === 'b') {
                 e.preventDefault();
-                setSidebarCollapsed((prev) => !prev);
+                toggleSidebar();
             }
             if ((e.ctrlKey || e.metaKey) && e.key === 'Backspace' && activeId) {
                 e.preventDefault();
@@ -159,7 +237,7 @@ export default function ChatPage() {
         };
         window.addEventListener('keydown', handleKeyboard);
         return () => window.removeEventListener('keydown', handleKeyboard);
-    }, [activeId, deleteConversation, selectConversation]);
+    }, [activeId, deleteConversation, selectConversation, toggleSidebar]);
 
     // --- Send Message ---
     const handleSend = useCallback(
@@ -351,14 +429,14 @@ export default function ChatPage() {
                     onDelete={deleteConversation}
                     onRename={renameConversation}
                     isCollapsed={sidebarCollapsed}
-                    onToggleCollapse={() => setSidebarCollapsed(!sidebarCollapsed)}
+                    onToggleCollapse={toggleSidebar}
                 />
 
                 <main className={`chat-main ${sidebarCollapsed ? 'sidebar-collapsed' : ''}`}>
                     {activeConversation && activeConversation.messages.length > 0 ? (
                         <>
                             <ChatHeader
-                                onToggleSidebar={() => setSidebarCollapsed(!sidebarCollapsed)}
+                                onToggleSidebar={toggleSidebar}
                                 sidebarCollapsed={sidebarCollapsed}
                             />
                             <MessageList
@@ -368,6 +446,8 @@ export default function ChatPage() {
                                 onFollowUp={handleSend}
                                 // A chat that already has a PDF gets no upload card (it would replace that PDF)
                                 onRequestUpload={activeSession ? null : () => setShowUploadForm(true)}
+                                onOpenSource={openSource}
+                                activeSourceId={source ? bare(source.item.chunk_id) : null}
                             />
                             <ChatInput
                                 onSend={handleSend}
@@ -428,6 +508,17 @@ export default function ChatPage() {
                         </div>
                     )}
                 </main>
+
+                {source && (() => {
+                    const pane = (
+                        <SourcePane item={source.item} pdfUrl={pdfUrlOf(source.item)}
+                            onClose={() => closeSource()} titleId="cx-source-title" />
+                    );
+                    return isNarrow
+                        ? <SourceSheet titleId="cx-source-title" onClose={() => closeSource()}>{pane}</SourceSheet>
+                        : <aside className="cx-source"
+                            aria-label={`${sourceLabel(source.item)}, page ${source.item.page_number || 1}`}>{pane}</aside>;
+                })()}
             </div>
         </div>
     );
