@@ -1,5 +1,6 @@
 import { API_BASE } from '../api';
 import { bare } from './citations';
+import { docLabel } from './chatFormat';
 
 // pdf_url is absolute when PDFs live in object storage, or an API path
 // (/pdfs/COMPANY/YEAR.pdf) when the backend serves them itself.
@@ -15,6 +16,6 @@ export const openFiling = (item) => {
 
 export const isFiling = (item) => bare(item?.chunk_id || '').startsWith('fin_');
 
-export const sourceLabel = (item) => item?.document_label
-    || item?.pdf_url?.split('/').pop()?.replace(/\.pdf$/i, '')
+export const sourceLabel = (item) => docLabel(item?.document_label
+    || item?.pdf_url?.split('/').pop()?.replace(/\.pdf$/i, ''))
     || 'Source';
