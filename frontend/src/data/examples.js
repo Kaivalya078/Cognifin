@@ -19,3 +19,15 @@ export const CTA_EXAMPLES = [
   { label: 'Infosys acquisitions FY25', question: 'Which acquisitions did the Infosys board approve in fiscal 2025?' },
   { label: 'HUL profit FY25', question: "What was Hindustan Unilever's profit after tax in FY2025?" },
 ];
+
+// Product window: INFY consolidated net profit, from backend/index_cache/financials.duckdb
+// (company='INFY', metric='net_profit', basis='consolidated', period_type='Q'), queried 2026-11-25.
+export const PRODUCT_CASE = {
+  question: 'Infosys net profit, last four quarters?',
+  rows: [
+    { quarter: 'Q3 FY26', value: 6666, source: 'BSE results filing p.87' },
+    { quarter: 'Q4 FY26', value: 8509, source: 'NSE iXBRL filing' },
+    { quarter: 'Q1 FY27', value: 7775, source: 'BSE results filing p.22' },
+    { quarter: 'Q2 FY27', value: 7838, source: 'BSE results filing p.85' },
+  ],
+};
