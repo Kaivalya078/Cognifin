@@ -67,6 +67,7 @@ from core.retriever_pipeline import RetrieverPipeline
 from db import ensure_indexes, users_collection
 from financials.present import assistant_metadata, finish
 from financials.present import prepare as prepare_figures
+from generation.citation_fill import fill_figure_citations
 from generation.intent_prompts import build_intent_prompt
 
 # Phase 2: Generation layer
@@ -924,6 +925,12 @@ def answer_events(question: str, session_id: Optional[str] = None,
     raw_answer = "".join(raw).strip()
 
     answer, follow_ups = extract_follow_ups(raw_answer)
+    # Phase 6.0: cite figures the model stated but left uncited, only on exact matches
+    # with a passage it was shown (fin rows first, the same order as the context).
+    model_answer = answer
+    context_items = [(e["chunk_id"], e["snippet"]) for e in (fin.evidence if fin else [])]
+    context_items += [(r.chunk_id, r.snippet) for r in results]
+    answer, filled = fill_figure_citations(answer, context_items)
     citations = extract_citations(answer, chunk_ids)
     confidence, conf_label = compute_confidence(results, answer, question, citations)
     citation_check = verify_citations(answer, chunk_ids)
@@ -965,7 +972,10 @@ def answer_events(question: str, session_id: Optional[str] = None,
             "cached": False,
             "model": llm_client.model,
             "citation_check": citation_check,
-            **finish(fin, answer),
+            "citation_fill": filled,
+            # The numbers check reads the model's own answer: filled fin markers would
+            # pull derived figures into it and raise false "unmatched" flags.
+            **finish(fin, model_answer),
         },
         "follow_ups": follow_ups,
     }

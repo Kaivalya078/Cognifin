@@ -101,3 +101,28 @@ def test_chat_and_stream_share_anonymous_quota(limited):
     r = client.post("/chat/stream", json={"question": "Revenue?"})
     assert r.status_code == 429
     assert "sign in" in r.json()["detail"].lower()
+
+
+def _one_result(monkeypatch, main):
+    hit = SimpleNamespace(chunk_id="chunk_7", snippet="revenue from operations 2,40,893 crore", score=1.0,
+                          page_number=17, document_label="TCS AR 2024", pdf_url="")
+    monkeypatch.setattr(main, "retrieve_global", lambda *a, **k: (None, [hit], None))
+    monkeypatch.setattr(main, "llm_client", _llm("Revenue was ", "₹2,40,893 crore."))
+
+
+def test_final_answer_gets_filled_citation(fresh_pipeline, monkeypatch):
+    main, client = fresh_pipeline
+    _one_result(monkeypatch, main)
+    final = events(client.post("/chat/stream", json={"question": "TCS revenue FY24 fill?"}).text)[-1][1]
+    assert final["answer"] == "Revenue was ₹2,40,893 crore [chunk_7]."
+    assert final["metadata"]["citation_fill"] == ["chunk_7"]
+    assert "chunk_7" in final["citations"]
+
+
+def test_numbers_check_gets_prefill_answer(fresh_pipeline, monkeypatch):
+    main, client = fresh_pipeline
+    _one_result(monkeypatch, main)
+    seen = []
+    monkeypatch.setattr(main, "finish", lambda fin, answer: seen.append(answer) or {})
+    client.post("/chat/stream", json={"question": "TCS revenue FY24 prefill?"})
+    assert seen == ["Revenue was ₹2,40,893 crore."]

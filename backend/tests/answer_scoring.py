@@ -8,7 +8,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from core.citation_verifier import bare_chunk_id  # noqa: E402
+from core.citation_verifier import _REF, bare_chunk_id  # noqa: E402
 
 # gpt-4o-mini, USD per 1M tokens (checked 2026-11-24, openai.com/api/pricing).
 PRICE_IN_PER_M = 0.15
@@ -68,6 +68,19 @@ def _cost(tok: dict) -> float:
     return tok["in"] / 1e6 * PRICE_IN_PER_M + tok["out"] / 1e6 * PRICE_OUT_PER_M
 
 
+def _fill_split(answered: list) -> tuple:
+    """(share of answered questions cited only by the code fill, filled markers / all markers)."""
+    fill_only = markers = filled = 0
+    for r in answered:
+        fill = {bare_chunk_id(i) for i in (r.get("metadata") or {}).get("citation_fill", [])}
+        valid = {bare_chunk_id(i) for i in (r["citation_check"] or {}).get("valid_citations", [])}
+        fill_only += bool(valid) and valid <= fill
+        filled += len((r.get("metadata") or {}).get("citation_fill", []))
+        markers += len(_REF.findall(r.get("answer") or ""))
+    return (fill_only / len(answered) if answered else None,
+            filled / markers if markers else None)
+
+
 def score_rows(rows: list) -> dict:
     n = len(rows)
     checks = [r["citation_check"] for r in rows if r["citation_check"]]
@@ -78,12 +91,15 @@ def score_rows(rows: list) -> dict:
     lat = sorted(r["latency_ms"] for r in rows)
     p95 = statistics.quantiles(lat, n=20)[-1] if len(lat) >= 2 else (lat[0] if lat else 0.0)
     kinds = sorted({r["kind"] for r in rows})
+    fill_only_share, filled_marker_share = _fill_split(answered)
     return {
         "faithfulness": _faith(rows),
         "correctness": sum(map(_credit, rows)) / n if n else None,
         "citation_validity": valid / (valid + invalid) if valid + invalid else None,
         "cited_share": (sum(1 for r in answered if (r["citation_check"] or {}).get("valid_citations"))
                         / len(answered)) if answered else None,
+        "fill_only_share": fill_only_share,
+        "filled_marker_share": filled_marker_share,
         "refusal_accuracy": (sum(_credit(r) for r in refusals) / len(refusals)) if refusals else None,
         "upload_card_rate": (sum(r["exact_refusal"] for r in refusals) / len(refusals)) if refusals else None,
         "by_kind": {k: {"n": len(ks := [r for r in rows if r["kind"] == k]),

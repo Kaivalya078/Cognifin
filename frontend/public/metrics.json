@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-11-25T12:25:25",
-  "label": "v2-baseline",
+  "generated_at": "2026-11-25T15:04:59",
+  "label": "v3-citations-r2",
   "model": "gpt-4o-mini",
   "judge_model": "gpt-4o-mini",
   "settings": {
@@ -21,17 +21,19 @@
     }
   },
   "answers": {
-    "faithfulness": 0.994413407821229,
+    "faithfulness": 0.9945945945945946,
     "correctness": 0.87,
-    "citation_validity": 1.0,
-    "cited_share": 0.021052631578947368,
+    "citation_validity": 0.9947643979057592,
+    "cited_share": 0.9473684210526315,
+    "fill_only_share": 0.2,
+    "filled_marker_share": 0.1821705426356589,
     "refusal_accuracy": 1.0,
     "upload_card_rate": 1.0,
     "by_kind": {
       "narrative": {
         "n": 41,
-        "faithfulness": 0.990990990990991,
-        "correctness": 0.9390243902439024
+        "faithfulness": 1.0,
+        "correctness": 0.9512195121951219
       },
       "numeric": {
         "n": 8,
@@ -45,8 +47,8 @@
       },
       "table": {
         "n": 46,
-        "faithfulness": 1.0,
-        "correctness": 0.8369565217391305
+        "faithfulness": 0.9868421052631579,
+        "correctness": 0.8260869565217391
       }
     },
     "errors": 0,
@@ -64,12 +66,12 @@
     "coverage": 0.9306122448979591
   },
   "latency_ms": {
-    "p50": 9266.0,
-    "p95": 15035.3
+    "p50": 5989.5,
+    "p95": 8939.55
   },
   "cost_usd": {
-    "per_question": 0.000672,
-    "judge_per_question": 0.000708
+    "per_question": 0.000712,
+    "judge_per_question": 0.000743
   },
   "index": {
     "chunks": 661560,

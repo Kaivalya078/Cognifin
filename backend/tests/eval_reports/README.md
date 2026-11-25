@@ -97,6 +97,7 @@ Chart values not equal to the DB: 0 of 50 points. Unmatched answer numbers: 1.
 | Run | Faithfulness | Correctness | Citation validity | Cited share | Refusal acc. | Upload card | hit@3 | hit@8 | p50 / p95 | $/question |
 |---|---|---|---|---|---|---|---|---|---|---|
 | v2-baseline | 0.994 | 0.870 | 1.00 | 0.02 | 1.00 | 1.00 | 0.793 | 0.966 | 9.3 s / 15.0 s | $0.00067 (+ $0.00071 judge) |
+| v3-citations (2026-11-25, `20261125-1504-v3-citations-r2-answers.json`) | 0.995 | 0.870 | 0.995 | 0.95 | 1.00 | 1.00 | 0.793 | 0.966 | 6.0 s / 8.9 s | $0.00071 (+ $0.00074 judge) |
 
 By kind, correctness: narrative 0.939, table 0.837, numeric 0.625, refusal 1.000. Retrieval over the 87 page-scored cases; v1's 40 alone: hit@3 0.775 (same as the 186-doc report from 2026-11-16).
 
@@ -106,3 +107,46 @@ By kind, correctness: narrative 0.939, table 0.837, numeric 0.625, refusal 1.000
 - **Numeric 0.625.** 3 of 8 quarterly-figure questions (`hcltech-q1fy27-revenue`, `kotakbank-q2fy27-gnpa`, `bel-q1fy27-revenue`) were refused although the figures are in the financials table. Router coverage gap, open.
 - **Real wrong answers** (not judge noise): `reliance-2023-netprofit`, `wipro-2023-revenue`, `shriramfin-2025-aum` (a nearby figure from a different line), `tatasteel-2024-deliveries` (1.06 MT for 19.91 MT), `icicibank-2024-pat` and `kotakbank-2026-customers` (refused; the second misses retrieval@8).
 - One run, published as-is. Two earlier runs were discarded: the first for the judge fix, the second for 2 `APIConnectionError` rows.
+
+## Citations (Phase 6.0)
+
+Goal: answers that point to their page. v2 cited 2% of answered questions.
+
+- **Prompt.** A hard rule asks for the context id in square brackets after every sentence, bullet or table row with a figure or fact (`[chunk_12]`, `[fin_3]`). The template's own examples show it, and a reminder follows the question. *Key Insights* and *Interpretation* may only use cited context, with no general commentary.
+- **Code fill** (`generation/citation_fill.py`). A sentence or table row the model left uncited gets a marker only when **every** figure in it matches a number in a passage the model was shown:
+  - whole numbers only, never substrings
+  - Indian and Western digit grouping are the same
+  - a passage figure may round to the answer's precision, never the reverse
+  - no unit conversion
+  - years and small integers are ignored
+  - financials rows win over chunks
+
+  Sentences without a qualifying figure are never filled; they rely on the model's own citation.
+- **Honesty split.** *Fill-only share* = answered questions whose valid citations all came from the fill. This is an upper bound on "cited only because of the fill": an answer counts even when the model also cited the same id elsewhere. *Filled-marker share* = filled markers / all markers.
+
+| Target | v2 | v3 run 1 | **v3 run 2 (published)** | |
+|---|---|---|---|---|
+| Cited share ≥ 0.90 | 0.021 | 0.947 | **0.947** | pass |
+| Citation validity ≥ 0.95 | 1.00 | 0.995 | **0.995** | pass |
+| Faithfulness, drop ≤ 1 pt | 0.994 | 0.959 | **0.995** | pass |
+| Correctness, drop ≤ 1 pt | 0.870 | 0.855 | **0.870** | pass |
+| Fill-only share | – | 0.32 | **0.20** | report |
+| Filled-marker share | – | 0.29 | **0.18** | report |
+
+**Runs**, all at gpt-4o-mini prices; total spend about $0.45 against a $0.45 cap:
+1. Subset try 1: the fixed 15-question subset (6 narrative, 6 table, 3 numeric, listed in the plan). Cited 15/15, no verdict worse than v2. About $0.03.
+2. Full run 1, `v3-citations`: the citation targets passed. Faithfulness dropped 3.5 pts: all 8 unsupported claims were generic *Key Insights / Interpretation* commentary in 2 answers (`icicibank-2025-onebank`, `cipla-2025-revenue`). Correctness was −1.5: two answers picked a different figure line (`itc-2025-cigarettes`, `techm-2023-revenue`), and one is a judge call. Report deleted. About $0.14.
+3. Prompt change: insights and interpretation only from cited context. Subset try 2: 15/15 cited, no regressions. About $0.03.
+4. Full run 2, `v3-citations-r2`: all targets pass. Published as-is. About $0.14.
+
+Faithfulness and correctness come from one LLM-judged run, so read them ±1 pt (see the judge note above). Latency p50 was 6.0 s, against 9.3 s in v2. The cause is not established: mean output tokens rose slightly (228 → 243), so it is not shorter answers. It is most likely API-side variance on the day. Also in this change: the chat's "Sources:" row was always empty for cited answers (it deduped by document before filtering to cited passages), and is now fixed. That went unnoticed while almost nothing was cited.
+
+**Fill fixes after the published run** (final review, 2026-11-25):
+- The fill no longer splits sentences at abbreviations ("vs.", "i.e."), which put a marker in place of the abbreviation's period.
+- A `%` figure now only matches a `%` figure in the passage.
+
+No paid rerun was done, because the budget is spent. Instead the published run's 52 filled answers were re-filled offline against their rebuilt retrieval context:
+- 5 changed, and all 5 stay cited.
+- Cited share and fill-only share are unchanged.
+- The filled-marker share falls slightly (7 fewer markers).
+

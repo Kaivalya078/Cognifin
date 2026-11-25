@@ -7,6 +7,7 @@
  */
 
 import ReactMarkdown from 'react-markdown';
+import { linkCitations } from '../../utils/citations';
 import remarkGfm from 'remark-gfm';
 import { STAGE_LABELS } from './stageLabels';
 
@@ -34,7 +35,7 @@ export default function LoadingIndicator({ streaming }) {
                 </div>
                 {text ? (
                     <div className="chat-msg-text chat-msg-markdown">
-                        <ReactMarkdown remarkPlugins={[remarkGfm]}>{text}</ReactMarkdown>
+                        <ReactMarkdown remarkPlugins={[remarkGfm]} components={{ a: ({ children }) => <span className="cite-chip">{children}</span> }}>{linkCitations(text, null)}</ReactMarkdown>
                         <span className="stream-cursor" />
                     </div>
                 ) : (

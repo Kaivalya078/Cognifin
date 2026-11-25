@@ -2355,3 +2355,27 @@
 .chat-fin-chart-title { font-size: 13px; color: var(--text); margin: 0 6px 8px; }
 .chat-fin-chart-note { font-size: 11px; color: var(--text-muted); margin: 6px 6px 0; }
 .chat-fin-chart-warn { color: var(--red); }
+
+/* Phase 6.0: inline citation chips (final styling in Phase 6.2) */
+.cite-chip {
+    display: inline-block;
+    margin: 0 2px;
+    padding: 0 6px;
+    font: 500 11px/18px 'JetBrains Mono', ui-monospace, monospace;
+    color: var(--gold);
+    background: rgba(212, 175, 55, 0.08);
+    border: 1px solid var(--gold-border);
+    border-radius: 4px;
+    vertical-align: 1px;
+    cursor: pointer;
+}
+
+button.cite-chip:hover {
+    background: rgba(212, 175, 55, 0.18);
+}
+
+button.cite-chip:focus-visible {
+    background: rgba(212, 175, 55, 0.18);
+    outline: 2px solid var(--gold);
+    outline-offset: 1px;
+}

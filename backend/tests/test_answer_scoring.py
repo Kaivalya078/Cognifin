@@ -71,3 +71,23 @@ def test_score_rows_no_claims_gives_none():
     s = score_rows([_row(kind="refusal", refused=True, correct="yes")])
     assert s["faithfulness"] is None
     assert s["citation_validity"] is None
+
+
+def test_score_rows_fill_split():
+    rows = [
+        _row(answer="A [chunk_1].", metadata={"citation_fill": []},
+             citation_check={"valid_citations": ["chunk_1"], "invalid_citations": []}),
+        _row(answer="B [chunk_2].", metadata={"citation_fill": ["chunk_2"]},
+             citation_check={"valid_citations": ["chunk_2"], "invalid_citations": []}),
+        _row(answer="C.", metadata={"citation_fill": []},
+             citation_check={"valid_citations": [], "invalid_citations": []}),
+    ]
+    s = score_rows(rows)
+    assert s["fill_only_share"] == pytest.approx(1 / 3)
+    assert s["filled_marker_share"] == pytest.approx(1 / 2)
+
+
+def test_score_rows_fill_split_without_metadata():
+    s = score_rows([_row(answer="no cites")])
+    assert s["fill_only_share"] == 0.0
+    assert s["filled_marker_share"] is None

@@ -17,11 +17,24 @@ import { Copy, Check, ChevronDown, ChevronUp, FileText } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { isRefusal } from '../../utils/refusal';
+import { bare, linkCitations } from '../../utils/citations';
 import PDFViewerModal from './PDFViewerModal';
 import FinancialChart from './FinancialChart';
 import LoadingIndicator from './LoadingIndicator';
 import { STAGE_LABELS } from './stageLabels';
 import { API_BASE } from '../../api';
+
+// pdf_url is absolute when PDFs live in object storage, or an API path
+// (/pdfs/COMPANY/YEAR.pdf) when the backend serves them itself.
+const pdfUrlOf = (item) => !item?.pdf_url ? null
+    : /^https?:\/\//.test(item.pdf_url) ? item.pdf_url
+    : `${API_BASE}${item.pdf_url}`;
+
+// Verified-figure rows (fin_N) point at BSE/NSE filings we don't serve: open in a new tab.
+const openFiling = (item) => {
+    const url = pdfUrlOf(item);
+    if (url) window.open(url + (/\.pdf($|\?)/i.test(url) && item.page_number > 0 ? `#page=${item.page_number}` : ''), '_blank', 'noopener');
+};
 
 function formatTime(timestamp) {
     if (!timestamp) return '';
@@ -64,6 +77,7 @@ function MessageBubble({ message, onFollowUp, onRequestUpload, isLoading }) {
     const [copied, setCopied] = useState(false);
     const [showEvidence, setShowEvidence] = useState(false);
     const [showPipeline, setShowPipeline] = useState(false);
+    const [citeItem, setCiteItem] = useState(null);
 
     const handleCopy = () => {
         navigator.clipboard.writeText(message.content);
@@ -75,6 +89,20 @@ function MessageBubble({ message, onFollowUp, onRequestUpload, isLoading }) {
     const citations = message.metadata?.citations || [];
     const pipeline = message.metadata?.pipeline || {};
     const followUps = message.metadata?.follow_ups || [];
+
+    // Citation chips: [p.17](#cite-chunk_12) links from linkCitations open that page.
+    const openCite = (id) => {
+        const item = evidence.find((e) => bare(e.chunk_id) === id);
+        if (!item || !pdfUrlOf(item)) return;
+        if (item.chunk_id.startsWith('fin_')) openFiling(item);
+        else setCiteItem(item);
+    };
+    const markdownComponents = {
+        a: ({ href, children, ...rest }) => (href?.startsWith('#cite-')
+            ? <button type="button" className="cite-chip" onClick={() => openCite(href.slice(6))}
+                aria-label={`Open source: ${children}`}>{children}</button>
+            : <a href={href} {...rest}>{children}</a>),
+    };
 
     return (
         <div
@@ -100,9 +128,17 @@ function MessageBubble({ message, onFollowUp, onRequestUpload, isLoading }) {
                     <div className="chat-msg-text">{message.content}</div>
                 ) : (
                     <div className="chat-msg-text chat-msg-markdown">
-                        <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                            {message.content}
+                        <ReactMarkdown remarkPlugins={[remarkGfm]} components={markdownComponents}>
+                            {linkCitations(message.content, evidence)}
                         </ReactMarkdown>
+                        {citeItem && (
+                            <PDFViewerModal
+                                pdfUrl={pdfUrlOf(citeItem)}
+                                pageNumber={citeItem.page_number || 1}
+                                chunkText={citeItem.snippet}
+                                onClose={() => setCiteItem(null)}
+                            />
+                        )}
                     </div>
                 )}
 
@@ -142,12 +178,15 @@ function MessageBubble({ message, onFollowUp, onRequestUpload, isLoading }) {
                                 {/* Deduplicate by document_label */}
                                 {(() => {
                                     const seen = new Set();
+                                    // Cited first, then dedupe: deduping first let an uncited passage
+                                    // of the same document hide the cited one (empty "Sources:" row).
                                     return evidence
+                                        .filter(item => citations.includes(item.chunk_id))
                                         .filter(item => {
                                             const key = item.document_label || item.chunk_id;
                                             if (seen.has(key)) return false;
                                             seen.add(key);
-                                            return citations.includes(item.chunk_id);
+                                            return true;
                                         })
                                         .map(item => (
                                             <span key={item.chunk_id} className="chat-citation-badge">
@@ -329,11 +368,7 @@ function EvidenceChunk({ item }) {
         ? `${item.document_label}${item.page_number > 0 ? ` · Page ${item.page_number}` : ''}`
         : item.chunk_id;
 
-    // pdf_url is absolute when PDFs live in object storage, or an API path
-    // (/pdfs/COMPANY/YEAR.pdf) when the backend serves them itself.
-    const pdfUrl = !item.pdf_url ? null
-        : /^https?:\/\//.test(item.pdf_url) ? item.pdf_url
-        : `${API_BASE}${item.pdf_url}`;
+    const pdfUrl = pdfUrlOf(item);
     const isFiling = item.chunk_id?.startsWith('fin_');
 
     return (
@@ -355,10 +390,7 @@ function EvidenceChunk({ item }) {
                         {pdfUrl && (
                             <button
                                 className="chat-evidence-pdf-link"
-                                onClick={() => (isFiling
-                                    // Verified-figure rows point at BSE/NSE filings we don't serve: open in a new tab
-                                    ? window.open(pdfUrl + (/\.pdf($|\?)/i.test(pdfUrl) && item.page_number > 0 ? `#page=${item.page_number}` : ''), '_blank', 'noopener')
-                                    : setPdfOpen(true))}
+                                onClick={() => (isFiling ? openFiling(item) : setPdfOpen(true))}
                             >
                                 <FileText size={12} />
                                 Open PDF{item.page_number > 0 ? ` (Page ${item.page_number})` : ''}

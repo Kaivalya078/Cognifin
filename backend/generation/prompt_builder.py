@@ -16,6 +16,16 @@ from typing import List, Tuple
 
 from core.citation_verifier import _REF, bare_chunk_id
 
+# Phase 6.0: answers must carry the context id after every fact (cited share was 2%).
+CITE_RULE = (
+    "CITE EVERY FACT: put the context id in square brackets right after every sentence, "
+    "bullet or table row that states a figure or fact from the CONTEXT, e.g. "
+    "\"Revenue was ₹2,40,893 crore [chunk_12].\" or \"| Revenue | ₹2,40,893 crore [fin_1] |\". "
+    "Use only ids that appear in the CONTEXT. For several sources write [chunk_12][chunk_40]. "
+    "Do not cite in headings or in [FOLLOW_UP] lines."
+)
+CITE_REMINDER = "Cite the context id in square brackets after each fact, e.g. [chunk_12]."
+
 # =============================================================================
 # SYSTEM PROMPT TEMPLATE
 # =============================================================================
@@ -28,16 +38,16 @@ GROUNDING RULES — YOU MUST FOLLOW THESE:
 3. If the context contains ANY information related to the question, use it to form your answer.
 4. ONLY say "Not available in the provided documents." if the context is entirely unrelated to the question.
 5. If no context chunks are provided below (empty CONTEXT section), respond ONLY with: "Not available in the provided documents."
-6. When answering, cite the relevant chunk IDs (e.g., chunk_12) that support your answer.
+6. {cite_rule}
 7. If only partial information is available, answer with what is present and note the limitation.
 8. Do NOT fabricate facts. Every claim must be traceable to a specific chunk.
 
 OUTPUT STRUCTURE — MANDATORY:
 Always format your response using these sections in order:
-1. **## Overview** — Concise 2–3 line summary of the answer.
-2. **## Data / Details** — Present all numerical or structured data in clean tables. If no tabular data applies, use clear bullet points with **bold** labels.
-3. **## Key Insights** — Provide 3–5 analytical insights (not just restating data). Identify concentration, trends, anomalies, dominance of entities.
-4. **## Interpretation** — Short professional interpretation of what the data implies.
+1. **## Overview** — Concise 2–3 line summary of the answer, each fact followed by its id, e.g. "Revenue rose 6.8% to ₹2,40,893 crore [chunk_12]."
+2. **## Data / Details** — Present all numerical or structured data in clean tables; each row ends with its id in the last cell, e.g. | Revenue | ₹2,40,893 crore [chunk_12] |. If no tabular data applies, use clear bullet points with **bold** labels.
+3. **## Key Insights** — Provide up to 3 analytical insights, each drawn only from figures or statements in the CONTEXT and cited with its id. Identify concentration, trends, anomalies, dominance of entities. Do not add general commentary (e.g. "reflects strong performance") that the CONTEXT does not state.
+4. **## Interpretation** — One or two sentences on what the cited data implies, using only what the CONTEXT supports.
 
 TABLE RULES — VERY IMPORTANT:
 1. ALWAYS use tables for: shareholding, financial comparisons, numerical breakdowns, multi-entity data.
@@ -144,10 +154,10 @@ def build_prompt(context: str, question: str) -> Tuple[str, str]:
         Tuple of (system_prompt, user_message)
     """
     # Insert the context into the system prompt template
-    system_prompt = SYSTEM_PROMPT_TEMPLATE.format(context=context)
+    system_prompt = SYSTEM_PROMPT_TEMPLATE.format(context=context, cite_rule=CITE_RULE)
     
-    # The user message is just the question
-    user_message = question
+    # The question, then the citation reminder (small models weigh the end of the prompt most)
+    user_message = f"{question}\n\n{CITE_REMINDER}"
     
     return system_prompt, user_message
 
