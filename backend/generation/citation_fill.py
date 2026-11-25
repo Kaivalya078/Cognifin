@@ -1,4 +1,4 @@
-"""Add a citation where the model left one out, but only for an exact figure match.
+"""Add a citation where the model left one out, but only when every figure it states is matched.
 
 A sentence (or table row) with no [chunk_N]/[fin_N] marker gets one when a number
 it states appears in a context passage: whole numbers only, never substrings;
@@ -45,15 +45,13 @@ def _matches(fig: tuple[Decimal, int], passage: list[tuple[Decimal, int]]) -> bo
 def _cite(unit: str, items: list[tuple[str, list]]) -> tuple[str, list[str]]:
     if _REF.search(unit):
         return unit, []
-    ids: list[str] = []
-    for fig in _numbers(unit, figures_only=True):
-        hit = next((cid for cid, nums in items if _matches(fig, nums)), None)
-        if hit and hit not in ids:
-            ids.append(hit)
-        if len(ids) == _MAX_PER_UNIT:
-            break
-    if not ids:
+    hits = [next((cid for cid, nums in items if _matches(fig, nums)), None)
+            for fig in _numbers(unit, figures_only=True)]
+    # Every figure must be sourced: one invented number in the unit means no fill,
+    # or the marker would vouch for it.
+    if not hits or None in hits:
         return unit, []
+    ids = list(dict.fromkeys(hits))[:_MAX_PER_UNIT]
     marks = "".join(f"[{i}]" for i in ids)
     body = unit.rstrip()
     tail = unit[len(body):]

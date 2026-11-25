@@ -73,3 +73,10 @@ def test_multi_sentence_line_fills_each_sentence():
     out, added = fill_figure_citations("Revenue was 2,40,893. NPA was 1.24%.", CTX)
     assert out == "Revenue was 2,40,893 [fin_1]. NPA was 1.24% [chunk_9]."
     assert added == ["fin_1", "chunk_9"]
+
+
+def test_unit_with_an_unmatched_figure_is_not_cited():
+    # A row mixing a sourced figure with an invented one must not look sourced.
+    text = "| March 31, 2024 | 1.24% | 32,000.00 (approx.) |"
+    assert fill_figure_citations(text, CTX) == (text, [])
+    assert fill_figure_citations("NPA was 1.24% and slippages 9,999 crore.", CTX)[1] == []

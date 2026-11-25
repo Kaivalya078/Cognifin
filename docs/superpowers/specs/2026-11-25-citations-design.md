@@ -63,7 +63,8 @@ Rules:
   - the passage number rounded to the answer number's decimal places equals the answer number. Example: `1.24` → `1.2`, which matches the financials table's 2-decimal ratios against the prompt's 1-decimal rounding.
 
   Rounding only goes one way: a precise passage figure can match a rounded answer figure, never the reverse.
-- **Pick the passage.** The first item in context order that contains a matching number for one of the unit's figures. At most 2 markers per unit, one per distinct figure, in order of appearance. If no passage matches, the unit is left uncited.
+- **Pick the passage.** The first item in context order that contains a matching number for one of the unit's figures.
+- **Every figure must be sourced (added during build, 2026-11-25).** If any figure in the unit has no matching passage, the unit is left uncited. Found in a real answer: a table row with a sourced `1.24%` and an invented `32,000.00 (approx.)` was cited, so the marker vouched for the invented number. At most 2 markers per unit, one per distinct figure, in order of appearance. If no passage matches, the unit is left uncited.
 - Pure function: no I/O, no LLM.
 
 ### 3. Where it runs (backend `main.py` `answer_events`)
