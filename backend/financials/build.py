@@ -26,6 +26,11 @@ from financials.store import Candidate, review_row, write_db
 BACKEND = Path(__file__).resolve().parents[1]
 # Insurers print these in both the policyholders' and shareholders' accounts; never stored.
 LI_AMBIGUOUS = {"revenue_from_operations", "other_income", "total_income", "total_expenses"}
+# Fiscal years that do not end in March: a March filing's year-to-date column is not a
+# full year for them (ABB, VBL: calendar year; ENRIN: October-September; SIEMENS:
+# October-September, then an 18-month period to March 2026), so no FY rows are stored.
+# ponytail: hand-kept list; read the year-start date from iXBRL if more companies need it
+NOT_MARCH_FY = {"ABB", "VBL", "ENRIN", "SIEMENS"}
 
 
 def wanted(kind: str) -> list[str]:
@@ -145,7 +150,7 @@ def build(sources_dir: Path, out_db: Path, use_llm: bool = True, client=None,
                 titled = {b for b in ("consolidated", "standalone")
                           for t in pages.values() if b in t[:1500].lower()}
                 bases = sorted({c.basis for c in cands} | titled) or ["consolidated", "standalone"]
-                ptypes = ["Q", "FY"] if s.period_end.month == 3 else ["Q"]
+                ptypes = ["Q", "FY"] if s.period_end.month == 3 and s.symbol not in NOT_MARCH_FY else ["Q"]
                 have = {(c.basis, c.period_type, c.metric) for c in ok}
                 missing = [(b, p, m) for b in bases for p in ptypes for m in sorted(want_m)
                            if (b, p, m) not in have
@@ -164,6 +169,8 @@ def build(sources_dir: Path, out_db: Path, use_llm: bool = True, client=None,
         except Exception as e:   # one bad file never stops the build
             filing.update(status="failed", reason=f"{type(e).__name__}: {e}")
         filings.append(filing)
+
+    rows = [c for c in rows if not (c.period_type == "FY" and c.company in NOT_MARCH_FY)]
 
     # one printed figure under two metrics of a PDF filing (iXBRL tags concepts, not labels)
     filed = defaultdict(list)
