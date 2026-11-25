@@ -1,7 +1,8 @@
 {
- "version": 1,
+ "version": 2,
  "changelog": [
-  "2026-11-16 recheck: mm-2025-tractors answer_pages [25] -> [15,25,48,77,81] (figure also stated on pages 15, 48, 77, 81)."
+  "2026-11-16 recheck: mm-2025-tractors answer_pages [25] -> [15,25,48,77,81] (figure also stated on pages 15, 48, 77, 81).",
+  "2026-11-24 v2: +60 cases (27 previously uncovered companies, FY2026, numeric kind = financials-table figures with no answer page, refusal kind = key is the refusal sentence). v1's 40 cases unchanged."
  ],
  "cases": [
   {
@@ -836,6 +837,1185 @@
    "checked_by": [
     "claude",
     "user",
+    "claude-recheck"
+   ]
+  },
+  {
+   "id": "adanient-2025-revenue",
+   "question": "What was Adani Enterprises' consolidated revenue from operations in FY2024-25?",
+   "company": "ADANIENT",
+   "year": "2025",
+   "answer_pages": [
+    138,
+    223,
+    392,
+    471,
+    594,
+    597,
+    598
+   ],
+   "answer": "₹97,894.75 crore",
+   "kind": "table",
+   "checked_by": [
+    "claude",
+    "claude-recheck",
+    "user"
+   ]
+  },
+  {
+   "id": "adaniports-2026-cargo",
+   "question": "How much cargo did Adani Ports handle in FY2025-26?",
+   "company": "ADANIPORTS",
+   "year": "2026",
+   "answer_pages": [
+    38,
+    47,
+    52,
+    97,
+    399
+   ],
+   "answer": "500.8 MMT",
+   "kind": "table",
+   "checked_by": [
+    "claude",
+    "claude-recheck"
+   ]
+  },
+  {
+   "id": "apollohosp-2026-revenue",
+   "question": "What was Apollo Hospitals' consolidated revenue for FY2025-26?",
+   "company": "APOLLOHOSP",
+   "year": "2026",
+   "answer_pages": [
+    5,
+    11,
+    12,
+    13
+   ],
+   "answer": "₹25,229 crore (₹252,285 million)",
+   "kind": "table",
+   "checked_by": [
+    "claude",
+    "claude-recheck"
+   ]
+  },
+  {
+   "id": "axisbank-2025-netprofit",
+   "question": "What was Axis Bank's standalone net profit for fiscal 2025?",
+   "company": "AXISBANK",
+   "year": "2025",
+   "answer_pages": [
+    140,
+    256,
+    257,
+    285,
+    286,
+    289,
+    458,
+    463,
+    546
+   ],
+   "answer": "₹26,373 crore",
+   "kind": "table",
+   "checked_by": [
+    "claude",
+    "claude-recheck"
+   ]
+  },
+  {
+   "id": "bajajauto-2026-reach",
+   "question": "How many vehicles has the Bajaj brand sold, and in how many countries, per Bajaj Auto's FY2026 annual report?",
+   "company": "BAJAJ-AUTO",
+   "year": "2026",
+   "answer_pages": [
+    43
+   ],
+   "answer": "Over 32 million vehicles sold in over 100 countries",
+   "kind": "narrative",
+   "checked_by": [
+    "claude",
+    "claude-recheck"
+   ]
+  },
+  {
+   "id": "bajajfinsv-2024-totalincome",
+   "question": "What was Bajaj Finserv's consolidated total income in FY2024?",
+   "company": "BAJAJFINSV",
+   "year": "2024",
+   "answer_pages": [
+    24,
+    34,
+    35,
+    62,
+    63,
+    103,
+    104,
+    204,
+    257
+   ],
+   "answer": "₹110,383 crore",
+   "kind": "table",
+   "checked_by": [
+    "claude",
+    "claude-recheck"
+   ]
+  },
+  {
+   "id": "bel-2024-orderbook",
+   "question": "What was Bharat Electronics' total order book at the end of FY2023-24?",
+   "company": "BEL",
+   "year": "2024",
+   "answer_pages": [
+    26,
+    32,
+    42,
+    58
+   ],
+   "answer": "₹75,934 crore",
+   "kind": "table",
+   "checked_by": [
+    "claude",
+    "claude-recheck"
+   ]
+  },
+  {
+   "id": "drreddy-2026-nrt",
+   "question": "Which acquired business contributed to Dr. Reddy's revenue growth in FY2025-26, especially in Europe?",
+   "company": "DRREDDY",
+   "year": "2026",
+   "answer_pages": [
+    17,
+    51,
+    64,
+    67,
+    187,
+    210,
+    225,
+    248,
+    249,
+    263
+   ],
+   "answer": "The acquired consumer healthcare business in Nicotine Replacement Therapy (NRT)",
+   "kind": "narrative",
+   "checked_by": [
+    "claude",
+    "claude-recheck",
+    "user"
+   ]
+  },
+  {
+   "id": "eichermot-2025-domestic",
+   "question": "How many motorcycles did Royal Enfield sell in the domestic market in FY2024-25?",
+   "company": "EICHERMOT",
+   "year": "2025",
+   "answer_pages": [
+    17,
+    27,
+    187
+   ],
+   "answer": "9,02,757 units",
+   "kind": "table",
+   "checked_by": [
+    "claude",
+    "claude-recheck"
+   ]
+  },
+  {
+   "id": "hcltech-2026-revenue",
+   "question": "What was HCLTech's revenue in FY26?",
+   "company": "HCLTECH",
+   "year": "2026",
+   "answer_pages": [
+    8,
+    12,
+    13,
+    57,
+    82,
+    83,
+    114,
+    115,
+    116,
+    129,
+    375,
+    411,
+    412,
+    428,
+    429
+   ],
+   "answer": "₹130,144 crore (US$14.7 billion)",
+   "kind": "table",
+   "checked_by": [
+    "claude",
+    "claude-recheck",
+    "user"
+   ]
+  },
+  {
+   "id": "hdfclife-2026-solvency",
+   "question": "What was HDFC Life's solvency ratio as on March 31, 2026?",
+   "company": "HDFCLIFE",
+   "year": "2026",
+   "answer_pages": [
+    7,
+    24,
+    31,
+    63,
+    154,
+    159,
+    165,
+    347,
+    352,
+    536
+   ],
+   "answer": "177%",
+   "kind": "table",
+   "checked_by": [
+    "claude",
+    "claude-recheck"
+   ]
+  },
+  {
+   "id": "hindalco-2023-novelis",
+   "question": "What is Novelis's position in the global aluminium industry, according to Hindalco's FY2023 annual report?",
+   "company": "HINDALCO",
+   "year": "2023",
+   "answer_pages": [
+    37,
+    42,
+    62
+   ],
+   "answer": "The world's largest producer of aluminium flat-rolled products (FRP) and the largest recycler of aluminium",
+   "kind": "narrative",
+   "checked_by": [
+    "claude",
+    "claude-recheck"
+   ]
+  },
+  {
+   "id": "indigo-2026-fleetage",
+   "question": "What is the average age of IndiGo's fleet according to its FY2026 annual report?",
+   "company": "INDIGO",
+   "year": "2026",
+   "answer_pages": [
+    9,
+    49,
+    96,
+    230,
+    314
+   ],
+   "answer": "4.9 years (one of the youngest fleets globally)",
+   "kind": "narrative",
+   "checked_by": [
+    "claude",
+    "claude-recheck"
+   ]
+  },
+  {
+   "id": "jiofin-2025-blackrock",
+   "question": "What is Jio Financial Services' partnership with BlackRock?",
+   "company": "JIOFIN",
+   "year": "2025",
+   "answer_pages": [
+    30,
+    40,
+    73,
+    74,
+    134
+   ],
+   "answer": "A 50:50 joint venture with BlackRock for asset management, wealth management and broking",
+   "kind": "narrative",
+   "checked_by": [
+    "claude",
+    "claude-recheck"
+   ]
+  },
+  {
+   "id": "jswsteel-2024-crude",
+   "question": "What was JSW Steel's consolidated crude steel production in FY2024?",
+   "company": "JSWSTEEL",
+   "year": "2024",
+   "answer_pages": [
+    14,
+    25,
+    125,
+    148
+   ],
+   "answer": "26.43 MnT",
+   "kind": "table",
+   "checked_by": [
+    "claude",
+    "claude-recheck"
+   ]
+  },
+  {
+   "id": "kotakbank-2026-customers",
+   "question": "How many customers did Kotak Mahindra Bank have according to its FY2026 annual report?",
+   "company": "KOTAKBANK",
+   "year": "2026",
+   "answer_pages": [
+    5,
+    16
+   ],
+   "answer": "5.2 crore",
+   "kind": "table",
+   "checked_by": [
+    "claude",
+    "claude-recheck"
+   ]
+  },
+  {
+   "id": "maxhealth-2025-network",
+   "question": "How many healthcare facilities and beds does Max Healthcare have per its FY2025 annual report?",
+   "company": "MAXHEALTH",
+   "year": "2025",
+   "answer_pages": [
+    16,
+    19,
+    45,
+    86
+   ],
+   "answer": "22 healthcare facilities with over 5,100 beds",
+   "kind": "narrative",
+   "checked_by": [
+    "claude",
+    "claude-recheck"
+   ]
+  },
+  {
+   "id": "nestleind-2026-maggi",
+   "question": "What global distinction does India hold for the MAGGI brand according to Nestlé India's FY2026 annual report?",
+   "company": "NESTLEIND",
+   "year": "2026",
+   "answer_pages": [
+    3
+   ],
+   "answer": "India is the largest market for MAGGI globally",
+   "kind": "narrative",
+   "checked_by": [
+    "claude",
+    "claude-recheck"
+   ]
+  },
+  {
+   "id": "ongc-2023-crude",
+   "question": "What was ONGC's crude oil production, including its share of JV production, in FY2023?",
+   "company": "ONGC",
+   "year": "2023",
+   "answer_pages": [
+    12,
+    39,
+    68,
+    106
+   ],
+   "answer": "21.485 MMT",
+   "kind": "table",
+   "checked_by": [
+    "claude",
+    "claude-recheck"
+   ]
+  },
+  {
+   "id": "powergrid-2024-availability",
+   "question": "What transmission system availability did POWERGRID achieve in FY2024?",
+   "company": "POWERGRID",
+   "year": "2024",
+   "answer_pages": [
+    7,
+    8,
+    35,
+    40,
+    79
+   ],
+   "answer": "99.85%",
+   "kind": "table",
+   "checked_by": [
+    "claude",
+    "claude-recheck"
+   ]
+  },
+  {
+   "id": "sbilife-2024-solvency",
+   "question": "What was SBI Life's solvency ratio at the end of FY2024?",
+   "company": "SBILIFE",
+   "year": "2024",
+   "answer_pages": [
+    20,
+    24,
+    37,
+    62,
+    65,
+    66,
+    139,
+    143,
+    160,
+    190,
+    253,
+    334,
+    464
+   ],
+   "answer": "1.96 (times), above the regulatory minimum of 1.50",
+   "kind": "table",
+   "checked_by": [
+    "claude",
+    "claude-recheck",
+    "user"
+   ]
+  },
+  {
+   "id": "shriramfin-2025-aum",
+   "question": "What was Shriram Finance's assets under management as of March 31, 2025?",
+   "company": "SHRIRAMFIN",
+   "year": "2025",
+   "answer_pages": [
+    14,
+    27,
+    30,
+    39,
+    80,
+    81,
+    91,
+    552
+   ],
+   "answer": "Rs. 263,190 crores",
+   "kind": "table",
+   "checked_by": [
+    "claude",
+    "claude-recheck"
+   ]
+  },
+  {
+   "id": "tataconsum-2025-acquisitions",
+   "question": "Which recent acquisitions has Tata Consumer Products made, according to its FY2025 annual report?",
+   "company": "TATACONSUM",
+   "year": "2025",
+   "answer_pages": [
+    16,
+    17,
+    21,
+    22,
+    23,
+    24,
+    28,
+    30,
+    36,
+    48,
+    56,
+    57,
+    58,
+    60,
+    61,
+    77,
+    111,
+    116,
+    135,
+    138,
+    163,
+    169,
+    170,
+    172,
+    182,
+    183,
+    187,
+    228,
+    325,
+    344,
+    346,
+    347,
+    348,
+    416,
+    443,
+    445
+   ],
+   "answer": "Capital Foods and Organic India",
+   "kind": "narrative",
+   "checked_by": [
+    "claude",
+    "claude-recheck"
+   ]
+  },
+  {
+   "id": "techm-2023-revenue",
+   "question": "What was Tech Mahindra's revenue in FY2023?",
+   "company": "TECHM",
+   "year": "2023",
+   "answer_pages": [
+    26,
+    51,
+    245,
+    346,
+    466,
+    535,
+    537,
+    560,
+    561
+   ],
+   "answer": "₹532,902 million",
+   "kind": "table",
+   "checked_by": [
+    "claude",
+    "claude-recheck"
+   ]
+  },
+  {
+   "id": "tmpv-2026-demerger",
+   "question": "When did the demerger of Tata Motors' commercial vehicles business become effective?",
+   "company": "TMPV",
+   "year": "2026",
+   "answer_pages": [
+    7,
+    160,
+    166,
+    186,
+    316,
+    317,
+    385,
+    436,
+    441,
+    442,
+    496,
+    497,
+    533
+   ],
+   "answer": "October 1, 2025",
+   "kind": "narrative",
+   "checked_by": [
+    "claude",
+    "claude-recheck",
+    "user"
+   ]
+  },
+  {
+   "id": "trent-2026-brands",
+   "question": "What are Trent's key fashion brand concepts according to its FY2026 annual report?",
+   "company": "TRENT",
+   "year": "2026",
+   "answer_pages": [
+    12,
+    127,
+    128
+   ],
+   "answer": "Westside, Zudio, Samoh and Burnt Toast",
+   "kind": "narrative",
+   "checked_by": [
+    "claude",
+    "claude-recheck",
+    "user"
+   ]
+  },
+  {
+   "id": "ultracemco-2024-capacity",
+   "question": "What cement capacity milestone did UltraTech reach in FY2024?",
+   "company": "ULTRACEMCO",
+   "year": "2024",
+   "answer_pages": [
+    41,
+    98
+   ],
+   "answer": "Its capacity crossed 150 MTPA, growing from 100 MTPA in about five years",
+   "kind": "narrative",
+   "checked_by": [
+    "claude",
+    "claude-recheck"
+   ]
+  },
+  {
+   "id": "tcs-2026-workforce",
+   "question": "How large is TCS's workforce according to its FY2026 annual report?",
+   "company": "TCS",
+   "year": "2026",
+   "answer_pages": [
+    6
+   ],
+   "answer": "Over 580,000 consultants across 56 countries",
+   "kind": "narrative",
+   "checked_by": [
+    "claude",
+    "claude-recheck"
+   ]
+  },
+  {
+   "id": "hdfcbank-2026-netprofit",
+   "question": "What was HDFC Bank's standalone net profit for FY2025-26?",
+   "company": "HDFCBANK",
+   "year": "2026",
+   "answer_pages": [
+    5,
+    16,
+    45,
+    58,
+    234,
+    247,
+    248,
+    250,
+    255,
+    301,
+    354,
+    445,
+    451,
+    548
+   ],
+   "answer": "₹74,671.3 crore",
+   "kind": "table",
+   "checked_by": [
+    "claude",
+    "claude-recheck"
+   ]
+  },
+  {
+   "id": "reliance-2026-jio",
+   "question": "How many digital subscribers does Jio have according to Reliance's FY2026 annual report?",
+   "company": "RELIANCE",
+   "year": "2026",
+   "answer_pages": [
+    2,
+    3,
+    9,
+    10,
+    22,
+    23
+   ],
+   "answer": "524 million+",
+   "kind": "narrative",
+   "checked_by": [
+    "claude",
+    "claude-recheck"
+   ]
+  },
+  {
+   "id": "itc-2026-hotels",
+   "question": "When did the demerger of ITC's Hotels business become effective?",
+   "company": "ITC",
+   "year": "2026",
+   "answer_pages": [
+    56,
+    176,
+    273
+   ],
+   "answer": "1st January, 2025",
+   "kind": "narrative",
+   "checked_by": [
+    "claude",
+    "claude-recheck"
+   ]
+  },
+  {
+   "id": "sbin-2026-netprofit",
+   "question": "What was SBI's standalone net profit in FY2026?",
+   "company": "SBIN",
+   "year": "2026",
+   "answer_pages": [
+    6,
+    11,
+    18,
+    49,
+    282,
+    286,
+    436,
+    513,
+    537,
+    539
+   ],
+   "answer": "₹80,032 crore",
+   "kind": "table",
+   "checked_by": [
+    "claude",
+    "claude-recheck"
+   ]
+  },
+  {
+   "id": "icicibank-2024-pat",
+   "question": "What was ICICI Bank's standalone profit after tax for fiscal 2024?",
+   "company": "ICICIBANK",
+   "year": "2024",
+   "answer_pages": [
+    76,
+    79,
+    87,
+    145,
+    198,
+    199,
+    217
+   ],
+   "answer": "₹408.88 billion",
+   "kind": "table",
+   "checked_by": [
+    "claude",
+    "claude-recheck"
+   ]
+  },
+  {
+   "id": "lt-2026-orderinflow",
+   "question": "What were L&T's group order inflows in FY2025-26?",
+   "company": "LT",
+   "year": "2026",
+   "answer_pages": [
+    10
+   ],
+   "answer": "₹4.36 lakh crore (record high, up 22%)",
+   "kind": "table",
+   "checked_by": [
+    "claude",
+    "claude-recheck"
+   ]
+  },
+  {
+   "id": "maruti-2025-sales",
+   "question": "How many vehicles did Maruti Suzuki sell in FY2024-25?",
+   "company": "MARUTI",
+   "year": "2025",
+   "answer_pages": [
+    26,
+    38,
+    46,
+    132,
+    145,
+    210
+   ],
+   "answer": "2,234,266 units",
+   "kind": "table",
+   "checked_by": [
+    "claude",
+    "claude-recheck"
+   ]
+  },
+  {
+   "id": "hul-2024-brands",
+   "question": "How many HUL brands have an annual turnover above ₹1,000 crore, per its FY2024 annual report?",
+   "company": "HINDUNILVR",
+   "year": "2024",
+   "answer_pages": [
+    3,
+    38,
+    51
+   ],
+   "answer": "19 brands",
+   "kind": "narrative",
+   "checked_by": [
+    "claude",
+    "claude-recheck"
+   ]
+  },
+  {
+   "id": "bharti-2026-rank",
+   "question": "What is Airtel's global ranking by customer base according to its FY2026 annual report?",
+   "company": "BHARTIARTL",
+   "year": "2026",
+   "answer_pages": [
+    5
+   ],
+   "answer": "The world's second-largest telecom operator by customer base, serving nearly 666 million customers",
+   "kind": "narrative",
+   "checked_by": [
+    "claude",
+    "claude-recheck"
+   ]
+  },
+  {
+   "id": "wipro-2025-ceo",
+   "question": "Who is Wipro's CEO and Managing Director, and from when was he appointed?",
+   "company": "WIPRO",
+   "year": "2025",
+   "answer_pages": [
+    9,
+    121,
+    131,
+    133,
+    154,
+    155,
+    159,
+    173,
+    259,
+    261,
+    369,
+    371,
+    472,
+    474
+   ],
+   "answer": "Srinivas Pallia, appointed from April 7, 2024 (for five years)",
+   "kind": "narrative",
+   "checked_by": [
+    "claude",
+    "claude-recheck"
+   ]
+  },
+  {
+   "id": "tatasteel-2024-deliveries",
+   "question": "What were Tata Steel's standalone steel deliveries in FY2023-24?",
+   "company": "TATASTEEL",
+   "year": "2024",
+   "answer_pages": [
+    5,
+    9,
+    10,
+    159,
+    191,
+    192,
+    200,
+    392,
+    453,
+    476
+   ],
+   "answer": "19.91 MT",
+   "kind": "table",
+   "checked_by": [
+    "claude",
+    "claude-recheck",
+    "user"
+   ]
+  },
+  {
+   "id": "ntpc-2026-added",
+   "question": "How much capacity did NTPC install during FY2025-26?",
+   "company": "NTPC",
+   "year": "2026",
+   "answer_pages": [
+    11,
+    22,
+    32
+   ],
+   "answer": "9.62 GW",
+   "kind": "table",
+   "checked_by": [
+    "claude",
+    "claude-recheck"
+   ]
+  },
+  {
+   "id": "asianpaint-2025-sleek",
+   "question": "Where did Asian Paints' Sleek business inaugurate a new plant in FY2024-25?",
+   "company": "ASIANPAINT",
+   "year": "2025",
+   "answer_pages": [
+    27
+   ],
+   "answer": "Wada, Maharashtra",
+   "kind": "narrative",
+   "checked_by": [
+    "claude",
+    "claude-recheck"
+   ]
+  },
+  {
+   "id": "cipla-2024-ceo",
+   "question": "Who is Cipla's Managing Director and Global CEO according to its FY2024 annual report?",
+   "company": "CIPLA",
+   "year": "2024",
+   "answer_pages": [
+    26,
+    27,
+    29,
+    35,
+    165,
+    166,
+    168,
+    172,
+    177,
+    180,
+    189,
+    209,
+    214,
+    215,
+    216,
+    222,
+    223,
+    224,
+    225,
+    230,
+    236,
+    237,
+    238,
+    239,
+    240,
+    254,
+    255,
+    257,
+    259,
+    306,
+    329,
+    342,
+    343,
+    345,
+    347,
+    423,
+    436,
+    439
+   ],
+   "answer": "Umang Vohra",
+   "kind": "narrative",
+   "checked_by": [
+    "claude",
+    "claude-recheck"
+   ]
+  },
+  {
+   "id": "titan-2026-totalincome",
+   "question": "What was Titan's standalone total income in FY2025-26?",
+   "company": "TITAN",
+   "year": "2026",
+   "answer_pages": [
+    9,
+    14,
+    124,
+    172,
+    284,
+    333,
+    334
+   ],
+   "answer": "₹78,089 crore",
+   "kind": "table",
+   "checked_by": [
+    "claude",
+    "claude-recheck"
+   ]
+  },
+  {
+   "id": "coalindia-2024-production",
+   "question": "What was Coal India's coal production in FY2023-24?",
+   "company": "COALINDIA",
+   "year": "2024",
+   "answer_pages": [
+    5,
+    6,
+    13,
+    28,
+    41,
+    61,
+    70,
+    71,
+    72,
+    74,
+    123,
+    162
+   ],
+   "answer": "773.647 million tonnes",
+   "kind": "table",
+   "checked_by": [
+    "claude",
+    "claude-recheck"
+   ]
+  },
+  {
+   "id": "mm-2026-e3w",
+   "question": "What is Mahindra's market share in electric three-wheelers according to its FY2026 annual report?",
+   "company": "M&M",
+   "year": "2026",
+   "answer_pages": [
+    6,
+    8
+   ],
+   "answer": "40% (market leader)",
+   "kind": "narrative",
+   "checked_by": [
+    "claude",
+    "claude-recheck"
+   ]
+  },
+  {
+   "id": "bajfinance-2026-aum",
+   "question": "What was Bajaj Finance's consolidated AUM as on 31 March 2026?",
+   "company": "BAJFINANCE",
+   "year": "2026",
+   "answer_pages": [
+    1,
+    5,
+    17,
+    47,
+    51
+   ],
+   "answer": "₹509,975 crore (crossed ₹5 trillion)",
+   "kind": "table",
+   "checked_by": [
+    "claude",
+    "claude-recheck"
+   ]
+  },
+  {
+   "id": "infy-2024-insemi",
+   "question": "Which semiconductor design services company did Infosys agree to acquire in fiscal 2024?",
+   "company": "INFY",
+   "year": "2024",
+   "answer_pages": [
+    36,
+    57,
+    215,
+    285
+   ],
+   "answer": "InSemi Technology Services Private Limited (100% of equity)",
+   "kind": "narrative",
+   "checked_by": [
+    "claude",
+    "claude-recheck"
+   ]
+  },
+  {
+   "id": "hcltech-q1fy27-revenue",
+   "question": "What was HCLTech's consolidated revenue from operations for the quarter ended June 2026?",
+   "company": "HCLTECH",
+   "year": "2027",
+   "answer_pages": [],
+   "answer": "₹34,579 crore",
+   "kind": "numeric",
+   "checked_by": [
+    "claude",
+    "claude-recheck"
+   ]
+  },
+  {
+   "id": "kotakbank-q2fy27-gnpa",
+   "question": "What was Kotak Mahindra Bank's gross NPA ratio for the quarter ended September 2026?",
+   "company": "KOTAKBANK",
+   "year": "2027",
+   "answer_pages": [],
+   "answer": "1.09%",
+   "kind": "numeric",
+   "checked_by": [
+    "claude",
+    "claude-recheck",
+    "user"
+   ]
+  },
+  {
+   "id": "bel-q1fy27-revenue",
+   "question": "What was Bharat Electronics' consolidated revenue from operations for the quarter ended June 2026?",
+   "company": "BEL",
+   "year": "2027",
+   "answer_pages": [],
+   "answer": "₹5,546.98 crore",
+   "kind": "numeric",
+   "checked_by": [
+    "claude",
+    "claude-recheck"
+   ]
+  },
+  {
+   "id": "nestleind-q4fy26-revenue",
+   "question": "What was Nestlé India's consolidated revenue from operations for the quarter ended March 2026?",
+   "company": "NESTLEIND",
+   "year": "2026",
+   "answer_pages": [],
+   "answer": "₹6,747.79 crore",
+   "kind": "numeric",
+   "checked_by": [
+    "claude",
+    "claude-recheck"
+   ]
+  },
+  {
+   "id": "ultracemco-q4fy26-revenue",
+   "question": "What was UltraTech Cement's consolidated revenue from operations for the quarter ended March 2026?",
+   "company": "ULTRACEMCO",
+   "year": "2026",
+   "answer_pages": [],
+   "answer": "₹25,799.47 crore",
+   "kind": "numeric",
+   "checked_by": [
+    "claude",
+    "claude-recheck"
+   ]
+  },
+  {
+   "id": "trent-fy26-eps",
+   "question": "What was Trent's consolidated basic EPS for FY2026?",
+   "company": "TRENT",
+   "year": "2026",
+   "answer_pages": [],
+   "answer": "₹48.37",
+   "kind": "numeric",
+   "checked_by": [
+    "claude",
+    "claude-recheck"
+   ]
+  },
+  {
+   "id": "techm-q1fy27-revenue",
+   "question": "What was Tech Mahindra's consolidated revenue from operations for the quarter ended June 2026?",
+   "company": "TECHM",
+   "year": "2027",
+   "answer_pages": [],
+   "answer": "₹15,711.9 crore",
+   "kind": "numeric",
+   "checked_by": [
+    "claude",
+    "claude-recheck",
+    "user"
+   ]
+  },
+  {
+   "id": "axisbank-q4fy26-gnpa",
+   "question": "What was Axis Bank's gross NPA ratio for the quarter ended March 2026?",
+   "company": "AXISBANK",
+   "year": "2026",
+   "answer_pages": [],
+   "answer": "1.23%",
+   "kind": "numeric",
+   "checked_by": [
+    "claude",
+    "claude-recheck"
+   ]
+  },
+  {
+   "id": "itc-2025-refusal-crypto",
+   "question": "How much cryptocurrency did ITC hold on its balance sheet at the end of FY2025?",
+   "company": "ITC",
+   "year": "2025",
+   "answer_pages": [],
+   "answer": "Not available in the provided documents.",
+   "kind": "refusal",
+   "checked_by": [
+    "claude",
+    "claude-recheck",
+    "user"
+   ]
+  },
+  {
+   "id": "sbin-2026-refusal-fy2010",
+   "question": "What was SBI's gross NPA ratio in FY2009-10?",
+   "company": "SBIN",
+   "year": "2026",
+   "answer_pages": [],
+   "answer": "Not available in the provided documents.",
+   "kind": "refusal",
+   "checked_by": [
+    "claude",
+    "claude-recheck"
+   ]
+  },
+  {
+   "id": "titan-2026-refusal-fy2031",
+   "question": "What will Titan's net profit be for FY2030-31?",
+   "company": "TITAN",
+   "year": "2026",
+   "answer_pages": [],
+   "answer": "Not available in the provided documents.",
+   "kind": "refusal",
+   "checked_by": [
+    "claude",
+    "claude-recheck"
+   ]
+  },
+  {
+   "id": "infy-2026-refusal-fy2012",
+   "question": "What was Infosys's consolidated revenue in fiscal 2012?",
+   "company": "INFY",
+   "year": "2026",
+   "answer_pages": [],
+   "answer": "Not available in the provided documents.",
+   "kind": "refusal",
+   "checked_by": [
+    "claude",
+    "claude-recheck"
+   ]
+  },
+  {
+   "id": "maruti-2025-refusal-us",
+   "question": "How many cars did Maruti Suzuki sell in the United States in FY2024-25?",
+   "company": "MARUTI",
+   "year": "2025",
+   "answer_pages": [],
+   "answer": "Not available in the provided documents.",
+   "kind": "refusal",
+   "checked_by": [
+    "claude",
     "claude-recheck"
    ]
   }

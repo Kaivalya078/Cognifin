@@ -102,7 +102,8 @@ def main() -> None:
 
     from core.app_retrieval import load_global_corpus, retrieve_global, rss_mb
 
-    cases = json.loads(Path(args.set).read_text(encoding="utf-8"))["cases"]
+    # numeric (iXBRL-sourced) and refusal cases have no answer page to score
+    cases = [c for c in json.loads(Path(args.set).read_text(encoding="utf-8"))["cases"] if c["answer_pages"]]
     pipeline, cm = load_global_corpus(args.cache)
     rss = rss_mb()
     pm_path = Path(args.cache) / "legacy_page_map.json"
