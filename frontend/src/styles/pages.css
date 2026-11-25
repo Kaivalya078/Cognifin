@@ -259,3 +259,26 @@
   .cf-eng-tile-value { font-size: 26px; }
   .cf-eng-columns { grid-template-columns: 1fr; gap: 40px; }
 }
+
+/* ── 404 ────────────────────────────────────────────────── */
+.cf-nf { padding-top: 96px; padding-bottom: 128px; }
+.cf-nf-inner { display: grid; gap: 16px; max-width: 560px; }
+.cf-nf-code { font: 400 12px var(--cf-font-mono); color: var(--cf-gold); }
+.cf-nf p { margin: 0; color: var(--cf-sub); font-size: 15px; line-height: 1.65; }
+.cf-nf code {
+  padding: 1px 6px;
+  border: 1px solid var(--cf-line);
+  border-radius: 4px;
+  background: var(--cf-bg-raised);
+  color: var(--cf-ink);
+  font: 13px var(--cf-font-mono);
+  overflow-wrap: anywhere;
+}
+.cf-nf-actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 8px; }
+.cf-nf-try { display: grid; gap: 10px; margin-top: 16px; padding-top: 20px; border-top: 1px solid var(--cf-line); }
+.cf-nf-try p { font-size: 14px; }
+.cf-nf-try ul { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; font-size: 14px; line-height: 1.5; }
+
+@media (max-width: 859px) {
+  .cf-nf { padding-top: 56px; padding-bottom: 80px; }
+}
