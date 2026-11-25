@@ -3,18 +3,20 @@
    ================================================================ */
 
 :root {
-  --c-bg: #080d17;
-  --c-bg2: #0d1426;
-  --c-bg3: rgba(255, 255, 255, 0.03);
-  --c-gold: #d4af37;
-  --c-gold-dim: rgba(212, 175, 55, 0.18);
-  --c-gold-soft: rgba(212, 175, 55, 0.07);
-  --c-border: rgba(212, 175, 55, 0.18);
-  --c-text: rgba(255, 255, 255, 0.92);
-  --c-sub: rgba(255, 255, 255, 0.55);
-  --c-muted: rgba(255, 255, 255, 0.30);
+  /* Legacy names, now mapped onto the Phase 6 tokens (styles/tokens.css) so
+     /engineering and older rules follow the new palette until 6.3 restyles them. */
+  --c-bg: var(--cf-bg);
+  --c-bg2: var(--cf-bg-raised);
+  --c-bg3: rgba(233, 230, 223, 0.025);
+  --c-gold: var(--cf-gold);
+  --c-gold-dim: rgba(201, 162, 74, 0.18);
+  --c-gold-soft: rgba(201, 162, 74, 0.07);
+  --c-border: rgba(201, 162, 74, 0.22);
+  --c-text: var(--cf-ink);
+  --c-sub: var(--cf-sub);
+  --c-muted: var(--cf-mute);
   --c-red: #ef4444;
-  --container: 1160px;
+  --container: var(--cf-container);
 }
 
 /* ── Base ── */

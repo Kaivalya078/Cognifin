@@ -13,7 +13,6 @@ import RegisterPage from './pages/RegisterPage';
 import ChatPage from './pages/ChatPage';
 import AuthCallbackPage from './pages/AuthCallbackPage';
 import EngineeringPage from './pages/EngineeringPage';
-import "./App.css";
 
 function AnimatedRoutes() {
   const location = useLocation();
