@@ -100,7 +100,10 @@ function SourceSheet({ titleId, onClose, children }) {
     }, []);
     return (
         <dialog ref={ref} className="cx-sheet" aria-labelledby={titleId}
-            onCancel={(e) => { e.preventDefault(); onClose(); }}>
+            onCancel={(e) => { e.preventDefault(); onClose(); }}
+            // A close that skipped cancel (Android back). Ignored when already reopened:
+            // the cleanup's close() fires its event after a remount's showModal().
+            onClose={(e) => { if (!e.currentTarget.open) onClose(); }}>
             {children}
         </dialog>
     );
@@ -157,7 +160,7 @@ export default function ChatPage() {
             listWasCollapsed.current = collapsedRef.current;
             setSidebarCollapsed(true);
         }
-        setSource({ item, anchor });
+        setSource({ item: { ...item }, anchor }); // fresh object: re-clicking a chip jumps back to its page
     }, []);
 
     const closeSource = useCallback((refocus = true) => {
@@ -182,10 +185,21 @@ export default function ChatPage() {
     // Escape closes the desktop pane (the mobile dialog handles its own Escape).
     useEffect(() => {
         if (!source || isNarrow) return;
-        const onKey = (e) => { if (e.key === 'Escape') closeSource(); };
+        // Not when Escape is cancelling something in the chat list (rename, menu).
+        const onKey = (e) => {
+            if (e.key === 'Escape' && !e.defaultPrevented && !e.target.closest?.('.cx-side')) closeSource();
+        };
         window.addEventListener('keydown', onKey);
         return () => window.removeEventListener('keydown', onKey);
     }, [source, isNarrow, closeSource]);
+
+    // Escape closes the narrow-screen chat list overlay.
+    useEffect(() => {
+        if (sidebarCollapsed || !isNarrow) return;
+        const onKey = (e) => { if (e.key === 'Escape' && !e.defaultPrevented && e.target.tagName !== 'INPUT') toggleSidebar(); };
+        window.addEventListener('keydown', onKey);
+        return () => window.removeEventListener('keydown', onKey);
+    }, [sidebarCollapsed, isNarrow, toggleSidebar]);
 
     // Active session for current chat
     const activeSession = activeId ? sessions[activeId] : null;
@@ -209,7 +223,10 @@ export default function ChatPage() {
         toast((t) => (
             <span className="cx-toast">
                 Chat deleted
-                <button type="button" onClick={() => { undoDelete(id); toast.dismiss(t.id); }}>Undo</button>
+                <button type="button" onClick={() => {
+                    toast.dismiss(t.id);
+                    if (!undoDelete(id)) toast('Already deleted');
+                }}>Undo</button>
             </span>
         ), { duration: 5000 });
     }, [deleteConversation, undoDelete]);
@@ -433,7 +450,7 @@ export default function ChatPage() {
                             </button>
                         </div>
                     )}
-                    <ChatErrorBoundary>
+                    <ChatErrorBoundary key={convKey}>
                     {activeConversation && activeConversation.messages.length > 0 ? (
                         <MessageList
                             messages={activeConversation.messages}

@@ -40,6 +40,7 @@ export default function SourcePane({ item, pdfUrl, onClose, titleId }) {
     // Load the document once per URL.
     useEffect(() => {
         let cancelled = false;
+        let loaded = null;
         setPdfDoc(null);
         setLoading(true);
         setError(false);
@@ -52,12 +53,13 @@ export default function SourcePane({ item, pdfUrl, onClose, titleId }) {
             enableXfa: false,
         }).promise
             .then((pdf) => {
-                if (cancelled) return;
+                if (cancelled) { pdf.destroy(); return; }
+                loaded = pdf;
                 setPdfDoc(pdf);
                 setTotalPages(pdf.numPages);
             })
             .catch(() => { if (!cancelled) { setError(true); setLoading(false); } });
-        return () => { cancelled = true; };
+        return () => { cancelled = true; loaded?.destroy(); };
     }, [pdfUrl]);
 
     // A new item (same or different PDF) jumps to its page.
@@ -88,6 +90,7 @@ export default function SourcePane({ item, pdfUrl, onClose, titleId }) {
                 if (cancelled || !highlightWords.length) return;
 
                 const text = await pg.getTextContent();
+                if (cancelled) return; // a newer render owns the canvas now
                 ctx.save();
                 ctx.fillStyle = HIGHLIGHT_COLOR;
                 text.items.forEach((t) => {
@@ -108,7 +111,10 @@ export default function SourcePane({ item, pdfUrl, onClose, titleId }) {
                 if (!cancelled) setLoading(false);
             }
         })();
-        return () => { cancelled = true; };
+        return () => {
+            cancelled = true;
+            try { renderTaskRef.current?.cancel(); } catch { /* already done */ }
+        };
     }, [pdfDoc, currentPage, scale, highlightWords]);
 
     const goTo = (p) => setCurrentPage(Math.min(Math.max(1, p), totalPages || 1));

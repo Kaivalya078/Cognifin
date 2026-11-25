@@ -671,6 +671,10 @@
 }
 .cx-drop:hover, .cx-drop.has-file { color: var(--cf-ink); background: var(--cf-gold-soft); }
 .cx-upload-fields { display: flex; gap: 8px; width: 100%; }
+.cx-conv-rename:focus-visible, .cx-field:focus-visible {
+  outline: 2px solid var(--cf-gold);
+  outline-offset: 2px;
+}
 .cx-field {
   flex: 1;
   min-width: 0;

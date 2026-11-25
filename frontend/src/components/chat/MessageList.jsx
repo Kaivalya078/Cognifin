@@ -33,7 +33,7 @@ const MD_COMPONENTS = { a: MdLink };
 function Chip({ active, onClick, children }) {
     return (
         <button type="button" className={`cx-chip${active ? ' is-active' : ''}`}
-            aria-pressed={active} onClick={onClick} aria-label={`Open source: ${children}`}>{children}</button>
+            aria-current={active ? 'true' : undefined} onClick={onClick} aria-label={`Open source: ${children}`}>{children}</button>
     );
 }
 
@@ -125,11 +125,22 @@ function Answer({ message, onFollowUp, onRequestUpload, isLoading, onOpenSource,
                     <span className="cx-sources-label">Sources:</span>
                     {groups.map((g) => (
                         <span key={g.label} className="cx-source-doc">
-                            <span>{g.label}</span>
-                            {g.items.filter((i) => i.page_number > 0).map((i) => (
-                                <Chip key={i.chunk_id} active={activeSourceId === bare(i.chunk_id)}
-                                    onClick={(e) => open(i, e.currentTarget)}>{`p.${i.page_number}`}</Chip>
-                            ))}
+                            {(() => {
+                                // Only sources we can show get a chip (uploads have no URL).
+                                const pages = g.items.filter((i) => i.page_number > 0 && pdfUrlOf(i));
+                                const whole = !pages.length && g.items.find((i) => pdfUrlOf(i));
+                                if (whole) return (
+                                    <Chip active={activeSourceId === bare(whole.chunk_id)}
+                                        onClick={(e) => open(whole, e.currentTarget)}>{g.label}</Chip>
+                                );
+                                return <>
+                                    <span>{g.label}</span>
+                                    {pages.map((i) => (
+                                        <Chip key={i.chunk_id} active={activeSourceId === bare(i.chunk_id)}
+                                            onClick={(e) => open(i, e.currentTarget)}>{`p.${i.page_number}`}</Chip>
+                                    ))}
+                                </>;
+                            })()}
                         </span>
                     ))}
                 </p>

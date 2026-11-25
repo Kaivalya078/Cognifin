@@ -8,6 +8,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { getConversations, getConversation, deleteConversationApi, renameConversationApi } from '../api';
 import { getToken } from '../utils/auth';
+import toast from 'react-hot-toast';
 import { createDeleteQueue } from '../utils/deleteQueue';
 
 export default function useConversations() {
@@ -131,7 +132,9 @@ export default function useConversations() {
     // The chat leaves the list at once; the server delete waits ~5s for an Undo.
     // hidden: id -> { conv, index, active } so Undo (or a failed delete) can put it back.
     const hidden = useRef(new Map());
-    const restore = useCallback((id) => {
+    // withActive: Undo reopens the chat; a failed delete only puts it back in the list
+    // (seconds later the user is elsewhere, and must not be pulled into it).
+    const restore = useCallback((id, withActive = true) => {
         const h = hidden.current.get(id);
         if (!h) return;
         hidden.current.delete(id);
@@ -140,18 +143,19 @@ export default function useConversations() {
             next.splice(Math.min(h.index, next.length), 0, h.conv);
             return next;
         });
-        if (h.active) {
+        if (withActive && h.active) {
             setActiveId(id);
             setActiveConversation(h.active);
         }
     }, []);
     const [queue] = useState(() => createDeleteQueue({
-        delayMs: 5000,
+        delayMs: 6000, // a little past the 5s toast, so a visible Undo still works
         commit: (id) => deleteConversationApi(id)
             .then(() => hidden.current.delete(id))
             .catch((err) => {
                 console.error('Failed to delete conversation:', err);
-                restore(id);
+                restore(id, false);
+                toast.error("Couldn't delete the chat.");
             }),
     }));
     useEffect(() => {
@@ -173,8 +177,11 @@ export default function useConversations() {
         queue.schedule(id);
     }, [conversations, activeId, activeConversation, queue]);
 
+    // false when the delete already went through (Undo came too late).
     const undoDelete = useCallback((id) => {
-        if (queue.undo(id)) restore(id);
+        if (!queue.undo(id)) return false;
+        restore(id);
+        return true;
     }, [queue, restore]);
 
     // ── Rename a conversation (optimistic + persist) ─────────
