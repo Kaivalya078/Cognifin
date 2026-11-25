@@ -35,14 +35,25 @@ JUDGE_PROMPT = """You grade one answer from a financial-filings Q&A app.
 You get CONTEXT (everything the app's model was shown), ANSWER (what it replied), \
 KEY (the verified correct answer) and KIND (table, narrative, numeric or refusal).
 
-1. Split ANSWER into atomic factual claims (one fact or figure each). Skip \
-follow-up suggestions, headings, citation markers and pure refusals.
+1. Split ANSWER into atomic factual claims (one fact or figure each). Take \
+claims only from sentences ANSWER actually writes: never from KEY, and never a \
+fact ANSWER leaves out. Skip follow-up suggestions, headings and citation \
+markers. If ANSWER is a refusal, "claims" is an empty list. A sum or split \
+that ANSWER writes (e.g. "27.56% + 0.35% = 27.91% in total") is read as \
+written, not reassigned to one part.
 2. For each claim: "supported" = true only if CONTEXT states it (same figure, \
 unit and period; rounding allowed). "cited" = the chunk_N / fin_N ids written \
-written next to that claim in ANSWER itself (empty list if ANSWER writes none; never take ids from CONTEXT).
-3. "correct": compare ANSWER with KEY. "yes" = it gives the key's fact (numbers \
-must match within rounding); "partial" = part of it, or right with a wrong \
-detail; "no" = wrong, missing, or refused.
+next to that claim in ANSWER itself (empty list if ANSWER writes none; never take ids from CONTEXT).
+3. "correct": compare ANSWER with KEY. Convert units before comparing \
+(1 lakh crore = 1,00,000 crore; 1 crore = 10 million; Indian and Western digit \
+grouping are the same number). A figure that rounds to the key's figure at the \
+key's precision is a match (2,18,542.51 crore = 2,18,543 crore; 4,35,590 crore = \
+4.36 lakh crore). Fiscal-year spellings are the same period \
+(FY2025 = FY2024-25 = FY25 = fiscal 2025 = year ended March 31, 2025). \
+Different wording or unit is never a reason for "partial". "yes" = it gives the fact the question asks for, matching \
+KEY; extra detail in KEY (a second unit, a growth rate, background) is not \
+required unless the question asks for it. "partial" = part of the asked fact, \
+or right with a wrong detail; "no" = wrong, missing, or refused.
 4. "refused": true if ANSWER declines to give the asked fact (e.g. says the \
 documents do not disclose it), else false.
 

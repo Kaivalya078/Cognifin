@@ -79,3 +79,30 @@ Chart values not equal to the DB: 0 of 50 points. Unmatched answer numbers: 1.
 - The first run (before the review fixes) charted HDFCBANK gross NPA as a flat 0.00%: the Phase 3 iXBRL extractor stores 0.0 for ratios a filing doesn't disclose (56 such rows across bank ratios). The router now drops exact-zero rows. The extractor still writes them, so a rebuild fix is open.
 - Citations: gpt-4o-mini often writes the verified figures without the `[fin_N]` tag (sometimes with no citations at all). Uncited sentences are skipped by the number check (`checked` 0), and 3 of 4 comparisons fail "all companies cited" for this reason, even though their numbers match the rows.
 - `₹32,469.0 crore` is a derived difference (TCS minus INFY), a known false flag of the regex check.
+
+# Answer eval results
+
+2026-11-25, `PYTHONUTF8=1 python -m tests.eval_answers --label v2-baseline` (report `20261125-1225-v2-baseline-answers.json`, also written to `frontend/public/metrics.json`).
+
+**Set:** `tests/golden_set.json` v2, 100 cases over 47 companies: 46 table, 41 narrative, 8 numeric (financials-table figures, no answer page), 5 refusal (key is the refusal sentence). v1's 40 cases unchanged. Every key was checked on its source page twice by Claude; the user spot-checked 10 (all OK).
+
+**Method:** every question goes through the app's real pipeline (`answer_events`, `INTELLIGENT_PARSING_ENABLED=false`, `MULTI_QUERY_ENABLED=false`, generation at temperature 0). A gpt-4o-mini judge gets the exact system + user prompt the model saw, the answer, the key and the kind, and returns claims, `correct` and `refused` as JSON.
+
+- **Faithfulness** = supported claims / all claims over answered (non-refusal) cases. The judge splits the answer into atomic claims and checks each against the context, the same method as RAGAS faithfulness.
+- **Correctness** = mean credit (yes 1, partial 0.5, no 0). A refusal on a non-refusal case scores 0; a refusal case scores 1 only if the app refused.
+- **Citation validity** = valid / (valid + invalid) cited ids, from `verify_citations`. **Cited share** = answered cases with at least one valid citation.
+- **Upload-card rate** = refusal cases whose reply is exactly the refusal sentence (the frontend's upload card triggers on it).
+- **Cost** = tokens × gpt-4o-mini prices (constants in `answer_scoring.py`, checked 2026-11-24).
+
+| Run | Faithfulness | Correctness | Citation validity | Cited share | Refusal acc. | Upload card | hit@3 | hit@8 | p50 / p95 | $/question |
+|---|---|---|---|---|---|---|---|---|---|---|
+| v2-baseline | 0.994 | 0.870 | 1.00 | 0.02 | 1.00 | 1.00 | 0.793 | 0.966 | 9.3 s / 15.0 s | $0.00067 (+ $0.00071 judge) |
+
+By kind, correctness: narrative 0.939, table 0.837, numeric 0.625, refusal 1.000. Retrieval over the 87 page-scored cases; v1's 40 alone: hit@3 0.775 (same as the 186-doc report from 2026-11-16).
+
+**Read with care.**
+- **Judge spot-check.** The first baseline's judge was wrong on 5 of the rows read by hand: it invented claims from the key (a refusal scored faithfulness 0; a US$ figure the answer never wrote marked unsupported), misread a written sum, and marked rounded / lakh-crore figures "partial". The judge prompt was revised (claims only from the answer, refusal = no claims, unit conversion, rounding to the key's precision, fiscal-year spellings equal) and the run repeated. In this run the judge is still wrong on about 4 rows: 3 too strict (`tatasteel-2025-turnover` and `lt-2026-orderinflow` rounding, `tcs-2024-netzero` asking for key detail the question didn't ask for) and 1 too lenient (`ntpc-2026-added` "partial" for 1,823 MW vs 9.62 GW). Net effect on correctness is about ±1 point. A stronger judge model would cost more per run.
+- **Citations.** Cited share 0.02: gpt-4o-mini almost never writes `[chunk_N]` / `[fin_N]` tags. Faithfulness is still high because the judge checks claims against the whole context, but users see uncited answers. Known open follow-up.
+- **Numeric 0.625.** 3 of 8 quarterly-figure questions (`hcltech-q1fy27-revenue`, `kotakbank-q2fy27-gnpa`, `bel-q1fy27-revenue`) were refused although the figures are in the financials table. Router coverage gap, open.
+- **Real wrong answers** (not judge noise): `reliance-2023-netprofit`, `wipro-2023-revenue`, `shriramfin-2025-aum` (a nearby figure from a different line), `tatasteel-2024-deliveries` (1.06 MT for 19.91 MT), `icicibank-2024-pat` and `kotakbank-2026-customers` (refused; the second misses retrieval@8).
+- One run, published as-is. Two earlier runs were discarded: the first for the judge fix, the second for 2 `APIConnectionError` rows.
