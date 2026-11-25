@@ -12,7 +12,7 @@ const README_URL =
 // Static copy from the v2 baseline write-up (backend/tests/eval_reports/README.md).
 // Update by hand when a new run changes it.
 const WEAK_SPOTS = [
-  'About 1 in 5 cited answers is cited only by a code fill, which attaches a source when every figure in a sentence matches a passage exactly. Narrative sentences rely on the model citing them itself.',
+  'About 1 in 5 cited answers is cited only by a code fill, which attaches a source when every figure in a sentence matches a passage exactly. Sentences without figures rely on the model citing them itself.',
   '3 of 8 quarterly-figure questions were refused although the figures are in the financials table.',
   'About 6 of 100 answers are genuinely wrong: a nearby figure from a different line, or a refusal where the answer exists.',
   'The judge model is about ±1 point noisy on correctness, in both directions.',

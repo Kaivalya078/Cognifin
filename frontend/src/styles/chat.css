@@ -2370,8 +2370,12 @@
     cursor: pointer;
 }
 
-button.cite-chip:hover,
+button.cite-chip:hover {
+    background: rgba(212, 175, 55, 0.18);
+}
+
 button.cite-chip:focus-visible {
     background: rgba(212, 175, 55, 0.18);
-    outline: none;
+    outline: 2px solid var(--gold);
+    outline-offset: 1px;
 }

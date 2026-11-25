@@ -121,8 +121,8 @@ Goal: answers that point to their page. v2 cited 2% of answered questions.
   - years and small integers are ignored
   - financials rows win over chunks
 
-  Narrative sentences are never filled.
-- **Honesty split.** *Fill-only share* = answered questions cited only because of the fill. *Filled-marker share* = filled markers / all markers.
+  Sentences without a qualifying figure are never filled; they rely on the model's own citation.
+- **Honesty split.** *Fill-only share* = answered questions whose valid citations all came from the fill. This is an upper bound on "cited only because of the fill": an answer counts even when the model also cited the same id elsewhere. *Filled-marker share* = filled markers / all markers.
 
 | Target | v2 | v3 run 1 | **v3 run 2 (published)** | |
 |---|---|---|---|---|
@@ -139,5 +139,14 @@ Goal: answers that point to their page. v2 cited 2% of answered questions.
 3. Prompt change: insights and interpretation only from cited context. Subset try 2: 15/15 cited, no regressions. About $0.03.
 4. Full run 2, `v3-citations-r2`: all targets pass. Published as-is. About $0.14.
 
-Faithfulness and correctness come from one LLM-judged run, so read them ±1 pt (see the judge note above). Latency p50 fell from 9.3 s to 6.0 s, because answers are shorter with at most 3 insights. Also in this change: the chat's "Sources:" row was always empty for cited answers (it deduped by document before filtering to cited passages), and is now fixed. That went unnoticed while almost nothing was cited.
+Faithfulness and correctness come from one LLM-judged run, so read them ±1 pt (see the judge note above). Latency p50 was 6.0 s, against 9.3 s in v2. The cause is not established: mean output tokens rose slightly (228 → 243), so it is not shorter answers. It is most likely API-side variance on the day. Also in this change: the chat's "Sources:" row was always empty for cited answers (it deduped by document before filtering to cited passages), and is now fixed. That went unnoticed while almost nothing was cited.
+
+**Fill fixes after the published run** (final review, 2026-11-25):
+- The fill no longer splits sentences at abbreviations ("vs.", "i.e."), which put a marker in place of the abbreviation's period.
+- A `%` figure now only matches a `%` figure in the passage.
+
+No paid rerun was done, because the budget is spent. Instead the published run's 52 filled answers were re-filled offline against their rebuilt retrieval context:
+- 5 changed, and all 5 stay cited.
+- Cited share and fill-only share are unchanged.
+- The filled-marker share falls slightly (7 fewer markers).
 

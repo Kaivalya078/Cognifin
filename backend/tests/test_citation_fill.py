@@ -1,3 +1,4 @@
+import re
 import sys
 from pathlib import Path
 
@@ -80,3 +81,21 @@ def test_unit_with_an_unmatched_figure_is_not_cited():
     text = "| March 31, 2024 | 1.24% | 32,000.00 (approx.) |"
     assert fill_figure_citations(text, CTX) == (text, [])
     assert fill_figure_citations("NPA was 1.24% and slippages 9,999 crore.", CTX)[1] == []
+
+
+def test_abbreviations_do_not_split_or_lose_their_period():
+    for text in ("Revenue 2,40,893 vs. 1.24% NPA.", "Revenue was 2,40,893, i.e. about 1.24% of it."):
+        out, _ = fill_figure_citations(text, CTX)
+        assert re.sub(r"\s*(?:\[(?:fin|chunk)_\d+\])+", "", out) == text
+        assert "vs [" not in out and "i.e [" not in out
+
+
+def test_percent_only_matches_percent():
+    text = "Growth was 1.5%."
+    assert fill_figure_citations(text, [("chunk_1", "about 1.5 lakh units")]) == (text, [])
+    assert fill_figure_citations("Count was 1.5 lakh.", [("chunk_1", "rose 1.5% in the year")])[1] == []
+    assert fill_figure_citations(text, [("chunk_1", "grew 1.5% this year")])[1] == ["chunk_1"]
+
+
+def test_page_reference_in_fin_snippet_does_not_match():
+    assert fill_figure_citations("Pages 117 cover it.", [("fin_1", "Rev | Q | ₹1.0 crore | AR p.117")])[1] == []

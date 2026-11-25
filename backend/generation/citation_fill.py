@@ -13,11 +13,12 @@ from core.citation_verifier import _REF, bare_chunk_id
 
 _NUM = re.compile(r"(?<![\w.])(\d{1,3}(?:,\d{2,3})+|\d+)(\.\d+)?(?!\d)(\s*%)?")
 _SEP_ROW = re.compile(r"\s*\|?(\s*:?-+:?\s*\|)+\s*:?-*:?\s*\|?\s*")
-_SENTENCE_END = re.compile(r"(?<=[.!?])\s+")
+# Not after "vs." / "i.e." / "Rs." etc.: only split when the next word starts upper-case or with a symbol.
+_SENTENCE_END = re.compile(r"(?<=[.!?])\s+(?![a-z0-9])")
 _MAX_PER_UNIT = 2
 
 
-def _numbers(text: str, figures_only: bool) -> list[tuple[Decimal, int]]:
+def _numbers(text: str, figures_only: bool) -> list[tuple[Decimal, int, bool]]:
     out = []
     for m in _NUM.finditer(text):
         whole, frac, pct = m.group(1), m.group(2) or "", m.group(3)
@@ -28,13 +29,15 @@ def _numbers(text: str, figures_only: bool) -> list[tuple[Decimal, int]]:
             is_year = not frac and not pct and "," not in whole and 1990 <= value <= 2039
             if is_year or not (len(digits) >= 3 or frac or pct):
                 continue
-        out.append((value, places))
+        out.append((value, places, bool(pct)))
     return out
 
 
-def _matches(fig: tuple[Decimal, int], passage: list[tuple[Decimal, int]]) -> bool:
-    value, places = fig
-    for p, p_places in passage:
+def _matches(fig: tuple[Decimal, int, bool], passage: list[tuple[Decimal, int, bool]]) -> bool:
+    value, places, pct = fig
+    for p, p_places, p_pct in passage:
+        if p_pct != pct:                       # 1.5% is not 1.5 lakh
+            continue
         if p == value:
             return True
         if p_places > places and p.quantize(Decimal(1).scaleb(-places), ROUND_HALF_UP) == value:
