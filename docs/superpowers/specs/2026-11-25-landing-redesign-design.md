@@ -78,7 +78,7 @@ Hero layout (user's choice, from three mockups): **B "Filing scan"** as the hero
 
 The page's promise ("Every answer points to its page", the citation chips in the hero and product window, and how-it-works step 03 "every claim cites its page") is **not true today**: `metrics.json` `cited_share` is 0.021, so about 98% of answers show no "Sources:" chips. Each answer still shows its Evidence list, which gives document, page and Open PDF for the passages it was given, not the lines it used. The user chose to **fix citations first** (a separate project, *Phase 6.0 citations*, its own design) and keep this copy.
 
-This project must not merge until the eval rerun after Phase 6.0 shows citations are reliable. The target is set in the Phase 6.0 design. If that target isn't met, the copy falls back to evidence wording ("Answers built from the filings, with the source pages one click away") before merging, never to an untrue claim.
+**Gate cleared 2026-11-25:** Phase 6.0 merged (PR #6). v3 eval: cited share 0.947, validity 0.995, faithfulness 0.995, correctness 0.870, so the copy stays. (Original rule: this project must not merge until the eval rerun after Phase 6.0 shows citations are reliable.) The target is set in the Phase 6.0 design. If that target isn't met, the copy falls back to evidence wording ("Answers built from the filings, with the source pages one click away") before merging, never to an untrue claim.
 
 ## Chat handoff (small, needed by section 7)
 
