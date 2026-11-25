@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom';
 import './../../styles/landing.css';
 
 export default function Footer() {
@@ -22,7 +23,7 @@ export default function Footer() {
                     <span className="partners-label">Powered by</span>
                     <div className="partners-list">
                         <span className="partner-item">OpenAI</span>
-                        <span className="partner-item">FAISS</span>
+                        <span className="partner-item">LanceDB</span>
                         <span className="partner-item">React</span>
                         <span className="partner-item">FastAPI</span>
                     </div>
@@ -30,7 +31,7 @@ export default function Footer() {
 
                 {/* Copyright */}
                 <div className="footer-copyright">
-                    <p>© {currentYear} Cognifin. Built for financial analysis.</p>
+                    <p>© {currentYear} Cognifin. Built for financial analysis. <Link to="/engineering" className="footer-link">How it's measured</Link></p>
                 </div>
             </div>
         </footer>

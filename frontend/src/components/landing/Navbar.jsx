@@ -31,18 +31,22 @@ export default function Navbar() {
 
                 {/* Desktop Navigation Links */}
                 <div className="nav-links">
-                    <a href="#features" className="nav-link">
+                    <a href="/#features" className="nav-link">
                         <span>Features</span>
                         <div className="nav-link-underline"></div>
                     </a>
-                    <a href="#how-it-works" className="nav-link">
+                    <a href="/#how-it-works" className="nav-link">
                         <span>How it Works</span>
                         <div className="nav-link-underline"></div>
                     </a>
-                    <a href="#about" className="nav-link">
+                    <a href="/#about" className="nav-link">
                         <span>About</span>
                         <div className="nav-link-underline"></div>
                     </a>
+                    <Link to="/engineering" className="nav-link">
+                        <span>Engineering</span>
+                        <div className="nav-link-underline"></div>
+                    </Link>
                 </div>
 
                 {/* CTA Button */}
@@ -63,15 +67,18 @@ export default function Navbar() {
             {/* Mobile Menu */}
             <div className={`mobile-menu ${isMobileMenuOpen ? 'open' : ''}`}>
                 <div className="mobile-menu-content">
-                    <a href="#features" className="mobile-nav-link" onClick={toggleMobileMenu}>
+                    <a href="/#features" className="mobile-nav-link" onClick={toggleMobileMenu}>
                         Features
                     </a>
-                    <a href="#how-it-works" className="mobile-nav-link" onClick={toggleMobileMenu}>
+                    <a href="/#how-it-works" className="mobile-nav-link" onClick={toggleMobileMenu}>
                         How it Works
                     </a>
-                    <a href="#about" className="mobile-nav-link" onClick={toggleMobileMenu}>
+                    <a href="/#about" className="mobile-nav-link" onClick={toggleMobileMenu}>
                         About
                     </a>
+                    <Link to="/engineering" className="mobile-nav-link" onClick={toggleMobileMenu}>
+                        Engineering
+                    </Link>
                     <Link to="/chat" className="mobile-cta-btn" onClick={toggleMobileMenu}>
                         Try for Free →
                     </Link>
