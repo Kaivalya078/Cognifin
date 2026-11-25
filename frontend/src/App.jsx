@@ -7,20 +7,25 @@
 import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
 import { AuthProvider } from './context/AuthContext';
+import { lazy, Suspense } from 'react';
 import LandingPage from './pages/LandingPage';
-import LoginPage from './pages/LoginPage';
-import RegisterPage from './pages/RegisterPage';
-import ChatPage from './pages/ChatPage';
-import AuthCallbackPage from './pages/AuthCallbackPage';
-import EngineeringPage from './pages/EngineeringPage';
-import "./App.css";
+
+// Only the landing page ships in the first bundle; the chat (PDF viewer, charts,
+// markdown) and the other pages load when visited.
+const LoginPage = lazy(() => import('./pages/LoginPage'));
+const RegisterPage = lazy(() => import('./pages/RegisterPage'));
+const ChatPage = lazy(() => import('./pages/ChatPage'));
+const AuthCallbackPage = lazy(() => import('./pages/AuthCallbackPage'));
+const EngineeringPage = lazy(() => import('./pages/EngineeringPage'));
 
 function AnimatedRoutes() {
   const location = useLocation();
 
   return (
     <AnimatePresence mode="wait">
-      <Routes location={location} key={location.pathname}>
+      {/* The key lives on Suspense, AnimatePresence's direct child, so route exits still animate. */}
+      <Suspense key={location.pathname} fallback={null}>
+      <Routes location={location}>
         <Route path="/" element={
           <PageTransition>
             <LandingPage />
@@ -47,6 +52,7 @@ function AnimatedRoutes() {
         {/* Open without login: anonymous visitors get a free trial (backend-capped) */}
         <Route path="/chat" element={<ChatPage />} />
       </Routes>
+      </Suspense>
     </AnimatePresence>
   );
 }

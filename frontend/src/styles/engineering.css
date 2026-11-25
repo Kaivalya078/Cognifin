@@ -3,7 +3,7 @@
 .eng-page {
   max-width: var(--container);
   margin: 0 auto;
-  padding: 128px 48px 96px;
+  padding: 72px 48px 96px;  /* navbar is sticky (in flow) since Phase 6.1 */
 }
 
 .eng-page h1 {
@@ -178,7 +178,7 @@
 
 @media (max-width: 859px) {
   .eng-page {
-    padding: 104px 20px 64px;
+    padding: 48px 20px 64px;
   }
 
   .eng-page h1 {

@@ -1,0 +1,27 @@
+/* Cognifin design tokens (Phase 6). Sibling of kaivalyapatel.dev: smoked near-black,
+   hairline grid, smoked glass, JetBrains Mono headings + Inter body, muted gold.
+   Prefixed --cf-* so they never collide with chat.css's generic :root names. */
+
+:root {
+  --cf-bg: #06070c;
+  --cf-bg-raised: #0b0c13;
+  --cf-ink: #e9e6df;
+  --cf-sub: rgba(233, 230, 223, 0.62);
+  --cf-mute: rgba(233, 230, 223, 0.54);  /* ≥ 4.5:1 on --cf-bg at 13 px */
+  --cf-line: rgba(233, 230, 223, 0.09);
+  --cf-grid: rgba(233, 230, 223, 0.045);
+  --cf-gold: #c9a24a;
+  --cf-gold-soft: rgba(201, 162, 74, 0.14);
+  --cf-gold-line: rgba(201, 162, 74, 0.45);
+  --cf-glass: rgba(9, 10, 16, 0.72);
+  --cf-glass-strong: rgba(9, 10, 16, 0.88);
+  --cf-blur: blur(14px) saturate(1.2);
+
+  --cf-font-mono: 'JetBrains Mono', ui-monospace, 'SFMono-Regular', Menlo, monospace;
+  --cf-font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+
+  --cf-r-sm: 6px;
+  --cf-r-md: 10px;
+  --cf-r-lg: 14px;
+  --cf-container: 1160px;
+}
