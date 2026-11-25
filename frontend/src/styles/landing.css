@@ -732,3 +732,12 @@
     gap: 32px;
   }
 }
+.footer-link {
+  color: var(--c-gold);
+  text-decoration: none;
+  margin-left: 6px;
+}
+
+.footer-link:hover {
+  text-decoration: underline;
+}

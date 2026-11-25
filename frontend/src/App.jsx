@@ -12,6 +12,7 @@ import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import ChatPage from './pages/ChatPage';
 import AuthCallbackPage from './pages/AuthCallbackPage';
+import EngineeringPage from './pages/EngineeringPage';
 import "./App.css";
 
 function AnimatedRoutes() {
@@ -33,6 +34,11 @@ function AnimatedRoutes() {
         <Route path="/register" element={
           <PageTransition>
             <RegisterPage />
+          </PageTransition>
+        } />
+        <Route path="/engineering" element={
+          <PageTransition>
+            <EngineeringPage />
           </PageTransition>
         } />
         <Route path="/auth/callback" element={
