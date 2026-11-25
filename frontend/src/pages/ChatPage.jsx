@@ -401,7 +401,7 @@ export default function ChatPage() {
                         color: 'var(--cf-ink)',
                         border: '1px solid var(--cf-line)',
                         borderRadius: 'var(--cf-r-md)',
-                        fontFamily: 'var(--cf-font-mono)',
+                        fontFamily: 'var(--cf-font-sans)',
                         fontSize: '13px',
                     },
                 }}

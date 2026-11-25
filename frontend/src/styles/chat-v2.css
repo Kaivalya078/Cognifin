@@ -67,7 +67,7 @@
 }
 .cx-pane-page {
   flex-shrink: 0;
-  font: 400 12px var(--cf-font-mono);
+  font: 400 12px var(--cf-font-sans);
   color: var(--cf-sub);
 }
 
@@ -182,7 +182,7 @@
 .cx-prose p { margin: 0 0 12px; }
 .cx-prose h1, .cx-prose h2, .cx-prose h3 {
   margin: 22px 0 8px;
-  font: 500 15px/1.4 var(--cf-font-mono);
+  font: 500 15px/1.4 var(--cf-font-sans);
   color: var(--cf-ink);
 }
 .cx-prose strong { font-weight: 600; color: var(--cf-ink); }
@@ -217,7 +217,7 @@
   border-radius: 4px;
   background: transparent;
   color: var(--cf-gold);
-  font: 500 11px/18px var(--cf-font-mono);
+  font: 500 11px/18px var(--cf-font-sans);
   vertical-align: 1px;
   cursor: pointer;
 }
@@ -277,7 +277,7 @@
   flex-wrap: wrap;
   gap: 6px 18px;
   margin: 0 0 10px;
-  font: 12px var(--cf-font-mono);
+  font: 12px var(--cf-font-sans);
   color: var(--cf-sub);
 }
 .cx-passages { list-style: none; margin: 0; padding: 0; }
@@ -298,7 +298,7 @@
 }
 .cx-passage-head:hover { color: var(--cf-ink); }
 .cx-passage-label { min-width: 0; overflow-wrap: anywhere; }
-.cx-passage-page { margin-left: 8px; font-family: var(--cf-font-mono); color: var(--cf-mute); }
+.cx-passage-page { margin-left: 8px; font-family: var(--cf-font-sans); color: var(--cf-mute); }
 .cx-passage-body { padding: 0 0 10px; }
 .cx-passage-body p { margin: 0 0 6px; font-size: 13px; line-height: 1.6; color: var(--cf-sub); }
 .cx-passage-body .cx-text-btn { margin-left: -8px; color: var(--cf-gold); }
@@ -351,7 +351,7 @@
   border-radius: var(--cf-r-md);
   background: var(--cf-bg-raised);
 }
-.cx-chart-title { margin: 0 0 8px 4px; font: 500 13px var(--cf-font-mono); color: var(--cf-ink); }
+.cx-chart-title { margin: 0 0 8px 4px; font: 500 13px var(--cf-font-sans); color: var(--cf-ink); }
 .cx-chart-note { margin: 6px 4px 0; font-size: 12px; color: var(--cf-mute); }
 .cx-chart-note.is-warn { color: var(--cf-gold); }
 
@@ -370,6 +370,7 @@
   height: 100vh;
   height: 100dvh;
   background-color: var(--cf-bg);
+  font-variant-numeric: tabular-nums; /* figures line up without a mono face */
   background-image:
     linear-gradient(var(--cf-grid) 1px, transparent 1px),
     linear-gradient(90deg, var(--cf-grid) 1px, transparent 1px);
@@ -398,7 +399,7 @@
   backdrop-filter: var(--cf-blur);
   -webkit-backdrop-filter: var(--cf-blur);
 }
-.cx-header .cf-wordmark, .cx-side-head .cf-wordmark { font: 500 17px var(--cf-font-mono); color: var(--cf-ink); }
+.cx-header .cf-wordmark, .cx-side-head .cf-wordmark { font: 500 17px var(--cf-font-sans); color: var(--cf-ink); }
 .cf-wordmark-dot { color: var(--cf-gold); }
 
 /* ── Chat list ─────────────────────────────────────────────────── */
@@ -566,7 +567,7 @@
 }
 .cx-welcome-title {
   margin: 0 0 20px;
-  font: 500 clamp(20px, 3vw, 26px)/1.3 var(--cf-font-mono);
+  font: 500 clamp(20px, 3vw, 26px)/1.3 var(--cf-font-sans);
   color: var(--cf-ink);
   letter-spacing: -0.01em;
 }
@@ -577,7 +578,7 @@
   padding: 1px 6px;
   border: 1px solid var(--cf-line);
   border-radius: 4px;
-  font: 12px var(--cf-font-mono);
+  font: 12px var(--cf-font-sans);
   color: var(--cf-sub);
 }
 
@@ -708,7 +709,7 @@
   backdrop-filter: var(--cf-blur);
   -webkit-backdrop-filter: var(--cf-blur);
 }
-.cx-overlay-title { margin: 0; font: 500 15px var(--cf-font-mono); }
+.cx-overlay-title { margin: 0; font: 500 15px var(--cf-font-sans); }
 .cx-overlay-file { margin: 4px 0 16px; overflow: hidden; font-size: 13px; color: var(--cf-sub); text-overflow: ellipsis; white-space: nowrap; }
 .cx-overlay-error { margin: 0; font-size: 14px; color: #e08a7a; }
 .cx-overlay-done { margin: 14px 0 0; font-size: 13px; color: var(--cf-sub); }
@@ -749,7 +750,7 @@
   border-radius: var(--cf-r-sm);
   background: transparent;
   color: var(--cf-gold);
-  font: 500 13px var(--cf-font-mono);
+  font: 500 13px var(--cf-font-sans);
   cursor: pointer;
 }
 .cx-toast button:focus-visible { outline: 2px solid var(--cf-gold); outline-offset: 2px; }
