@@ -17,6 +17,7 @@ const RegisterPage = lazy(() => import('./pages/RegisterPage'));
 const ChatPage = lazy(() => import('./pages/ChatPage'));
 const AuthCallbackPage = lazy(() => import('./pages/AuthCallbackPage'));
 const EngineeringPage = lazy(() => import('./pages/EngineeringPage'));
+const NotFoundPage = lazy(() => import('./pages/NotFoundPage'));
 
 function AnimatedRoutes() {
   const location = useLocation();
@@ -51,6 +52,11 @@ function AnimatedRoutes() {
         } />
         {/* Open without login: anonymous visitors get a free trial (backend-capped) */}
         <Route path="/chat" element={<ChatPage />} />
+        <Route path="*" element={
+          <PageTransition>
+            <NotFoundPage />
+          </PageTransition>
+        } />
       </Routes>
       </Suspense>
     </AnimatePresence>

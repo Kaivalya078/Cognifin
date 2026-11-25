@@ -9,7 +9,10 @@
 import { useEffect, useMemo } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import '../styles/auth.css';
+import { AlertTriangle } from 'lucide-react';
+import { Wordmark } from '../components/landing/Navbar';
+import '../styles/landing-v2.css';
+import '../styles/pages.css';
 
 export default function AuthCallbackPage() {
     const [searchParams] = useSearchParams();
@@ -60,17 +63,19 @@ export default function AuthCallbackPage() {
     }, [result, navigate, loginWithToken]);
 
     return (
-        <div className="auth-callback-page">
+        <div className="cf-auth-callback">
+            <Wordmark />
             {error ? (
-                <div className="auth-callback-error">
-                    <div className="auth-callback-icon">⚠</div>
-                    <p>{error}</p>
-                    <span className="auth-callback-redirect">Redirecting to login...</span>
+                <div className="cf-auth-callback-msg">
+                    <p className="cf-auth-error" role="alert">
+                        <AlertTriangle size={14} aria-hidden="true" /> <span>{error}</span>
+                    </p>
+                    <p className="cf-auth-callback-sub">Taking you back to sign in.</p>
                 </div>
             ) : (
-                <div className="auth-callback-loading">
-                    <div className="auth-spinner"></div>
-                    <p>Signing you in...</p>
+                <div className="cf-auth-callback-msg" role="status">
+                    <span className="cf-auth-spin" aria-hidden="true" />
+                    <p>Signing you in…</p>
                 </div>
             )}
         </div>

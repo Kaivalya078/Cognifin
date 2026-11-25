@@ -1,0 +1,278 @@
+<title>Cognifin Page Mockups</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: option switch on top; three framed screens (login, /engineering, 404) below,
+   each inside a fake browser chrome. Single dark look: it mirrors the app itself. */
+:root {
+  --bg: #06070c; --raised: #0b0c13; --ink: #e9e6df;
+  --sub: rgba(233,230,223,.62); --mute: rgba(233,230,223,.54);
+  --line: rgba(233,230,223,.09); --grid: rgba(233,230,223,.045);
+  --gold: #c9a24a; --gold-soft: rgba(201,162,74,.14); --gold-line: rgba(201,162,74,.45);
+  --glass: rgba(9,10,16,.72);
+  --mono: 'JetBrains Mono', ui-monospace, Menlo, Consolas, monospace;
+  --sans: 'Inter', -apple-system, 'Segoe UI', sans-serif;
+  color-scheme: dark;
+}
+html, body { background: var(--bg); color: var(--ink); }
+body {
+  font: 14px/1.5 var(--sans);
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 28px 64px;
+}
+.wrap { max-width: 1180px; margin: 0 auto; display: grid; gap: 22px; }
+.top h1 { margin: 0; font: 500 22px/1.3 var(--mono); text-wrap: balance; }
+.top p { margin: 6px 0 0; color: var(--sub); max-width: 70ch; }
+
+.switch { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 8px; }
+.opt { text-align: left; cursor: pointer; color: var(--ink); background: var(--raised); border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; display: grid; gap: 3px; font: inherit; }
+.opt:hover { border-color: rgba(233,230,223,.2); }
+.opt[aria-pressed="true"] { border-color: var(--gold-line); background: var(--gold-soft); }
+.opt:focus-visible, .frame a:focus-visible, .frame button:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+.opt b { font-weight: 500; font-size: 14px; }
+.opt span { font-size: 12px; color: var(--mute); }
+.opt em { font-style: normal; font-size: 11px; color: var(--gold); }
+
+.screens { display: grid; gap: 28px; }
+.label { font: 500 13px var(--sans); color: var(--sub); margin: 0 0 8px; display: flex; gap: 10px; align-items: baseline; flex-wrap: wrap; }
+.label code { font: 12px var(--mono); color: var(--mute); }
+.frame { border: 1px solid var(--line); border-radius: 12px; overflow: hidden; background: var(--bg); }
+.chrome { height: 30px; display: flex; align-items: center; gap: 6px; padding: 0 12px; border-bottom: 1px solid var(--line); background: var(--raised); }
+.chrome i { width: 9px; height: 9px; border-radius: 50%; background: rgba(233,230,223,.14); }
+.chrome span { margin-left: 10px; font: 11px var(--mono); color: var(--mute); }
+.page {
+  --head: var(--mono);
+  position: relative; min-height: 520px;
+  background-image: linear-gradient(var(--grid) 1px, transparent 1px), linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+  background-size: 48px 48px;
+}
+.h { font-family: var(--head); font-weight: 500; letter-spacing: -0.03em; margin: 0; text-wrap: balance; }
+.page.sans-head .h { letter-spacing: -0.02em; font-weight: 600; }
+.wm { font: 500 17px var(--mono); color: var(--ink); text-decoration: none; }
+.wm b { color: var(--gold); font-weight: 500; }
+
+/* Navbar (shared by /engineering and 404) */
+.nav { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 14px 28px; border-bottom: 1px solid var(--line); background: var(--glass); }
+.nav nav { display: flex; gap: 22px; font-size: 13px; color: var(--sub); }
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; font: 500 13px var(--sans); border-radius: 8px; padding: 9px 14px; text-decoration: none; cursor: pointer; border: 1px solid transparent; }
+.btn-solid { background: var(--ink); color: var(--bg); }
+.btn-ghost { background: transparent; color: var(--ink); border-color: var(--line); }
+
+/* Login */
+.auth { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); min-height: 560px; }
+.auth-left { padding: 28px 40px; display: flex; flex-direction: column; justify-content: space-between; border-right: 1px solid var(--line); }
+.auth-left .h { font-size: clamp(26px, 3vw, 34px); line-height: 1.12; max-width: 16ch; }
+.auth-left p { color: var(--sub); max-width: 40ch; margin: 14px 0 0; }
+.cite-demo { border: 1px solid var(--line); border-radius: 10px; background: var(--glass); padding: 14px 16px; font-size: 13px; line-height: 1.6; color: var(--sub); max-width: 42ch; }
+.cite-demo strong { color: var(--ink); font-weight: 600; }
+.chip { font: 500 11px/18px var(--mono); color: var(--gold); background: var(--gold-soft); border: 1px solid var(--gold-line); border-radius: 4px; padding: 0 5px; }
+.auth-right { display: grid; place-items: center; padding: 28px; }
+.form { width: 100%; max-width: 340px; display: grid; gap: 14px; }
+.form .h { font-size: 22px; }
+.form > p { margin: -6px 0 4px; color: var(--sub); font-size: 13px; }
+.google { display: flex; align-items: center; justify-content: center; gap: 10px; border: 1px solid var(--line); border-radius: 8px; padding: 10px; font: 500 14px var(--sans); color: var(--ink); background: var(--raised); }
+.or { display: flex; align-items: center; gap: 10px; color: var(--mute); font-size: 12px; }
+.or::before, .or::after { content: ""; flex: 1; height: 1px; background: var(--line); }
+.field { display: grid; gap: 6px; font-size: 13px; color: var(--sub); }
+.input { border: 1px solid var(--line); border-radius: 8px; background: var(--bg); padding: 10px 12px; font: 14px var(--sans); color: var(--ink); display: flex; justify-content: space-between; }
+.input.focus { border-color: var(--gold-line); outline: 2px solid var(--gold); outline-offset: 2px; }
+.input small { color: var(--mute); font-size: 12px; }
+.form .btn-solid { padding: 11px; font-size: 14px; }
+.swap { text-align: center; font-size: 13px; color: var(--sub); margin: 4px 0 0; }
+.swap a { color: var(--ink); text-underline-offset: 3px; }
+
+/* Engineering */
+.eng { padding: 40px 44px 44px; display: grid; gap: 26px; }
+.eyebrow { font: 12px var(--mono); color: var(--gold); letter-spacing: .02em; }
+.eng .h { font-size: clamp(28px, 3.4vw, 40px); line-height: 1.08; }
+.meta { color: var(--sub); font-size: 13px; display: flex; flex-wrap: wrap; gap: 6px 18px; }
+.tiles { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); border: 1px solid var(--line); border-radius: 12px; background: var(--glass); }
+.tile { padding: 16px 18px; display: grid; gap: 4px; border-right: 1px solid var(--line); }
+.tile:last-child { border-right: 0; }
+.tile span { font-size: 12px; color: var(--sub); }
+.tile b { font: 500 28px/1.1 var(--head); letter-spacing: -0.03em; font-variant-numeric: tabular-nums; }
+.tile small { font-size: 12px; color: var(--mute); }
+.cols { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); gap: 36px; }
+.cols h3 { margin: 0 0 8px; font: 500 16px var(--head); }
+.cols p { margin: 0; color: var(--sub); max-width: 58ch; line-height: 1.65; }
+table { border-collapse: collapse; width: 100%; font-size: 13px; font-variant-numeric: tabular-nums; }
+th, td { text-align: left; padding: 7px 0; border-bottom: 1px solid var(--line); }
+th { color: var(--mute); font-weight: 500; }
+td.n, th.n { text-align: right; }
+
+/* 404 */
+.nf { display: grid; place-items: center; padding: 56px 28px 72px; text-align: left; }
+.nf-inner { max-width: 520px; display: grid; gap: 16px; }
+.nf .code { font: 12px var(--mono); color: var(--gold); }
+.nf .h { font-size: clamp(28px, 3.4vw, 40px); line-height: 1.1; }
+.nf p { margin: 0; color: var(--sub); }
+.nf .path { font: 13px var(--mono); color: var(--ink); background: var(--raised); border: 1px solid var(--line); border-radius: 4px; padding: 1px 6px; }
+.nf .row { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 6px; }
+.nf .tries { border-top: 1px solid var(--line); padding-top: 16px; margin-top: 8px; display: grid; gap: 8px; font-size: 13px; color: var(--sub); }
+.nf .tries a { color: var(--ink); text-decoration: none; }
+.nf .tries a:hover { text-decoration: underline; text-underline-offset: 3px; }
+
+@media (max-width: 820px) {
+  .auth { grid-template-columns: 1fr; }
+  .auth-left { border-right: 0; border-bottom: 1px solid var(--line); padding: 24px; gap: 20px; }
+  .cite-demo { display: none; }
+  .nav nav { display: none; }
+  .nav { padding: 12px 16px; }
+  .eng { padding: 28px 18px; }
+  .tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .tile:nth-child(2) { border-right: 0; }
+  .tile:nth-child(-n+2) { border-bottom: 1px solid var(--line); }
+  .cols { grid-template-columns: 1fr; gap: 24px; }
+}
+</style>
+
+<div class="wrap">
+  <header class="top">
+    <h1>Phase 6.3 mockups</h1>
+    <p>Pick an option to switch the headings on all three screens. Colours, layout and copy stay the same, so you're only comparing the type. The /engineering figures come from the latest eval run.</p>
+  </header>
+
+  <div class="switch" role="group" aria-label="Heading font option">
+    <button type="button" class="opt" data-opt="A"><b>A) Like the landing</b><span>Mono headings, Inter body on every page</span><em>My pick</em></button>
+    <button type="button" class="opt" data-opt="B"><b>B) Like the chat</b><span>Inter everywhere</span><em>Matches the app</em></button>
+    <button type="button" class="opt" data-opt="C"><b>C) Split</b><span>Login in Inter; /engineering and 404 in mono</span><em>Login as the app's doorway</em></button>
+  </div>
+
+  <div class="screens">
+    <section>
+      <p class="label">Login <code>/login</code> (register uses the same layout with a name field)</p>
+      <div class="frame">
+        <div class="chrome"><i></i><i></i><i></i><span>cognifin.app/login</span></div>
+        <div class="page" data-screen="auth">
+          <div class="auth">
+            <div class="auth-left">
+              <div>
+                <a class="wm" href="#">cognifin<b>.</b></a>
+              </div>
+              <div>
+                <h2 class="h">Every answer points to its page.</h2>
+                <p>Sign in to keep your chats and upload a company's annual report to ask about it.</p>
+              </div>
+              <div class="cite-demo">
+                HDFC Limited's amalgamation with HDFC Bank became effective on <strong>1 July 2023</strong> <span class="chip">p.14</span>.
+              </div>
+            </div>
+            <div class="auth-right">
+              <div class="form">
+                <h2 class="h">Sign in</h2>
+                <p>Use Google or your email.</p>
+                <div class="google">
+                  <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 01-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
+                  Continue with Google
+                </div>
+                <div class="or">or</div>
+                <label class="field">Email<span class="input focus">analyst@example.com</span></label>
+                <label class="field">Password<span class="input">••••••••••<small>Show</small></span></label>
+                <span class="btn btn-solid">Sign in</span>
+                <p class="swap">No account? <a href="#">Create one</a></p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <p class="label">Engineering <code>/engineering</code> (top of the page; the method write-up and "Reproduce" follow below)</p>
+      <div class="frame">
+        <div class="chrome"><i></i><i></i><i></i><span>cognifin.app/engineering</span></div>
+        <div class="page" data-screen="eng">
+          <div class="nav">
+            <a class="wm" href="#">cognifin<b>.</b></a>
+            <nav><span>Product</span><span>How it works</span><span style="color:var(--ink)">Engineering</span></nav>
+            <span class="btn btn-solid">Open app</span>
+          </div>
+          <div class="eng">
+            <div style="display:grid;gap:10px">
+              <span class="eyebrow">Evaluation</span>
+              <h2 class="h">How Cognifin is measured</h2>
+              <div class="meta"><span>Eval run 25 Nov 2026</span><span>100 questions</span><span>47 companies</span><span>186 filings indexed</span></div>
+            </div>
+            <div class="tiles">
+              <div class="tile"><span>Faithfulness</span><b>99.5%</b><small>claims backed by the passages shown</small></div>
+              <div class="tile"><span>Correctness</span><b>87.0%</b><small>against the answer key</small></div>
+              <div class="tile"><span>Retrieval hit@8</span><b>96.6%</b><small>right page in the top 8</small></div>
+              <div class="tile"><span>Latency p50</span><b>6.0 s</b><small>p95 8.9 s</small></div>
+            </div>
+            <div class="cols">
+              <div>
+                <h3>How it's measured</h3>
+                <p>A hundred questions with written answer keys, spread across annual reports and quarterly results. Each answer is graded twice: is every claim supported by the passages it cites, and does it match the key. Retrieval is scored on whether the right page reaches the top results.</p>
+              </div>
+              <div>
+                <h3>By question type</h3>
+                <table>
+                  <thead><tr><th>Type</th><th class="n">Questions</th><th class="n">Correct</th></tr></thead>
+                  <tbody>
+                    <tr><td>Narrative</td><td class="n">41</td><td class="n">95.1%</td></tr>
+                    <tr><td>Table</td><td class="n">46</td><td class="n">82.6%</td></tr>
+                    <tr><td>Numeric</td><td class="n">8</td><td class="n">62.5%</td></tr>
+                    <tr><td>Refusal</td><td class="n">5</td><td class="n">100%</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <p class="label">Not found <code>any unknown URL</code></p>
+      <div class="frame">
+        <div class="chrome"><i></i><i></i><i></i><span>cognifin.app/pricing</span></div>
+        <div class="page" data-screen="nf">
+          <div class="nav">
+            <a class="wm" href="#">cognifin<b>.</b></a>
+            <nav><span>Product</span><span>How it works</span><span>Engineering</span></nav>
+            <span class="btn btn-solid">Open app</span>
+          </div>
+          <div class="nf">
+            <div class="nf-inner">
+              <span class="code">404</span>
+              <h2 class="h">This page isn't in the filings.</h2>
+              <p>Nothing lives at <span class="path">/pricing</span>. It may have moved, or the link has a typo.</p>
+              <div class="row"><span class="btn btn-solid">Ask a question</span><span class="btn btn-ghost">Back to home</span></div>
+              <div class="tries">
+                <span>Or try one of these:</span>
+                <a href="#">What was TCS's consolidated revenue from operations in FY2024?</a>
+                <a href="#">What was Hindustan Unilever's profit after tax in FY2025?</a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+</div>
+
+<script>
+const HEADS = {
+  A: { auth: 'mono', eng: 'mono', nf: 'mono' },
+  B: { auth: 'sans', eng: 'sans', nf: 'sans' },
+  C: { auth: 'sans', eng: 'mono', nf: 'mono' },
+};
+function pick(opt) {
+  const h = HEADS[opt] || HEADS.A;
+  document.querySelectorAll('.page').forEach((p) => {
+    const sans = h[p.dataset.screen] === 'sans';
+    p.style.setProperty('--head', sans ? 'var(--sans)' : 'var(--mono)');
+    p.classList.toggle('sans-head', sans);
+  });
+  document.querySelectorAll('.opt').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.opt === opt)));
+  try { localStorage.setItem('cf63-opt', opt); } catch (e) { /* storage unavailable */ }
+}
+document.querySelectorAll('.opt').forEach((b) => b.addEventListener('click', () => pick(b.dataset.opt)));
+document.querySelectorAll('.frame a').forEach((a) => a.addEventListener('click', (e) => e.preventDefault()));
+let start = 'A';
+try { start = localStorage.getItem('cf63-opt') || 'A'; } catch (e) { /* storage unavailable */ }
+pick(start);
+</script>
