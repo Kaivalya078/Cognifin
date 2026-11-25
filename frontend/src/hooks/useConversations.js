@@ -5,9 +5,10 @@
  * Replaces the old localStorage-based persistence.
  */
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { getConversations, getConversation, deleteConversationApi, renameConversationApi } from '../api';
 import { getToken } from '../utils/auth';
+import { createDeleteQueue } from '../utils/deleteQueue';
 
 export default function useConversations() {
     const [conversations, setConversations] = useState([]);
@@ -126,19 +127,55 @@ export default function useConversations() {
         refreshConversations();
     }, [refreshConversations]);
 
-    // ── Delete a conversation ────────────────────────────────
-    const deleteConversation = useCallback(async (id) => {
-        try {
-            await deleteConversationApi(id);
-            setConversations((prev) => prev.filter((c) => c.id !== id));
-            if (activeId === id) {
-                setActiveId(null);
-                setActiveConversation(null);
-            }
-        } catch (err) {
-            console.error('Failed to delete conversation:', err);
+    // ── Delete a conversation (Undo-able) ──────────────────
+    // The chat leaves the list at once; the server delete waits ~5s for an Undo.
+    // hidden: id -> { conv, index, active } so Undo (or a failed delete) can put it back.
+    const hidden = useRef(new Map());
+    const restore = useCallback((id) => {
+        const h = hidden.current.get(id);
+        if (!h) return;
+        hidden.current.delete(id);
+        setConversations((prev) => {
+            const next = [...prev];
+            next.splice(Math.min(h.index, next.length), 0, h.conv);
+            return next;
+        });
+        if (h.active) {
+            setActiveId(id);
+            setActiveConversation(h.active);
         }
-    }, [activeId]);
+    }, []);
+    const [queue] = useState(() => createDeleteQueue({
+        delayMs: 5000,
+        commit: (id) => deleteConversationApi(id)
+            .then(() => hidden.current.delete(id))
+            .catch((err) => {
+                console.error('Failed to delete conversation:', err);
+                restore(id);
+            }),
+    }));
+    useEffect(() => {
+        const flush = () => queue.flush();
+        window.addEventListener('pagehide', flush);
+        return () => { window.removeEventListener('pagehide', flush); flush(); };
+    }, [queue]);
+
+    const deleteConversation = useCallback((id) => {
+        const index = conversations.findIndex((c) => c.id === id);
+        const conv = conversations[index] || { id, title: activeConversation?.title || 'Chat' };
+        const active = activeId === id ? activeConversation : null;
+        hidden.current.set(id, { conv, index: Math.max(index, 0), active });
+        setConversations((prev) => prev.filter((c) => c.id !== id));
+        if (active) {
+            setActiveId(null);
+            setActiveConversation(null);
+        }
+        queue.schedule(id);
+    }, [conversations, activeId, activeConversation, queue]);
+
+    const undoDelete = useCallback((id) => {
+        if (queue.undo(id)) restore(id);
+    }, [queue, restore]);
 
     // ── Rename a conversation (optimistic + persist) ─────────
     const renameConversation = useCallback(async (id, title) => {
@@ -167,6 +204,7 @@ export default function useConversations() {
         setConversationId,
         selectConversation,
         deleteConversation,
+        undoDelete,
         renameConversation,
         refreshConversations,
     };

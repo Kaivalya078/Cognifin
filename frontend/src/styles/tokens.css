@@ -1,6 +1,6 @@
 /* Cognifin design tokens (Phase 6). Sibling of kaivalyapatel.dev: smoked near-black,
    hairline grid, smoked glass, JetBrains Mono headings + Inter body, muted gold.
-   Prefixed --cf-* so they never collide with chat.css's generic :root names. */
+   Prefixed --cf-* so they never collide with generic :root names elsewhere. */
 
 :root {
   --cf-bg: #06070c;

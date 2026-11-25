@@ -8,7 +8,7 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Toaster, toast } from 'react-hot-toast';
-import { askQuestionStream, checkHealth, uploadPdf, API_BASE } from '../api';
+import { askQuestionStream, checkHealth, uploadPdf } from '../api';
 import { useAuth } from '../context/AuthContext';
 import useConversations from '../hooks/useConversations';
 import Sidebar from '../components/chat/Sidebar';
@@ -16,11 +16,11 @@ import ChatHeader from '../components/chat/ChatHeader';
 import MessageList from '../components/chat/MessageList';
 import ChatInput from '../components/chat/ChatInput';
 import SourcePane from '../components/chat/SourcePane';
+import ChatErrorBoundary from '../components/chat/ChatErrorBoundary';
+import { AlertTriangle, X } from 'lucide-react';
 import { pdfUrlOf, openFiling, isFiling, sourceLabel } from '../utils/sources';
 import { bare } from '../utils/citations';
 import { readQuestionParam } from '../utils/landing';
-import '../styles/chat.css';
-import '../styles/api.css';
 import '../styles/chat-v2.css';
 
 // Must match SHOWCASE_QUESTIONS in backend/main.py (pre-answered at startup, so instant).
@@ -116,6 +116,7 @@ export default function ChatPage() {
         setConversationId,
         selectConversation,
         deleteConversation,
+        undoDelete,
         renameConversation,
     } = useConversations();
 
@@ -202,6 +203,17 @@ export default function ChatPage() {
             });
     }, []);
 
+    // Every delete path: gone from view at once, Undo for 5s, then the server delete.
+    const handleDelete = useCallback((id) => {
+        deleteConversation(id);
+        toast((t) => (
+            <span className="cx-toast">
+                Chat deleted
+                <button type="button" onClick={() => { undoDelete(id); toast.dismiss(t.id); }}>Undo</button>
+            </span>
+        ), { duration: 5000 });
+    }, [deleteConversation, undoDelete]);
+
     // --- Keyboard Shortcuts ---
     useEffect(() => {
         const handleKeyboard = (e) => {
@@ -214,15 +226,16 @@ export default function ChatPage() {
                 e.preventDefault();
                 toggleSidebar();
             }
-            if ((e.ctrlKey || e.metaKey) && e.key === 'Backspace' && activeId) {
+            // Not while typing: there Ctrl+Backspace deletes a word.
+            const typing = /^(INPUT|TEXTAREA)$/.test(e.target.tagName);
+            if ((e.ctrlKey || e.metaKey) && e.key === 'Backspace' && activeId && !typing) {
                 e.preventDefault();
-                deleteConversation(activeId);
-                toast('Chat deleted', { duration: 1500 });
+                handleDelete(activeId);
             }
         };
         window.addEventListener('keydown', handleKeyboard);
         return () => window.removeEventListener('keydown', handleKeyboard);
-    }, [activeId, deleteConversation, selectConversation, toggleSidebar]);
+    }, [activeId, handleDelete, selectConversation, toggleSidebar]);
 
     // --- Send Message ---
     const handleSend = useCallback(
@@ -377,24 +390,6 @@ export default function ChatPage() {
                 }}
             />
 
-            {/* Health Banner */}
-            {backendDown && !bannerDismissed && (
-                <div className="health-banner">
-                    <span className="health-banner-icon">⚠️</span>
-                    <span className="health-banner-text">
-                        <strong>Backend unavailable.</strong> The API at{' '}
-                        <code>{API_BASE}</code> isn't responding — it may still be starting up.
-                    </span>
-                    <button
-                        className="health-banner-dismiss"
-                        onClick={() => setBannerDismissed(true)}
-                        title="Dismiss"
-                    >
-                        ×
-                    </button>
-                </div>
-            )}
-
             {/* Upload Progress Overlay */}
             {uploading && (
                 <UploadProgressOverlay
@@ -414,7 +409,7 @@ export default function ChatPage() {
                     activeId={activeId}
                     onSelect={handleSelect}
                     onNewChat={handleNewChat}
-                    onDelete={deleteConversation}
+                    onDelete={handleDelete}
                     onRename={renameConversation}
                     isCollapsed={sidebarCollapsed}
                     onToggleCollapse={toggleSidebar}
@@ -427,6 +422,18 @@ export default function ChatPage() {
 
                 <main className="cx-main">
                     {sidebarCollapsed && <ChatHeader onToggleSidebar={toggleSidebar} />}
+                    {/* A slim row inside the column, so the input never leaves the screen */}
+                    {backendDown && !bannerDismissed && (
+                        <div className="cx-banner" role="status">
+                            <AlertTriangle size={14} aria-hidden="true" />
+                            <span>Can&apos;t reach the server. It may still be starting up.</span>
+                            <button type="button" className="cx-icon-btn is-small" onClick={() => setBannerDismissed(true)}
+                                aria-label="Dismiss">
+                                <X size={12} />
+                            </button>
+                        </div>
+                    )}
+                    <ChatErrorBoundary>
                     {activeConversation && activeConversation.messages.length > 0 ? (
                         <MessageList
                             messages={activeConversation.messages}
@@ -453,6 +460,7 @@ export default function ChatPage() {
                             </p>
                         </div>
                     )}
+                    </ChatErrorBoundary>
                     <ChatInput
                         onSend={handleSend}
                         onUpload={handleUpload}
@@ -464,7 +472,7 @@ export default function ChatPage() {
                     />
                 </main>
 
-                {source && (() => {
+                {source && <ChatErrorBoundary>{(() => {
                     const pane = (
                         <SourcePane item={source.item} pdfUrl={pdfUrlOf(source.item)}
                             onClose={() => closeSource()} titleId="cx-source-title" />
@@ -473,7 +481,7 @@ export default function ChatPage() {
                         ? <SourceSheet titleId="cx-source-title" onClose={() => closeSource()}>{pane}</SourceSheet>
                         : <aside className="cx-source"
                             aria-label={`${sourceLabel(source.item)}, page ${source.item.page_number || 1}`}>{pane}</aside>;
-                })()}
+                })()}</ChatErrorBoundary>}
             </div>
         </div>
     );

@@ -461,6 +461,8 @@
 .cx-side-search input::placeholder { color: var(--cf-mute); }
 .cx-side-search input::-webkit-search-cancel-button { display: none; }
 .cx-side-search:focus-within { border-color: var(--cf-gold-line); }
+.cx-side-search:has(input:focus-visible),
+.cx-input:has(textarea:focus-visible) { outline: 2px solid var(--cf-gold); outline-offset: 2px; }
 
 .cx-side-list { flex: 1; min-height: 0; overflow-y: auto; margin: 0 -4px; padding: 0 4px; }
 .cx-side-empty { margin: 8px 6px; font-size: 13px; color: var(--cf-mute); }
@@ -734,3 +736,44 @@
 @media (prefers-reduced-motion: reduce) {
   .cx-progress-fill { transition: none; }
 }
+
+/* Undo toast */
+.cx-toast { display: inline-flex; align-items: center; gap: 14px; }
+.cx-toast button {
+  padding: 2px 8px;
+  border: 1px solid var(--cf-gold-line);
+  border-radius: var(--cf-r-sm);
+  background: transparent;
+  color: var(--cf-gold);
+  font: 500 13px var(--cf-font-mono);
+  cursor: pointer;
+}
+.cx-toast button:focus-visible { outline: 2px solid var(--cf-gold); outline-offset: 2px; }
+
+/* Server-unreachable banner: a slim row in the column, never pushes the input away */
+.cx-banner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 10px 6px 14px;
+  border-bottom: 1px solid var(--cf-gold-line);
+  background: var(--cf-gold-soft);
+  font-size: 13px;
+  color: var(--cf-ink);
+}
+.cx-banner svg { flex-shrink: 0; color: var(--cf-gold); }
+.cx-banner span { flex: 1; min-width: 0; }
+
+/* Error boundary */
+.cx-crash {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 24px;
+  color: var(--cf-sub);
+  font-size: 14px;
+}
+.cx-crash p { margin: 0; }
