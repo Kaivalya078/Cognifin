@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-11-25T14:42:07",
-  "label": "v3-citations",
+  "generated_at": "2026-11-25T15:04:59",
+  "label": "v3-citations-r2",
   "model": "gpt-4o-mini",
   "judge_model": "gpt-4o-mini",
   "settings": {
@@ -21,19 +21,19 @@
     }
   },
   "answers": {
-    "faithfulness": 0.9593908629441624,
-    "correctness": 0.855,
-    "citation_validity": 0.9948453608247423,
+    "faithfulness": 0.9945945945945946,
+    "correctness": 0.87,
+    "citation_validity": 0.9947643979057592,
     "cited_share": 0.9473684210526315,
-    "fill_only_share": 0.3157894736842105,
-    "filled_marker_share": 0.2879120879120879,
+    "fill_only_share": 0.2,
+    "filled_marker_share": 0.1821705426356589,
     "refusal_accuracy": 1.0,
     "upload_card_rate": 1.0,
     "by_kind": {
       "narrative": {
         "n": 41,
-        "faithfulness": 0.9557522123893806,
-        "correctness": 0.9390243902439024
+        "faithfulness": 1.0,
+        "correctness": 0.9512195121951219
       },
       "numeric": {
         "n": 8,
@@ -47,8 +47,8 @@
       },
       "table": {
         "n": 46,
-        "faithfulness": 0.9620253164556962,
-        "correctness": 0.8043478260869565
+        "faithfulness": 0.9868421052631579,
+        "correctness": 0.8260869565217391
       }
     },
     "errors": 0,
@@ -66,12 +66,12 @@
     "coverage": 0.9306122448979591
   },
   "latency_ms": {
-    "p50": 6259.5,
-    "p95": 8967.35
+    "p50": 5989.5,
+    "p95": 8939.55
   },
   "cost_usd": {
     "per_question": 0.000712,
-    "judge_per_question": 0.000741
+    "judge_per_question": 0.000743
   },
   "index": {
     "chunks": 661560,
