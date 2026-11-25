@@ -15,6 +15,8 @@ Phase: 4 (Intelligent Query Understanding)
 
 from typing import Tuple
 
+from generation.prompt_builder import CITE_REMINDER, CITE_RULE
+
 # =============================================================================
 # SHARED FORMATTING RULES (appended to every intent prompt)
 # =============================================================================
@@ -72,7 +74,7 @@ _INTENT_PROMPTS = {
 GROUNDING RULES:
 1. ONLY answer using the CONTEXT below. Do NOT use external knowledge. Do NOT hallucinate.
 2. Give a direct, precise answer to the specific question asked.
-3. Cite chunk IDs (e.g., chunk_12) that support your answer.
+3. {cite_rule}
 4. If the information is not in the context, say "Not available in the provided documents."
 5. If only partial information is available, answer with what is present and note the limitation.
 """ + _FORMATTING_RULES + """
@@ -89,7 +91,7 @@ GROUNDING RULES:
 4. Table format: | Metric | Entity A | Entity B | Difference | with header separator row.
 5. Use clear sections: "## Overview", "## Data / Details" (with comparison table), "## Key Insights", "## Interpretation".
 6. For each entity, summarize the relevant findings from their respective sections.
-7. Cite chunk IDs (e.g., chunk_12) that support each point.
+7. {cite_rule}
 8. If information for one entity is missing, explicitly state that.
 """ + _FORMATTING_RULES + """
 
@@ -105,7 +107,7 @@ GROUNDING RULES:
 4. Note increases, decreases, and any turning points clearly using **bold** for key numbers.
 5. Present the timeline in chronological order.
 6. If data for some periods is missing, note the gaps.
-7. Cite chunk IDs (e.g., chunk_12) that support your analysis.
+7. {cite_rule}
 """ + _FORMATTING_RULES + """
 
 CONTEXT:
@@ -121,7 +123,7 @@ GROUNDING RULES:
    - Strategic direction or outlook
 3. Use the mandatory output structure: "## Overview", "## Data / Details" (with tables for key metrics), "## Key Insights", "## Interpretation".
 4. Use **bold** for key metrics and numbers.
-5. Cite chunk IDs (e.g., chunk_12) for key claims.
+5. {cite_rule}
 6. If the context is limited, summarize what is available and note gaps.
 """ + _FORMATTING_RULES + """
 
@@ -136,7 +138,7 @@ GROUNDING RULES:
 3. Use evidence from the context to support your explanation.
 4. If multiple factors are involved, list them clearly with **bold** labels.
 5. Distinguish between stated facts and reasonable inferences.
-6. Cite chunk IDs (e.g., chunk_12) that support your reasoning.
+6. {cite_rule}
 """ + _FORMATTING_RULES + """
 
 CONTEXT:
@@ -149,7 +151,7 @@ GROUNDING RULES:
 2. Present your answer as a structured LIST using bullet points with **bold** labels.
 3. Be comprehensive — include ALL relevant items found in the context.
 4. Group similar items together if possible.
-5. Cite the source chunk ID for each item (e.g., chunk_12).
+5. {cite_rule}
 6. If the list may be incomplete, note that.
 """ + _FORMATTING_RULES + """
 
@@ -164,7 +166,7 @@ GROUNDING RULES:
 1. ONLY answer using the CONTEXT provided below. Do NOT use any external knowledge. Do NOT hallucinate.
 2. Answer based on ALL relevant information in the context.
 3. If the context is entirely unrelated, say "Not available in the provided documents."
-4. Cite chunk IDs (e.g., chunk_12) that support your answer.
+4. {cite_rule}
 5. Maintain a professional, analytical tone at all times.
 """ + _FORMATTING_RULES + """
 
@@ -193,5 +195,5 @@ def build_intent_prompt(
         Tuple of (system_prompt, user_message)
     """
     template = _INTENT_PROMPTS.get(intent, _FALLBACK_PROMPT)
-    system_prompt = template.format(context=context)
-    return system_prompt, query
+    system_prompt = template.format(context=context, cite_rule=CITE_RULE)
+    return system_prompt, f"{query}\n\n{CITE_REMINDER}"
