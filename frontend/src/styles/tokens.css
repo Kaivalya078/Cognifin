@@ -7,7 +7,7 @@
   --cf-bg-raised: #0b0c13;
   --cf-ink: #e9e6df;
   --cf-sub: rgba(233, 230, 223, 0.62);
-  --cf-mute: rgba(233, 230, 223, 0.42);
+  --cf-mute: rgba(233, 230, 223, 0.54);  /* ≥ 4.5:1 on --cf-bg at 13 px */
   --cf-line: rgba(233, 230, 223, 0.09);
   --cf-grid: rgba(233, 230, 223, 0.045);
   --cf-gold: #c9a24a;
