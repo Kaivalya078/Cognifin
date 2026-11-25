@@ -18,11 +18,20 @@ import ChatInput from '../components/chat/ChatInput';
 import SourcePane from '../components/chat/SourcePane';
 import { pdfUrlOf, openFiling, isFiling, sourceLabel } from '../utils/sources';
 import { bare } from '../utils/citations';
-import { Sparkles, TrendingUp, BarChart2, Users, DollarSign } from 'lucide-react';
 import { readQuestionParam } from '../utils/landing';
 import '../styles/chat.css';
 import '../styles/api.css';
 import '../styles/chat-v2.css';
+
+// Must match SHOWCASE_QUESTIONS in backend/main.py (pre-answered at startup, so instant).
+const SUGGESTED = [
+    "What was TCS's consolidated revenue from operations in FY2024?",
+    'When did the amalgamation of HDFC Limited with HDFC Bank become effective?',
+    'Which acquisitions did the Infosys board approve in fiscal 2025?',
+    "What was Hindustan Unilever's profit after tax in FY2025?",
+];
+
+const NARROW = '(max-width: 899px)';
 
 // ── Upload progress stages, driven by /upload's stream ──────────
 // Index = position in the list; the server names map onto it.
@@ -44,49 +53,25 @@ function uploadProgress(ev) {
 // ── Upload Progress Overlay component ────────────────────────────
 function UploadProgressOverlay({ fileName, stageIndex, pct, stageLabel, done, error }) {
     return (
-        <div className="upload-overlay">
-            <div className="upload-overlay-card">
-                <div className="upload-overlay-title">
-                    {done ? '✓ Analysis ready' : 'Processing PDF'}
-                </div>
-                <div className="upload-overlay-file">{fileName}</div>
-
+        <div className="cx-overlay" role="status" aria-live="polite">
+            <div className="cx-overlay-card">
+                <p className="cx-overlay-title">{error ? 'Upload failed' : done ? 'Analysis ready' : 'Processing PDF'}</p>
+                <p className="cx-overlay-file">{fileName}</p>
                 {error ? (
-                    <div className="upload-overlay-error">{error}</div>
+                    <p className="cx-overlay-error">{error}</p>
                 ) : (
                     <>
-                        {/* Progress bar */}
-                        <div className="upload-progress-bar-wrap">
-                            <div
-                                className="upload-progress-bar-fill"
-                                style={{ width: `${pct}%` }}
-                            />
+                        <div className="cx-progress" aria-hidden="true">
+                            <div className="cx-progress-fill" style={{ width: `${pct}%` }} />
                         </div>
-                        <div className="upload-progress-pct">{pct}%</div>
-
-                        {/* Stage indicators */}
-                        <div className="upload-stages">
+                        <ol className="cx-stages">
                             {UPLOAD_STAGES.map((s, i) => (
-                                <div
-                                    key={s}
-                                    className={`upload-stage ${
-                                        i < stageIndex ? 'done' :
-                                        i === stageIndex ? 'active' : ''
-                                    }`}
-                                >
-                                    <span className="upload-stage-dot" />
-                                    <span className="upload-stage-label">
-                                        {i === stageIndex && stageLabel ? stageLabel : s}
-                                    </span>
-                                </div>
+                                <li key={s} className={i < stageIndex ? 'is-done' : i === stageIndex ? 'is-active' : ''}>
+                                    {i === stageIndex && stageLabel ? stageLabel : s}
+                                </li>
                             ))}
-                        </div>
-
-                        {done && (
-                            <div className="upload-overlay-done">
-                                Start asking questions about this PDF!
-                            </div>
-                        )}
+                        </ol>
+                        {done && <p className="cx-overlay-done">Ask about this PDF in this chat.</p>}
                     </>
                 )}
             </div>
@@ -138,7 +123,7 @@ export default function ChatPage() {
     const [isLoading, setIsLoading] = useState(false);
     const [streaming, setStreaming] = useState(null); // { stages, text } while answering
     const [showUploadForm, setShowUploadForm] = useState(false);
-    const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+    const [sidebarCollapsed, setSidebarCollapsed] = useState(() => window.matchMedia(NARROW).matches);
     const [backendDown, setBackendDown] = useState(false);
     const [bannerDismissed, setBannerDismissed] = useState(false);
 
@@ -157,7 +142,7 @@ export default function ChatPage() {
     // The cited page open beside the answer: { item, anchor } (anchor gets focus back on close).
     const [source, setSource] = useState(null);
     const listWasCollapsed = useRef(false);
-    const isNarrow = useMediaQuery('(max-width: 899px)');
+    const isNarrow = useMediaQuery(NARROW);
 
     // A ref mirror so these callbacks stay stable (the activeId effect must not re-run on open).
     const sourceRef = useRef(null);
@@ -223,7 +208,7 @@ export default function ChatPage() {
             if ((e.ctrlKey || e.metaKey) && e.key === 'n') {
                 e.preventDefault();
                 selectConversation(null); // same as handleNewChat (defined below)
-                toast('New chat created', { icon: '💬', duration: 1500 });
+                toast('New chat', { duration: 1500 });
             }
             if ((e.ctrlKey || e.metaKey) && e.key === 'b') {
                 e.preventDefault();
@@ -232,7 +217,7 @@ export default function ChatPage() {
             if ((e.ctrlKey || e.metaKey) && e.key === 'Backspace' && activeId) {
                 e.preventDefault();
                 deleteConversation(activeId);
-                toast('Chat deleted', { icon: '🗑️', duration: 1500 });
+                toast('Chat deleted', { duration: 1500 });
             }
         };
         window.addEventListener('keydown', handleKeyboard);
@@ -280,8 +265,8 @@ export default function ChatPage() {
             } catch (err) {
                 const errorMsg = err.message || 'Something went wrong. Is the backend running?';
                 // Anonymous trial used up: offer the way forward, not just an error
-                const signIn = err.status === 429 && !isAuthenticated ? ' [Sign in →](/login)' : '';
-                addMessage(convId, 'assistant', `⚠️ ${errorMsg}${signIn}`, {});
+                const signIn = err.status === 429 && !isAuthenticated ? ' [Sign in](/login) to keep asking.' : '';
+                addMessage(convId, 'assistant', `${errorMsg}${signIn}`, {});
                 toast.error(errorMsg, { duration: 4000 });
             } finally {
                 setIsLoading(false);
@@ -344,7 +329,7 @@ export default function ChatPage() {
                 addMessage(
                     convId,
                     'assistant',
-                    `✅ **${file.name}** has been processed — ${result.chunks} chunks indexed.\n\nYou can now ask questions about this document. It's only available in this chat.`,
+                    `**${file.name}** is ready: ${result.chunks} passages indexed. Ask about it in this chat.`,
                     {}
                 );
 
@@ -367,24 +352,27 @@ export default function ChatPage() {
             delete next[activeId];
             return next;
         });
-        toast('PDF session cleared — back to global corpus', { icon: '🗂️', duration: 2000 });
+        toast('PDF removed from this chat', { duration: 2000 });
     };
 
-    const handleNewChat = () => {
-        selectConversation(null);
-    };
+    // On narrow screens the list is an overlay: picking a chat closes it.
+    const foldIfNarrow = () => { if (window.matchMedia(NARROW).matches) setSidebarCollapsed(true); };
+    const handleNewChat = () => { selectConversation(null); foldIfNarrow(); };
+    const handleSelect = (id) => { selectConversation(id); foldIfNarrow(); };
 
     return (
-        <div className="chat-page">
+        <div className="cx-page">
             <Toaster
                 position="top-center"
                 toastOptions={{
                     style: {
-                        background: '#1a1a2e',
-                        color: '#fff',
-                        border: '1px solid rgba(255,255,255,0.08)',
-                        borderRadius: '12px',
-                        fontSize: '14px',
+                        background: 'var(--cf-glass-strong)',
+                        backdropFilter: 'var(--cf-blur)',
+                        color: 'var(--cf-ink)',
+                        border: '1px solid var(--cf-line)',
+                        borderRadius: 'var(--cf-r-md)',
+                        fontFamily: 'var(--cf-font-mono)',
+                        fontSize: '13px',
                     },
                 }}
             />
@@ -420,11 +408,11 @@ export default function ChatPage() {
             )}
 
             {/* Sidebar + Main row */}
-            <div className="chat-body">
+            <div className="cx-body">
                 <Sidebar
                     conversations={conversations}
                     activeId={activeId}
-                    onSelect={selectConversation}
+                    onSelect={handleSelect}
                     onNewChat={handleNewChat}
                     onDelete={deleteConversation}
                     onRename={renameConversation}
@@ -432,81 +420,48 @@ export default function ChatPage() {
                     onToggleCollapse={toggleSidebar}
                 />
 
-                <main className={`chat-main ${sidebarCollapsed ? 'sidebar-collapsed' : ''}`}>
+                {/* Narrow screens: the open list is an overlay; tapping outside closes it */}
+                {!sidebarCollapsed && isNarrow && (
+                    <button type="button" className="cx-scrim" aria-label="Close chat list" onClick={toggleSidebar} />
+                )}
+
+                <main className="cx-main">
+                    {sidebarCollapsed && <ChatHeader onToggleSidebar={toggleSidebar} />}
                     {activeConversation && activeConversation.messages.length > 0 ? (
-                        <>
-                            <ChatHeader
-                                onToggleSidebar={toggleSidebar}
-                                sidebarCollapsed={sidebarCollapsed}
-                            />
-                            <MessageList
-                                messages={activeConversation.messages}
-                                isLoading={isLoading}
-                                streaming={streaming}
-                                onFollowUp={handleSend}
-                                // A chat that already has a PDF gets no upload card (it would replace that PDF)
-                                onRequestUpload={activeSession ? null : () => setShowUploadForm(true)}
-                                onOpenSource={openSource}
-                                activeSourceId={source ? bare(source.item.chunk_id) : null}
-                            />
-                            <ChatInput
-                                onSend={handleSend}
-                                onUpload={handleUpload}
-                                isLoading={isLoading}
-                                uploadedFile={activeSession?.fileName || null}
-                                onClearUpload={handleClearUpload}
-                                showUploadForm={showUploadForm}
-                                setShowUploadForm={setShowUploadForm}
-                            />
-                        </>
+                        <MessageList
+                            messages={activeConversation.messages}
+                            isLoading={isLoading}
+                            streaming={streaming}
+                            onFollowUp={handleSend}
+                            // A chat that already has a PDF gets no upload card (it would replace that PDF)
+                            onRequestUpload={activeSession ? null : () => setShowUploadForm(true)}
+                            onOpenSource={openSource}
+                            activeSourceId={source ? bare(source.item.chunk_id) : null}
+                        />
                     ) : (
-                        <div className="chat-welcome">
-                            <div className="chat-welcome-content">
-                                <div className="chat-welcome-icon">
-                                    <TrendingUp size={38} />
-                                </div>
-                                <h1>Cognifin</h1>
-                                <p>Your AI-powered financial analyst — trained on NIFTY 50 annual reports. Ask about financials, risk factors, shareholding, and market insights.</p>
-
-                                <div className="chat-welcome-prompts">
-                                    <h3>Suggested questions</h3>
-                                    <div className="chat-prompt-cards">
-                                        {/* Must match SHOWCASE_QUESTIONS in backend/main.py (pre-warmed, instant) */}
-                                        {[
-                                            { icon: <BarChart2 size={15} />, text: 'Compare TCS and Infosys revenue and profit' },
-                                            { icon: <TrendingUp size={15} />, text: 'What are the key risk factors?' },
-                                            { icon: <Users size={15} />, text: 'Who are the promoters and their shareholding?' },
-                                            { icon: <DollarSign size={15} />, text: 'Summarise the financial highlights' },
-                                        ].map(({ icon, text }) => (
-                                            <button
-                                                key={text}
-                                                className="chat-prompt-card"
-                                                onClick={() => handleSend(text)}
-                                            >
-                                                {icon}
-                                                <span>{text}</span>
-                                            </button>
-                                        ))}
-                                    </div>
-                                </div>
-
-                                <div className="chat-shortcuts">
-                                    <span>⌨️ Shortcuts:</span>
-                                    <kbd>Ctrl+N</kbd> New Chat
-                                    <kbd>Ctrl+B</kbd> Toggle Sidebar
-                                </div>
-                            </div>
-                            <ChatInput
-                                onSend={handleSend}
-                                onUpload={handleUpload}
-                                isLoading={isLoading}
-                                uploadedFile={activeSession?.fileName || null}
-                                onClearUpload={handleClearUpload}
-                                showUploadForm={showUploadForm}
-                                setShowUploadForm={setShowUploadForm}
-                            />
+                        <div className="cx-welcome">
+                            <h1 className="cx-welcome-title">Ask about any NIFTY 50 company&apos;s filings.</h1>
+                            <ul className="cx-suggested" aria-label="Suggested questions">
+                                {SUGGESTED.map((text) => (
+                                    <li key={text}>
+                                        <button type="button" className="cx-followup" onClick={() => handleSend(text)}>{text}</button>
+                                    </li>
+                                ))}
+                            </ul>
+                            <p className="cx-shortcuts">
+                                Shortcuts: <kbd>Ctrl+N</kbd> new chat, <kbd>Ctrl+B</kbd> chat list
+                            </p>
                         </div>
                     )}
+                    <ChatInput
+                        onSend={handleSend}
+                        onUpload={handleUpload}
+                        isLoading={isLoading}
+                        uploadedFile={activeSession?.fileName || null}
+                        onClearUpload={handleClearUpload}
+                        showUploadForm={showUploadForm}
+                        setShowUploadForm={setShowUploadForm}
+                    />
                 </main>
 
                 {source && (() => {

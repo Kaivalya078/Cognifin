@@ -1,5 +1,5 @@
 {
- "note": "Throwaway queries for threshold calibration only. Never overlaps tests/golden_set.json. The first four are main.SHOWCASE_QUESTIONS.",
+ "note": "Throwaway queries for threshold calibration only. Never overlaps tests/golden_set.json. The first four were the pre-Phase-6.2 showcase questions.",
  "queries": [
   "Compare TCS and Infosys revenue and profit",
   "What are the key risk factors?",

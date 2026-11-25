@@ -68,139 +68,71 @@ export default function ChatInput({ onSend, onUpload, isLoading, uploadedFile, o
     };
 
     return (
-        <div className="chat-input-area">
-            {/* Active session pill */}
-            {uploadedFile && (
-                <div className="upload-session-pill">
-                    <div className="chat-input-inner">
-                        <div className="upload-session-box">
-                            <Paperclip size={12} />
-                            <span>{uploadedFile} · Session active for this chat</span>
-                            <button
-                                className="upload-session-clear"
-                                onClick={onClearUpload}
-                                title="Remove uploaded PDF (revert to global corpus)"
-                            >
-                                <X size={12} />
+        <div className="cx-input-area">
+            <div className="cx-input-inner">
+                {uploadedFile && (
+                    <div className="cx-pill">
+                        <Paperclip size={12} aria-hidden="true" />
+                        <span>Asking about {uploadedFile} in this chat</span>
+                        <button type="button" className="cx-icon-btn is-small" onClick={onClearUpload}
+                            aria-label="Remove the uploaded PDF from this chat">
+                            <X size={12} />
+                        </button>
+                    </div>
+                )}
+
+                {showUploadForm && (
+                    <div className="cx-upload">
+                        <div className="cx-upload-head">
+                            <span>Upload a PDF for this chat</span>
+                            <button type="button" className="cx-icon-btn is-small" onClick={cancelUploadForm} aria-label="Close upload">
+                                <X size={14} />
                             </button>
                         </div>
-                    </div>
-                </div>
-            )}
-
-            {/* Upload form (inline, above input) */}
-            {showUploadForm && (
-                <div className="upload-form-panel">
-                    <div className="chat-input-inner">
-                        <div className="upload-form-box">
-                            <div className="upload-form-header">
-                                <span>Upload PDF for this chat</span>
-                                <button className="upload-form-close" onClick={cancelUploadForm}>
-                                    <X size={14} />
-                                </button>
+                        <form onSubmit={handleUploadSubmit} className="cx-upload-body">
+                            <button type="button" className={`cx-drop${selectedFile ? ' has-file' : ''}`}
+                                onClick={() => fileInputRef.current?.click()}>
+                                <Upload size={16} aria-hidden="true" />
+                                {selectedFile
+                                    ? <span>{selectedFile.name} ({(selectedFile.size / 1024 / 1024).toFixed(1)} MB)</span>
+                                    : <span>Choose a PDF</span>}
+                            </button>
+                            <input ref={fileInputRef} type="file" accept=".pdf" hidden onChange={handleFileChange} />
+                            <div className="cx-upload-fields">
+                                <input className="cx-field" type="text" placeholder="Company name" aria-label="Company name"
+                                    value={companyName} onChange={(e) => setCompanyName(e.target.value)} required />
+                                <input className="cx-field is-year" type="text" placeholder="Year" aria-label="Year"
+                                    value={year} onChange={(e) => setYear(e.target.value)} maxLength={4} />
                             </div>
-                            <form onSubmit={handleUploadSubmit} className="upload-form-body">
-                                <div
-                                    className={`upload-drop-zone ${selectedFile ? 'has-file' : ''}`}
-                                    onClick={() => fileInputRef.current?.click()}
-                                >
-                                    <input
-                                        ref={fileInputRef}
-                                        type="file"
-                                        accept=".pdf"
-                                        style={{ display: 'none' }}
-                                        onChange={handleFileChange}
-                                    />
-                                    {selectedFile ? (
-                                        <>
-                                            <Upload size={16} />
-                                            <span className="upload-filename">{selectedFile.name}</span>
-                                            <span className="upload-filesize">
-                                                ({(selectedFile.size / 1024 / 1024).toFixed(1)} MB)
-                                            </span>
-                                        </>
-                                    ) : (
-                                        <>
-                                            <Upload size={20} />
-                                            <span>Click to select a PDF</span>
-                                        </>
-                                    )}
-                                </div>
-                                <div className="upload-fields">
-                                    <input
-                                        className="upload-field-input"
-                                        type="text"
-                                        placeholder="Company name *"
-                                        value={companyName}
-                                        onChange={e => setCompanyName(e.target.value)}
-                                        required
-                                    />
-                                    <input
-                                        className="upload-field-input upload-field-year"
-                                        type="text"
-                                        placeholder="Year"
-                                        value={year}
-                                        onChange={e => setYear(e.target.value)}
-                                        maxLength={4}
-                                    />
-                                </div>
-                                <button
-                                    type="submit"
-                                    className="upload-submit-btn"
-                                    disabled={!selectedFile || !companyName.trim()}
-                                >
-                                    <Upload size={14} />
-                                    Start Processing
-                                </button>
-                            </form>
-                        </div>
+                            <button type="submit" className="cx-btn" disabled={!selectedFile || !companyName.trim()}>
+                                Process PDF
+                            </button>
+                        </form>
                     </div>
-                </div>
-            )}
+                )}
 
-            {/* Main input row */}
-            <form className="chat-input-form" onSubmit={handleSubmit}>
-                <div className="chat-input-inner">
-                    <div className="chat-input-wrapper">
-                        {/* Upload trigger */}
-                        <button
-                            type="button"
-                            className={`chat-upload-btn ${uploadedFile ? 'active' : ''}`}
-                            onClick={() => setShowUploadForm(v => !v)}
-                            title={uploadedFile ? 'PDF session active' : 'Upload a PDF for this chat'}
-                            disabled={isLoading}
-                        >
-                            <Paperclip size={16} />
-                        </button>
-
-                        <textarea
-                            ref={textareaRef}
-                            value={question}
-                            onChange={(e) => setQuestion(e.target.value)}
-                            onKeyDown={handleKeyDown}
-                            placeholder={
-                                uploadedFile
-                                    ? `Ask about ${uploadedFile} or the global corpus...`
-                                    : 'Ask about the financial document...'
-                            }
-                            disabled={isLoading}
-                            rows={1}
-                        />
-                        <button
-                            type="submit"
-                            className="chat-send-btn"
-                            disabled={isLoading || !question.trim()}
-                            title="Send message"
-                        >
-                            <Send size={18} />
-                        </button>
-                    </div>
-                    <p className="chat-input-hint">
-                        Press Enter to send · Shift+Enter for new line
-                        {uploadedFile && <span className="hint-session"> · PDF session active</span>}
-                    </p>
-                </div>
-            </form>
+                <form className="cx-input" onSubmit={handleSubmit}>
+                    <button type="button" className={`cx-icon-btn${uploadedFile ? ' is-on' : ''}`}
+                        onClick={() => setShowUploadForm((v) => !v)} disabled={isLoading}
+                        aria-label="Upload a PDF for this chat" aria-expanded={showUploadForm}>
+                        <Paperclip size={16} />
+                    </button>
+                    <textarea
+                        ref={textareaRef}
+                        value={question}
+                        onChange={(e) => setQuestion(e.target.value)}
+                        onKeyDown={handleKeyDown}
+                        placeholder={uploadedFile ? `Ask about ${uploadedFile} or any covered company` : "Ask about a company's filings"}
+                        aria-label="Question"
+                        disabled={isLoading}
+                        rows={1}
+                    />
+                    <button type="submit" className="cx-send" disabled={isLoading || !question.trim()} aria-label="Send">
+                        <Send size={16} />
+                    </button>
+                </form>
+                <p className="cx-input-hint">Enter to send, Shift+Enter for a new line</p>
+            </div>
         </div>
     );
 }

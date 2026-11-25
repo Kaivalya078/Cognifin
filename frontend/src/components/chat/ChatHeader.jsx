@@ -1,32 +1,17 @@
 /**
- * ChatHeader — shows model info only, no title (title lives in sidebar)
+ * ChatHeader — narrow screens only (CSS hides it from 900px up, where the rail does this job):
+ * the menu button that opens the chat list, and the wordmark.
  */
-import { TrendingUp, PanelLeftOpen } from 'lucide-react';
+import { PanelLeftOpen } from 'lucide-react';
+import { Wordmark } from '../landing/Navbar';
 
-export default function ChatHeader({ onToggleSidebar, sidebarCollapsed }) {
+export default function ChatHeader({ onToggleSidebar }) {
     return (
-        <header className="chat-header">
-            {sidebarCollapsed && (
-                <button
-                    className="chat-header-menu"
-                    onClick={onToggleSidebar}
-                    title="Open sidebar"
-                >
-                    <PanelLeftOpen size={20} />
-                </button>
-            )}
-
-            <div className="chat-header-info">
-                <div className="chat-header-model">
-                    <TrendingUp size={11} />
-                    <span>GPT-4o-mini · RAG Pipeline · NIFTY 50 Corpus</span>
-                </div>
-            </div>
-
-            <div className="chat-header-status">
-                <span className="status-dot" />
-                <span>Analyst Ready</span>
-            </div>
+        <header className="cx-header">
+            <button type="button" className="cx-icon-btn" onClick={onToggleSidebar} aria-label="Show chat list">
+                <PanelLeftOpen size={18} />
+            </button>
+            <Wordmark />
         </header>
     );
 }
