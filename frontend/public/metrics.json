@@ -1,0 +1,80 @@
+{
+  "generated_at": "2026-11-25T12:25:25",
+  "label": "v2-baseline",
+  "model": "gpt-4o-mini",
+  "judge_model": "gpt-4o-mini",
+  "settings": {
+    "intelligent_parsing": false,
+    "multi_query": false,
+    "top_k": 5,
+    "final_k": 8
+  },
+  "golden_set": {
+    "version": 2,
+    "cases": 100,
+    "companies": 47,
+    "kinds": {
+      "table": 46,
+      "narrative": 41,
+      "numeric": 8,
+      "refusal": 5
+    }
+  },
+  "answers": {
+    "faithfulness": 0.994413407821229,
+    "correctness": 0.87,
+    "citation_validity": 1.0,
+    "cited_share": 0.021052631578947368,
+    "refusal_accuracy": 1.0,
+    "upload_card_rate": 1.0,
+    "by_kind": {
+      "narrative": {
+        "n": 41,
+        "faithfulness": 0.990990990990991,
+        "correctness": 0.9390243902439024
+      },
+      "numeric": {
+        "n": 8,
+        "faithfulness": 1.0,
+        "correctness": 0.625
+      },
+      "refusal": {
+        "n": 5,
+        "faithfulness": null,
+        "correctness": 1.0
+      },
+      "table": {
+        "n": 46,
+        "faithfulness": 1.0,
+        "correctness": 0.8369565217391305
+      }
+    },
+    "errors": 0,
+    "judge_errors": 0
+  },
+  "retrieval": {
+    "hit@3": 0.7931034482758621,
+    "hit@8": 0.9655172413793104,
+    "mrr": 0.6582649151614669,
+    "recall@60": 0.9770114942528736,
+    "v1_hit@3": 0.775
+  },
+  "financials": {
+    "precision": 1.0,
+    "coverage": 0.9306122448979591
+  },
+  "latency_ms": {
+    "p50": 9266.0,
+    "p95": 15035.3
+  },
+  "cost_usd": {
+    "per_question": 0.000672,
+    "judge_per_question": 0.000708
+  },
+  "index": {
+    "chunks": 661560,
+    "documents": 186,
+    "companies": 47,
+    "disk_mb": 2357.6
+  }
+}
