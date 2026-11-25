@@ -80,7 +80,7 @@ jobs:
       - name: Lint (eslint)
         run: npm run lint
       - name: Unit checks
-        run: node src/utils/sse.check.mjs && node src/utils/refusal.check.mjs
+        run: node src/utils/sse.check.mjs && node src/utils/refusal.check.mjs && node src/utils/metricsFormat.check.mjs
       - name: Build
         run: npm run build
         env:
