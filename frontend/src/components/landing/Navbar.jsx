@@ -1,89 +1,56 @@
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { useState, useEffect } from 'react';
-import { Menu, X, Sparkles } from 'lucide-react';
-import './../../styles/landing.css';
+import { Menu, X } from 'lucide-react';
+import '../../styles/landing-v2.css';
+
+const LINKS = [
+    { label: 'Product', href: '/#product' },
+    { label: 'How it works', href: '/#how' },
+    { label: 'Engineering', to: '/engineering' },
+];
+
+export function Wordmark() {
+    return <span className="cf-wordmark">cognifin<span className="cf-wordmark-dot">.</span></span>;
+}
 
 export default function Navbar() {
-    const [isScrolled, setIsScrolled] = useState(false);
-    const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+    const [open, setOpen] = useState(false);
 
     useEffect(() => {
-        const handleScroll = () => {
-            setIsScrolled(window.scrollY > 20);
-        };
+        if (!open) return undefined;
+        const onKey = (e) => e.key === 'Escape' && setOpen(false);
+        window.addEventListener('keydown', onKey);
+        return () => window.removeEventListener('keydown', onKey);
+    }, [open]);
 
-        window.addEventListener('scroll', handleScroll);
-        return () => window.removeEventListener('scroll', handleScroll);
-    }, []);
-
-    const toggleMobileMenu = () => {
-        setIsMobileMenuOpen(!isMobileMenuOpen);
-    };
+    const close = () => setOpen(false);
+    const item = (l, cls) => (l.to
+        ? <Link key={l.label} to={l.to} className={cls} onClick={close}>{l.label}</Link>
+        : <a key={l.label} href={l.href} className={cls} onClick={close}>{l.label}</a>);
 
     return (
-        <nav className={`landing-nav ${isScrolled ? 'scrolled' : ''}`}>
-            <div className="nav-container">
-                {/* Logo */}
-                <Link to="/" className="nav-logo">
-                    <span className="nav-logo-mark">C</span>
-                    <span className="logo-text">Cognifin</span>
-                </Link>
-
-                {/* Desktop Navigation Links */}
-                <div className="nav-links">
-                    <a href="/#features" className="nav-link">
-                        <span>Features</span>
-                        <div className="nav-link-underline"></div>
-                    </a>
-                    <a href="/#how-it-works" className="nav-link">
-                        <span>How it Works</span>
-                        <div className="nav-link-underline"></div>
-                    </a>
-                    <a href="/#about" className="nav-link">
-                        <span>About</span>
-                        <div className="nav-link-underline"></div>
-                    </a>
-                    <Link to="/engineering" className="nav-link">
-                        <span>Engineering</span>
-                        <div className="nav-link-underline"></div>
-                    </Link>
-                </div>
-
-                {/* CTA Button */}
-                <Link to="/chat" className="nav-cta-btn">
-                    <span>Try for Free</span>
-                    <div className="btn-glow"></div>
-                    <svg className="btn-arrow" width="16" height="16" viewBox="0 0 16 16" fill="none">
-                        <path d="M1 8h14M9 2l6 6-6 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                    </svg>
-                </Link>
-
-                {/* Mobile Menu Button */}
-                <button className="mobile-menu-btn" onClick={toggleMobileMenu} aria-label="Toggle menu">
-                    {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+        <header className="cf-nav">
+            <nav className="cf-nav-inner" aria-label="Main">
+                <Link to="/" className="cf-nav-home" aria-label="Cognifin home" onClick={close}><Wordmark /></Link>
+                <div className="cf-nav-links">{LINKS.map((l) => item(l, 'cf-nav-link'))}</div>
+                <Link to="/chat" className="cf-btn cf-btn-ghost cf-nav-cta">Open app</Link>
+                <button
+                    type="button"
+                    className="cf-nav-menu"
+                    aria-label="Menu"
+                    aria-expanded={open}
+                    aria-controls="cf-nav-sheet"
+                    onClick={() => setOpen((o) => !o)}
+                >
+                    {open ? <X size={20} /> : <Menu size={20} />}
                 </button>
-            </div>
-
-            {/* Mobile Menu */}
-            <div className={`mobile-menu ${isMobileMenuOpen ? 'open' : ''}`}>
-                <div className="mobile-menu-content">
-                    <a href="/#features" className="mobile-nav-link" onClick={toggleMobileMenu}>
-                        Features
-                    </a>
-                    <a href="/#how-it-works" className="mobile-nav-link" onClick={toggleMobileMenu}>
-                        How it Works
-                    </a>
-                    <a href="/#about" className="mobile-nav-link" onClick={toggleMobileMenu}>
-                        About
-                    </a>
-                    <Link to="/engineering" className="mobile-nav-link" onClick={toggleMobileMenu}>
-                        Engineering
-                    </Link>
-                    <Link to="/chat" className="mobile-cta-btn" onClick={toggleMobileMenu}>
-                        Try for Free →
-                    </Link>
+            </nav>
+            {open && (
+                <div id="cf-nav-sheet" className="cf-nav-sheet">
+                    {LINKS.map((l) => item(l, 'cf-nav-sheet-link'))}
+                    <Link to="/chat" className="cf-btn cf-btn-solid" onClick={close}>Open app</Link>
                 </div>
-            </div>
-        </nav>
+            )}
+        </header>
     );
 }

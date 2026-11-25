@@ -1,0 +1,135 @@
+/* Phase 6.1 landing — smoked glass, sibling of kaivalyapatel.dev. Tokens: styles/tokens.css */
+
+/* ── Shared ─────────────────────────────────────────────── */
+.cf-wordmark {
+  font-family: var(--cf-font-mono);
+  font-weight: 500;
+  font-size: 17px;
+  letter-spacing: -0.01em;
+  color: var(--cf-ink);
+}
+
+.cf-wordmark-dot { color: var(--cf-gold); }
+
+.cf-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 16px;
+  border-radius: var(--cf-r-sm);
+  font: 500 14px/1.2 var(--cf-font-sans);
+  text-decoration: none;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+
+.cf-btn-solid { background: var(--cf-ink); color: #0a0b10; }
+.cf-btn-solid:hover { background: #fff; }
+.cf-btn-ghost { color: var(--cf-ink); border-color: var(--cf-gold-line); }
+.cf-btn-ghost:hover { background: var(--cf-gold-soft); }
+
+:where(.cf-nav, .cf-footer, .cf-landing) :is(a, button, input):focus-visible {
+  outline: 2px solid var(--cf-gold);
+  outline-offset: 2px;
+}
+
+/* ── Navbar ─────────────────────────────────────────────── */
+.cf-nav {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  background: var(--cf-glass-strong);
+  backdrop-filter: var(--cf-blur);
+  -webkit-backdrop-filter: var(--cf-blur);
+  border-bottom: 1px solid var(--cf-line);
+}
+
+.cf-nav-inner {
+  max-width: var(--cf-container);
+  margin: 0 auto;
+  height: 60px;
+  padding: 0 48px;
+  display: flex;
+  align-items: center;
+  gap: 32px;
+}
+
+.cf-nav-home { text-decoration: none; margin-right: auto; }
+.cf-nav-links { display: flex; gap: 28px; }
+
+.cf-nav-link {
+  color: var(--cf-sub);
+  font: 400 14px var(--cf-font-sans);
+  text-decoration: none;
+}
+
+.cf-nav-link:hover { color: var(--cf-ink); }
+
+.cf-nav-menu {
+  display: none;
+  background: none;
+  border: 1px solid var(--cf-line);
+  border-radius: var(--cf-r-sm);
+  color: var(--cf-ink);
+  padding: 6px;
+  cursor: pointer;
+}
+
+.cf-nav-sheet {
+  display: none;
+  flex-direction: column;
+  gap: 4px;
+  padding: 12px 20px 20px;
+  border-top: 1px solid var(--cf-line);
+}
+
+.cf-nav-sheet-link {
+  padding: 12px 0;
+  color: var(--cf-ink);
+  font: 400 16px var(--cf-font-sans);
+  text-decoration: none;
+  border-bottom: 1px solid var(--cf-line);
+}
+
+.cf-nav-sheet .cf-btn { margin-top: 12px; justify-content: center; }
+
+@media (max-width: 859px) {
+  .cf-nav-inner { padding: 0 20px; gap: 12px; }
+  .cf-nav-links, .cf-nav-cta { display: none; }
+  .cf-nav-menu { display: inline-flex; }
+  .cf-nav-sheet { display: flex; }
+}
+
+/* ── Footer ─────────────────────────────────────────────── */
+.cf-footer { border-top: 1px solid var(--cf-line); background: var(--cf-bg); }
+
+.cf-footer-inner {
+  max-width: var(--cf-container);
+  margin: 0 auto;
+  padding: 28px 48px;
+  display: flex;
+  align-items: center;
+  gap: 32px;
+  flex-wrap: wrap;
+}
+
+.cf-footer-links { display: flex; gap: 24px; margin-right: auto; }
+
+.cf-footer-links a {
+  color: var(--cf-sub);
+  font: 400 14px var(--cf-font-sans);
+  text-decoration: none;
+}
+
+.cf-footer-links a:hover { color: var(--cf-ink); }
+
+.cf-footer-copy {
+  margin: 0;
+  color: var(--cf-mute);
+  font: 400 13px var(--cf-font-mono);
+}
+
+@media (max-width: 859px) {
+  .cf-footer-inner { padding: 24px 20px; gap: 16px 24px; }
+}
