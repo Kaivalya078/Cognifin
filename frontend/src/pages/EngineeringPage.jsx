@@ -14,6 +14,7 @@ const README_URL =
 const WEAK_SPOTS = [
   'Answers rarely show citation tags: 2% of answered questions carry one, although the claims themselves trace back to the passages.',
   '3 of 8 quarterly-figure questions were refused although the figures are in the financials table.',
+  'About 6 of 100 answers are genuinely wrong: a nearby figure from a different line, or a refusal where the answer exists.',
   'The judge model is about ±1 point noisy on correctness, in both directions.',
 ];
 
@@ -28,7 +29,7 @@ function Results({ m }) {
   const idx = m.index ?? {};
   const tiles = [
     ['Faithfulness', pct(a.faithfulness), 'claims backed by the passages shown'],
-    ['Correct answers', pct(a.correctness), 'vs a hand-checked answer key'],
+    ['Correctness', pct(a.correctness), 'vs the answer key; partial counts ½'],
     ['Retrieval hit@8', pct(r['hit@8']), 'right page in the top 8'],
     ['Latency p50', secs(lat.p50), `p95 ${secs(lat.p95)}`],
   ];
@@ -65,7 +66,8 @@ function Results({ m }) {
           <h2>How it's measured</h2>
           <p>
             {m.golden_set?.cases} questions over {m.golden_set?.companies} companies' annual reports and quarterly
-            filings. Every answer key was checked by hand on the page it comes from.
+            filings. Every answer key was checked against the page it comes from, twice, by an LLM; 10 were
+            also spot-checked by hand.
           </p>
           <p>
             Each question runs through the same pipeline the chat uses: retrieval, reranking, the numeric

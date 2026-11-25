@@ -9,7 +9,9 @@ import './../styles/landing.css';
 export default function LandingPage() {
     // Arriving from another page at /#features etc.: the browser's own anchor jump runs before React renders.
     useEffect(() => {
-        if (window.location.hash) document.querySelector(window.location.hash)?.scrollIntoView();
+        // getElementById, not querySelector: a hash like #1abc is an invalid selector and would throw.
+        const id = decodeURIComponent(window.location.hash.slice(1));
+        if (id) document.getElementById(id)?.scrollIntoView();
     }, []);
 
     return (
