@@ -12,7 +12,13 @@ def test_block_and_ids(fin_db):
     assert list(p.ids) == ["fin_1", "fin_2", "fin_3"]
     assert p.block.startswith("VERIFIED FIGURES")
     assert "authoritative" in p.block and "not in verified table: ACME" in p.block
-    assert "[fin_1] TCS | net_profit | Q1 FY26 | consolidated |" in p.block
+    assert "[fin_1] TCS | net_profit | Q1 FY26 (quarter ended 30 Jun 2025) | consolidated |" in p.block
+
+
+def test_block_says_conflicting_chunk_figures_lose(fin_db):
+    """v4 eval: the model took a report's 'operating revenue' over the verified row."""
+    p = prepare("TCS net profit", ["TCS"], [], db=fin_db)
+    assert "differ" in p.block and "use the verified figure" in p.block
 
 
 def test_evidence_items(fin_db):
@@ -84,3 +90,12 @@ def test_mixed_bases_label_every_series_and_title_uses_requested_metric(fin_db):
 def test_single_basis_names_unchanged(fin_db):
     c = build_chart(prepare("TCS net profit", ["TCS"], [], db=fin_db))
     assert c["series"][0]["name"] == "TCS" and c["mixed_basis"] is False and c["title"] == "Net profit"
+
+
+def test_reminder_repeats_rows_next_to_the_question(fin_db):
+    """v4 eval: rows only at the top of the system prompt lost to a nearer chunk figure."""
+    from financials.present import reminder
+    p = prepare("TCS net profit", ["TCS"], [], db=fin_db)
+    r = reminder(p)
+    assert all(f"[{fid}]" in r for fid in p.ids) and "use these exact figures" in r
+    assert reminder(None) == ""

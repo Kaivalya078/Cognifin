@@ -3,7 +3,8 @@
  "changelog": [
   "2026-11-16 recheck: mm-2025-tractors answer_pages [25] -> [15,25,48,77,81] (figure also stated on pages 15, 48, 77, 81).",
   "2026-11-24 v2: +60 cases (27 previously uncovered companies, FY2026, numeric kind = financials-table figures with no answer page, refusal kind = key is the refusal sentence). v1's 40 cases unchanged.",
-  "2026-11-26 v3: +19 NIFTY Next 50 cases (8 table incl. HINDZINC FY2024 from the FY2025 report's prior-year column, 6 narrative, 3 numeric, 2 refusal; near-duplicate names BAJAJHLDNG, ADANIGREEN, TATAPOWER, ENRIN, SIEMENS). v2's 100 cases unchanged; user spot-checked 10."
+  "2026-11-26 v3: +19 NIFTY Next 50 cases (8 table incl. HINDZINC FY2024 from the FY2025 report's prior-year column, 6 narrative, 3 numeric, 2 refusal; near-duplicate names BAJAJHLDNG, ADANIGREEN, TATAPOWER, ENRIN, SIEMENS). v2's 100 cases unchanged; user spot-checked 10.",
+  "2026-11-26 v3 wording: hal-2026-revenue key written in crore (lakh as the printed form) and dmart-2026-stores key drops the FY2025 aside; the v4 judge misread both. Figures unchanged."
  ],
  "cases": [
   {
@@ -2054,7 +2055,7 @@
     183,
     227
    ],
-   "answer": "₹33,08,979 lakh (about ₹33,090 crore)",
+   "answer": "₹33,089.79 crore (printed as ₹33,08,979 lakh)",
    "kind": "table",
    "checked_by": [
     "claude",
@@ -2193,7 +2194,7 @@
     44,
     121
    ],
-   "answer": "500 stores (415 at the end of FY2025)",
+   "answer": "500 stores at the end of FY2026",
    "kind": "narrative",
    "checked_by": [
     "claude",

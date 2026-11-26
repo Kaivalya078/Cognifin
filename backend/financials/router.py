@@ -138,10 +138,13 @@ def _select(rows: list[Row], spec: PeriodSpec) -> list[Row]:
     return rows[-spec.last_n:] if spec.last_n else rows
 
 
+_PART = re.compile(r"\b(?:segments?|divisions?|verticals?)\b", re.I)
+
+
 def route(question: str, companies: list[str], years: list[str], db: str = DEFAULT_DB) -> "Lookup | None":
     metrics = detect_metrics(question)
-    if not metrics or not companies:
-        return None
+    if not metrics or not companies or _PART.search(question):
+        return None   # the table holds company totals only; a segment's figure comes from RAG
     spec = parse_periods(question, years)
     q = question.lower()
     bases = (["standalone"] if "standalone" in q else ["consolidated"] if "consolidated" in q

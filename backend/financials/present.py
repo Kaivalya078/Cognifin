@@ -8,7 +8,10 @@ from financials.router import Lookup, Series, route
 
 _HEADER = ("VERIFIED FIGURES (from company filings; these are authoritative — use these numbers exactly, "
            "prefer them over chunk text for the same metric and period. Every sentence or table row that "
-           "uses one of these figures MUST cite it, e.g. [fin_3]):")
+           "uses one of these figures MUST cite it, e.g. [fin_3]. If a chunk gives a figure that "
+           "differs for the same metric and period (e.g. 'operating revenue' in a report's narrative), "
+           "use the verified figure. Each period shows its end date: match the question's "
+           "'quarter ended <month>' or fiscal year to it):")
 _DISPLAY = {"INR": ("₹ crore", 1e7), "pct": ("%", 1), "ratio": ("×", 1), "INR_per_share": ("₹ per share", 1)}
 
 
@@ -25,6 +28,12 @@ def fmt_value(value: float, unit: str) -> str:
 def period_label(row: Row) -> str:
     fy = f"FY{row.fiscal_year % 100:02d}"
     return fy if row.period_type == "FY" else f"Q{row.fiscal_quarter} {fy}"
+
+
+def _period_text(row: Row) -> str:
+    """'Q2 FY26 (quarter ended 30 Sep 2025)': the model can't map calendar months to FY quarters."""
+    kind = "year" if row.period_type == "FY" else "quarter"
+    return f"{period_label(row)} ({kind} ended {row.period_end.day} {row.period_end:%b %Y})"
 
 
 def _source(row: Row) -> str:
@@ -61,7 +70,7 @@ def prepare(question: str, companies: list[str], years: list[str], db: str = DEF
     for s in lookup.series:
         for r in s.rows:
             ids[f"fin_{len(ids) + 1}"] = (s, r)
-    lines = {fid: f"[{fid}] {s.company} | {r.metric} | {period_label(r)} | {s.basis} | "
+    lines = {fid: f"[{fid}] {s.company} | {r.metric} | {_period_text(r)} | {s.basis} | "
                   f"{fmt_value(r.value, r.unit)} | {_source(r)}" for fid, (s, r) in ids.items()}
     notes = [f"not in verified table: {c}" for c in lookup.missing]
     if _mixed_basis(lookup.series):
@@ -72,6 +81,16 @@ def prepare(question: str, companies: list[str], years: list[str], db: str = DEF
                  "document_label": f"{s.company} results {period_label(r)}", "pdf_url": r.source_url}
                 for fid, (s, r) in ids.items()]
     return Prepared(lookup, ids, block, evidence)
+
+
+def reminder(prep: "Prepared | None") -> str:
+    """The verified rows again, for the user message: at the top of a long system prompt
+    gpt-4o-mini let a nearer chunk figure win (v4 eval: TATAPOWER, BAJAJHLDNG)."""
+    if prep is None:
+        return ""
+    rows = [line for line in prep.block.splitlines() if line.startswith("[fin_")]
+    return ("\n\nVerified figures for this question (use these exact figures over any chunk "
+            "figure for the same metric and period, and cite them):\n" + "\n".join(rows))
 
 
 def _mixed_basis(series: list[Series]) -> bool:

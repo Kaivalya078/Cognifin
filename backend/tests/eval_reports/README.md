@@ -116,6 +116,23 @@ Chart values not equal to the DB: 0 of 50 points. Unmatched answer numbers: 1.
   - Wrong figure from the report: `hindzinc-2024-revenue` (₹34,158 cr for FY2024's ₹28,932 cr; no router hit, prior-year question).
 - Spend: one full run, about $0.17; Phase 5.5 total about $0.30 of the $0.60 cap.
 
+### v4 fixes (published)
+
+| Run | Faithfulness | Correctness | Citation validity | Cited share | Refusal acc. | v2 cases correctness | Next 50 correctness |
+|---|---|---|---|---|---|---|---|
+| v4-nifty100 | 0.978 | 0.832 | 0.995 | 0.94 | 1.00 | 0.855 | 0.711 |
+| **v4-nifty100-fixes** (`20261126-1040-v4-nifty100-fixes-answers.json`) | **0.991** | **0.912** | 0.991 | 0.98 | 1.00 | **0.915** | **0.895** |
+
+Retrieval unchanged (hit@3 0.743, v2 cases 0.793). 0 cross-company citations of 191.
+
+- **Quarter refusals** (TVSMOTOR, HYUNDAI, and v2's HCLTECH, KOTAKBANK, BEL, open since 5.3): the verified row said "Q2 FY26" and the question "quarter ended September 2025"; gpt-4o-mini can't map months to Indian fiscal quarters, so March passed and September always refused. Each row now carries its end date ("Q2 FY26 (quarter ended 30 Sep 2025)"). Numeric correctness 0.545 → 0.909.
+- **Report figure over the verified row** (TATAPOWER "operating revenue ₹63,681 cr"; BAJAJHLDNG ₹6,520.67 cr, the owners' share its own highlights call "profit for the year"): the rows sat only at the top of a long system prompt. They are now repeated after the question in the user message. A header sentence alone didn't fix it (subset run).
+- **Segment questions** routed to company totals (ITC "cigarettes segment" got company revenue): the router now declines questions naming a segment, division or vertical.
+- **Mismatch warning hidden**: the "didn't match the verified table" note only rendered inside a chart, so single-figure answers never showed it. It now shows without a chart.
+- **Key wording** (`hal-2026-revenue` in crore, `dmart-2026-stores` without the FY2025 aside): the judge misread both; figures unchanged.
+- **Still wrong, model reading:** `hindzinc-2024-revenue` (takes the FY2025 column of a two-year table). Judge noise this run: `hyundai-q2fy26-revenue` (₹17,460.8 cr for ₹17,460.82 cr marked no; passed in the subset run).
+- Spend: two subset runs (~$0.06) + this full run (~$0.17); Phase 5.5 total about $0.53 of the $0.60 cap.
+
 By kind, correctness: narrative 0.939, table 0.837, numeric 0.625, refusal 1.000. Retrieval over the 87 page-scored cases; v1's 40 alone: hit@3 0.775 (same as the 186-doc report from 2026-11-16).
 
 **Read with care.**

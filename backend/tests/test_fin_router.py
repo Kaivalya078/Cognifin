@@ -102,3 +102,11 @@ def test_zero_rows_are_not_figures(tmp_path):
              [], [])
     s = route("HDFCBANK gross NPA", ["HDFCBANK"], [], db=p).series[0]
     assert s.basis == "standalone" and [r.value for r in s.rows] == [1.24]
+
+
+def test_segment_questions_are_not_company_totals(fin_db):
+    """v4 eval: ITC 'cigarettes segment' revenue was routed to company revenue."""
+    from financials.router import route
+    assert route("TCS revenue from the BFSI segment in FY26", ["TCS"], [], db=fin_db) is None
+    assert route("TCS net profit of its consumer division", ["TCS"], [], db=fin_db) is None
+    assert route("TCS net profit trend", ["TCS"], [], db=fin_db) is not None

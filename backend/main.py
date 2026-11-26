@@ -65,7 +65,7 @@ from core.retriever_pipeline import RetrieverPipeline
 
 # Auth + Database
 from db import ensure_indexes, users_collection
-from financials.present import assistant_metadata, finish
+from financials.present import assistant_metadata, finish, reminder
 from financials.present import prepare as prepare_figures
 from generation.citation_fill import fill_figure_citations
 from generation.intent_prompts import build_intent_prompt
@@ -912,6 +912,7 @@ def answer_events(question: str, session_id: Optional[str] = None,
         system_prompt, user_message = build_intent_prompt(context, question, prompt_intent)
     else:
         system_prompt, user_message = build_prompt(context, question)
+    user_message += reminder(fin)
     print(f"🤖 Generating answer with {llm_client.model}...")
     raw = []
 

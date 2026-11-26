@@ -119,6 +119,13 @@ function Answer({ message, onFollowUp, onRequestUpload, isLoading, onOpenSource,
             )}
 
             {pipeline.chart && <FinancialChart chart={pipeline.chart} numbersCheck={pipeline.numbers_check} />}
+            {/* Single-figure answers have no chart; the mismatch warning must still show. */}
+            {!pipeline.chart && pipeline.numbers_check?.unmatched?.length > 0 && (
+                <div className="cx-chart-note is-warn">
+                    {pipeline.numbers_check.unmatched.length} number{pipeline.numbers_check.unmatched.length > 1 ? 's' : ''} in
+                    this answer didn&apos;t match the verified table: {pipeline.numbers_check.unmatched.join(', ')}
+                </div>
+            )}
 
             {groups.length > 0 && (
                 <p className="cx-sources">
