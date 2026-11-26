@@ -7,6 +7,11 @@ services:
     environment:
       ASSET_MODE: remote
       INDEX_CACHE_DIR: /data/index_cache
+      # 1 GB VM (measured: ~0.5 GB app memory, ~0.6 GB with one large upload held).
+      # One upload session at a time: a new upload ends the previous one.
+      SESSION_MAX: ${SESSION_MAX:-1}
+    # Restart the API instead of letting it push the whole VM into swap. Tune on the VM.
+    mem_limit: ${API_MEM_LIMIT:-750m}
     volumes:
       - index:/data            # index downloaded once, survives restarts
     restart: unless-stopped

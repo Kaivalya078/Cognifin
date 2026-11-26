@@ -13,9 +13,22 @@ from dataclasses import dataclass
 from typing import Dict, List
 
 import numpy as np
-from sentence_transformers import SentenceTransformer
 
 from config import settings
+
+
+def SentenceTransformer(model_name: str):
+    """Lazy: the ONNX server has no PyTorch / sentence-transformers installed."""
+    from sentence_transformers import SentenceTransformer as _ST
+    return _ST(model_name)
+
+
+def _load_embedder(model_name: str):
+    if settings.MODEL_BACKEND == "onnx":
+        from core.onnx_models import OnnxEmbedder
+        return OnnxEmbedder.from_dir(f"{settings.ONNX_DIR}/embedder", int8=settings.ONNX_INT8,
+                                     threads=settings.ONNX_THREADS)
+    return SentenceTransformer(model_name)
 
 NORMALIZATION_VERSION = "2"       # bump when normalize_text() logic changes
 METADATA_SCHEMA_VERSION = "1"     # bump when ChunkMetadata fields change
@@ -64,7 +77,7 @@ class RetrieverPipeline:
         model_name = model_name or settings.EMBEDDING_MODEL
         if model_name not in _MODELS:
             print(f"🤖 Loading embedding model: {model_name}")
-            _MODELS[model_name] = SentenceTransformer(model_name)
+            _MODELS[model_name] = _load_embedder(model_name)
         self.model = _MODELS[model_name]
         self.embedding_dim = self.model.get_sentence_embedding_dimension()
 

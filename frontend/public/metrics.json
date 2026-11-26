@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-11-26T10:40:32",
-  "label": "v4-nifty100-fixes",
+  "generated_at": "2026-11-26T15:25:44",
+  "label": "v6-onnx-int8",
   "model": "gpt-4o-mini",
   "judge_model": "gpt-4o-mini",
   "settings": {
@@ -14,69 +14,69 @@
     "cases": 119,
     "companies": 64,
     "kinds": {
-      "table": 54,
+      "table": 53,
       "narrative": 47,
       "numeric": 11,
-      "refusal": 7
+      "refusal": 8
     }
   },
   "answers": {
-    "faithfulness": 0.9909502262443439,
-    "correctness": 0.9117647058823529,
-    "citation_validity": 0.9906976744186047,
-    "cited_share": 0.9819819819819819,
-    "fill_only_share": 0.22522522522522523,
-    "filled_marker_share": 0.15807560137457044,
+    "faithfulness": 1.0,
+    "correctness": 0.907563025210084,
+    "citation_validity": 1.0,
+    "cited_share": 1.0,
+    "fill_only_share": 0.2018348623853211,
+    "filled_marker_share": 0.13321492007104796,
     "refusal_accuracy": 1.0,
     "upload_card_rate": 1.0,
     "by_kind": {
       "narrative": {
         "n": 47,
         "faithfulness": 1.0,
-        "correctness": 0.9680851063829787
+        "correctness": 0.9574468085106383
       },
       "numeric": {
         "n": 11,
-        "faithfulness": 0.8571428571428571,
-        "correctness": 0.9090909090909091
+        "faithfulness": 1.0,
+        "correctness": 1.0
       },
       "refusal": {
-        "n": 7,
+        "n": 8,
         "faithfulness": null,
         "correctness": 1.0
       },
       "table": {
-        "n": 54,
+        "n": 53,
         "faithfulness": 1.0,
-        "correctness": 0.8518518518518519
+        "correctness": 0.8301886792452831
       }
     },
     "errors": 0,
-    "judge_errors": 1
+    "judge_errors": 2
   },
   "retrieval": {
-    "hit@3": 0.7425742574257426,
-    "hit@8": 0.9306930693069307,
-    "mrr": 0.6335337105139085,
-    "recall@60": 0.9702970297029703,
-    "v1_hit@3": 0.775
+    "hit@3": 0.76,
+    "hit@8": 0.93,
+    "mrr": 0.621702380952381,
+    "recall@60": 0.97,
+    "v1_hit@3": 0.825
   },
   "financials": {
     "precision": 1.0,
     "coverage": 0.9389067524115756
   },
   "latency_ms": {
-    "p50": 6111,
-    "p95": 8532.0
+    "p50": 4651,
+    "p95": 9252.0
   },
   "cost_usd": {
-    "per_question": 0.000712,
-    "judge_per_question": 0.000745
+    "per_question": 0.000718,
+    "judge_per_question": 0.000756
   },
   "index": {
     "chunks": 991331,
     "documents": 289,
     "companies": 100,
-    "disk_mb": 3576.4
+    "disk_mb": 3905.7
   }
 }

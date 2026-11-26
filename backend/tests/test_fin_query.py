@@ -48,3 +48,14 @@ def test_available(db):
         "eps_basic": ["2025-09-30"],
         "net_profit": ["2025-06-30", "2025-09-30", "2025-12-31", "2026-03-31"],
     }
+
+
+def test_default_db_follows_index_cache_dir(tmp_path):
+    """Docker sets INDEX_CACHE_DIR=/data/index_cache; the table must be read from there."""
+    import os
+    import subprocess
+    import sys
+    env = {**os.environ, "INDEX_CACHE_DIR": str(tmp_path)}
+    out = subprocess.run([sys.executable, "-c", "from financials.query import DEFAULT_DB; print(DEFAULT_DB)"],
+                         cwd=os.path.dirname(os.path.dirname(__file__)), env=env, capture_output=True, text=True)
+    assert out.stdout.strip() == str(tmp_path / "financials.duckdb"), out.stderr

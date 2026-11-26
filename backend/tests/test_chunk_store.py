@@ -33,7 +33,7 @@ def store(tmp_path):
     s.add(c, m, _vecs(3, 1))
     c, m = _doc("INFY", "2024", ["Infosys revenue grew", "Infosys attrition", "Infosys deals"], 3)
     s.add(c, m, _vecs(3, 2))
-    s.build_text_index()
+    s.build_indexes()
     return s
 
 
@@ -173,7 +173,7 @@ def test_enrich_skips_results_from_other_corpora(corpus):
 
 
 def test_keyword_search_respects_scope(corpus):
-    corpus.store.build_text_index()
+    corpus.store.build_indexes()
     hits = corpus.search_text([RetrievalScope(label="t", companies=["TCS"])], "231456", k=10)
     assert hits and {r.document_label for r in hits} == {"TCS_Annual_Report_2024_v1"}
     assert all(r.page_number == 2 for r in hits)
@@ -181,7 +181,7 @@ def test_keyword_search_respects_scope(corpus):
 
 def test_orchestrator_keyword_hits_respect_scope(corpus, monkeypatch):
     from query.query_orchestrator import retrieve_context
-    corpus.store.build_text_index()
+    corpus.store.build_indexes()
     monkeypatch.setattr(corpus, "search", lambda scope, vec: [])   # keyword results only
     merged, parsed = retrieve_context("INFY revenue 231456 in 2024", corpus_manager=corpus,
                                       embed_query=corpus.retriever.embed_query)
@@ -237,7 +237,7 @@ def test_scope_with_unindexed_year_falls_back_to_company(corpus):
     scope = RetrievalScope(label="t", companies=["TCS"], years=["2019"], doc_types=["DRHP"])
     res = corpus.search(scope, vec)
     assert res and {r.document_label for r in res} == {"TCS_Annual_Report_2024_v1"}
-    corpus.store.build_text_index()
+    corpus.store.build_indexes()
     kw = corpus.search_text([scope], "revenue", 10)
     assert kw and {r.document_label for r in kw} == {"TCS_Annual_Report_2024_v1"}
 
@@ -269,3 +269,31 @@ def test_new_session_cannot_see_earlier_sessions(tmp_path):
     assert first.store.path != second.store.path
     vec = p.embed_query("revenue")
     assert second.search(RetrievalScope(label="t"), vec) == []
+
+
+def test_build_indexes_adds_exact_scalar_indexes(store):
+    """1 GB target: neighbour lookups and scope filters must not scan the table."""
+    names = {i.name for i in store.table.list_indices()}
+    for col in ("vector_id", "chunk_seq", "document_label", "company", "year", "document_type", "is_active"):
+        assert f"{col}_idx" in names, (col, names)
+    assert [r["chunk_seq"] for r in store.neighbors("TCS_Annual_Report_2024_v1", 1, 1)] == [0, 1, 2]
+    assert store.get(4)["company"] == "INFY"
+
+
+def test_company_scoped_search_stays_exact_and_unscoped_uses_the_vector_index(tmp_path, monkeypatch):
+    """1 GB target: an unscoped brute-force scan over ~1M vectors was OOM-killed at 600 MB;
+    company-scoped searches must keep their exact (pre-index) results."""
+    s = ChunkStore(str(tmp_path / "db"), DIM)
+    c, m = _doc("TCS", "2024", [f"tcs {i}" for i in range(300)], 0)
+    s.add(c, m, _vecs(300, 1))
+    c, m = _doc("INFY", "2024", [f"infy {i}" for i in range(300)], 300)
+    s.add(c, m, _vecs(300, 2))
+    q = _vecs(1, 9)[0]
+    exact_scoped = [r["vector_id"] for _, r in s.search_dense(q, 10, "company IN ('TCS')")]
+    exact_all = [r["vector_id"] for _, r in s.search_dense(q, 10, None)]
+    monkeypatch.setattr("core.chunk_store.VECTOR_INDEX_PARTITIONS", 4)
+    monkeypatch.setattr("core.chunk_store.VECTOR_INDEX_SUBVECTORS", 2)
+    s.build_indexes()
+    assert "vector_idx" in {i.name for i in s.table.list_indices()}
+    assert [r["vector_id"] for _, r in s.search_dense(q, 10, "company IN ('TCS')")] == exact_scoped
+    assert len(s.search_dense(q, 10, None)) == 10 and exact_all   # approximate, but answers

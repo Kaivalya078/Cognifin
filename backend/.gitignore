@@ -76,3 +76,6 @@ test_run1.json
 .pytest_cache/
 
 # Model cache (sentence-transformers caches in ~/.cache/huggingface/)
+
+# ONNX exports (ingestion/export_onnx.py); the Docker build makes its own
+models_onnx/
