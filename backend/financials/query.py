@@ -6,7 +6,12 @@ from pathlib import Path
 
 import duckdb
 
-DEFAULT_DB = str(Path(__file__).resolve().parents[1] / "index_cache" / "financials.duckdb")
+from config import settings  # noqa: E402
+
+# Follows INDEX_CACHE_DIR (Docker: /data/index_cache); a relative value is under backend/.
+_CACHE = Path(settings.INDEX_CACHE_DIR)
+DEFAULT_DB = str((_CACHE if _CACHE.is_absolute() else Path(__file__).resolve().parents[1] / _CACHE)
+                 / "financials.duckdb")
 _COLS = ["company", "basis", "period_type", "period_end", "fiscal_year", "fiscal_quarter",
          "metric", "value", "unit", "source_url", "source_file", "page", "method"]
 
