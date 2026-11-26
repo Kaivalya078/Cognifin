@@ -439,3 +439,11 @@ def test_session_is_usable_only_by_its_uploader(app_ready, monkeypatch, path):
     main.response_cache.set("Revenue?", {"answer": "a", "citations": [], "evidence": [],
                                          "metadata": {}, "follow_ups": []}, "s1")
     assert client.post(path, json=body, headers=_auth("alice")).status_code == 200
+
+
+def test_prompts_refuse_off_topic_tasks():
+    """A public chat on our API key: poems, code and general chat get the refusal sentence."""
+    from generation.intent_prompts import build_intent_prompt
+    from generation.prompt_builder import build_prompt
+    for system, _ in (build_prompt("ctx", "q"), build_intent_prompt("ctx", "q", "trend")):
+        assert "Indian listed companies" in system and "Not available in the provided documents." in system
