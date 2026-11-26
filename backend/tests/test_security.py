@@ -446,4 +446,18 @@ def test_prompts_refuse_off_topic_tasks():
     from generation.intent_prompts import build_intent_prompt
     from generation.prompt_builder import build_prompt
     for system, _ in (build_prompt("ctx", "q"), build_intent_prompt("ctx", "q", "trend")):
-        assert "Indian listed companies" in system and "Not available in the provided documents." in system
+        assert "poems" in system and "code" in system and "Not available in the provided documents." in system
+
+
+def test_scope_allows_uploaded_documents_of_any_company():
+    """Review: an uploaded foreign/unlisted company's report must not be refused as off-topic."""
+    from generation.prompt_builder import DATA_NOTE
+    assert "uploaded documents" in DATA_NOTE.split("SCOPE:", 1)[1].split(".")[0]
+
+
+def test_vi_is_not_vodafone_idea():
+    """Review: the bare alias 'Vi' matched 'Schedule VI' (wrong-company scoping)."""
+    from query.query_understanding import detect_companies
+    companies, _ = detect_companies("What does Schedule VI of the Companies Act require?", ["IDEA", "TCS"])
+    assert companies == []
+    assert detect_companies("Vodafone Idea subscriber count", ["IDEA"])[0] == ["IDEA"]

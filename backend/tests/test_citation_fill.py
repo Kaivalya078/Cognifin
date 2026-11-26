@@ -107,3 +107,8 @@ def test_unknown_ids_are_dropped_so_the_fill_can_recite():
     text = "PAT was ₹472 crore [chunk_250].\n| PAT | ₹472 crore [chunk_7][chunk_250] |\nSee [fin_1]."
     assert drop_unknown_ids(text, ["chunk_7", "[expanded]chunk_8", "fin_1"]) == \
         "PAT was ₹472 crore.\n| PAT | ₹472 crore [chunk_7] |\nSee [fin_1]."
+
+
+def test_dropping_an_id_keeps_paragraph_breaks():
+    from generation.citation_fill import drop_unknown_ids
+    assert drop_unknown_ids("Revenue rose.\n\n[chunk_99] Next part.", ["chunk_1"]) == "Revenue rose.\n\n Next part."

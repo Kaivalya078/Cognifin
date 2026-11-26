@@ -66,7 +66,7 @@ def _cite(unit: str, items: list[tuple[str, list]]) -> tuple[str, list[str]]:
     return f"{body} {marks}{tail}", ids
 
 
-_MARK = re.compile(r"\s*\[((?:chunk|fin)_\d+)\]")
+_MARK = re.compile(r"[ \t]*\[((?:chunk|fin)_\d+)\]")
 
 
 def drop_unknown_ids(answer: str, chunk_ids: list[str]) -> str:

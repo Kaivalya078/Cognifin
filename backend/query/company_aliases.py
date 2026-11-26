@@ -82,7 +82,7 @@ COMPANY_ALIASES = {
     "HDFCAMC": ["HDFC Asset Management", "HDFC AMC"],
     "HINDZINC": ["Hindustan Zinc"],
     "HYUNDAI": ["Hyundai Motor India", "Hyundai India", "Hyundai"],
-    "IDEA": ["Vodafone Idea", "Vi"],
+    "IDEA": ["Vodafone Idea"],   # not "Vi": matches "Schedule VI"
     "IOC": ["Indian Oil Corporation", "Indian Oil", "IndianOil"],
     "IRFC": ["Indian Railway Finance Corporation", "Indian Railway Finance"],
     "JINDALSTEL": ["Jindal Steel and Power", "Jindal Steel"],
