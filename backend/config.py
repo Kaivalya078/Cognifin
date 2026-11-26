@@ -37,6 +37,13 @@ class Settings(BaseSettings):
     EMBEDDING_MODEL: str = "BAAI/bge-base-en-v1.5"
     QUERY_INSTRUCTION: str = "Represent this sentence for searching relevant passages:"
 
+    # Model runtime: "torch" (sentence-transformers; local GPU ingestion) or "onnx"
+    # (onnxruntime + tokenizers, no PyTorch: the 1 GB server). See ingestion/export_onnx.py.
+    MODEL_BACKEND: str = "torch"
+    ONNX_DIR: str = "models_onnx"
+    ONNX_INT8: bool = False          # int8 weights: ~4x less memory; check retrieval before enabling
+    ONNX_THREADS: int = 0            # 0 = one per core ONNX Runtime sees (pin it when a container is CPU-capped)
+
     # Retrieval
     RETRIEVAL_K: int = 60
     FINAL_K: int = 8

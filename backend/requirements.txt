@@ -1,50 +1,15 @@
-# FinSight AI - Phase 1 + Phase 2 + Phase 3 Dependencies
-# Install with: pip install -r requirements.txt
+# Everything for local development, ingestion, tests and the ONNX export.
+# Install with: pip install -r requirements.txt   (the API image uses requirements-runtime.txt)
+-r requirements-runtime.txt
 
-# Web Framework
-fastapi>=0.104.0,<0.129  # streaming disconnects verified on 0.128 + uvicorn 0.40 (ASGI 2.3)
-uvicorn>=0.40.0,<0.41  # re-check closed-tab handling of /chat/stream before bumping
-
-# PDF Processing
-pymupdf>=1.23.0
-
-# Embeddings
+# Embeddings on PyTorch (GPU ingestion, MODEL_BACKEND=torch) and the ONNX export
 sentence-transformers>=2.2.0
+transformers>=4.41,<5   # the ONNX export was verified on 4.57
+onnx>=1.17
 
-# LLM Generation (Phase 2)
-openai>=1.0.0
-
-
-# Configuration
-pydantic-settings>=2.0.0
-python-multipart
-
-# Auth + Database
-pymongo>=4.6.0
-bcrypt>=4.1.0
-python-jose[cryptography]>=3.3.0
-email-validator>=2.1.0
-
-# Google OAuth
-authlib>=1.3.0
-httpx>=0.27.0
-itsdangerous>=2.1.0
-
-# Rate limiting
-slowapi>=0.1.9
-# Vector + full-text store (core/chunk_store.py)
-lancedb>=0.41
-duckdb>=1.1
-# OCR for scanned results PDFs (financials/ocr.py)
+# OCR for scanned results PDFs (financials/ocr.py, offline financials build)
 rapidocr>=3.10
-onnxruntime>=1.20
-pyarrow>=15
-# Index bootstrap (asset_manager.py)
-requests>=2.31.0
 
 # Tests
 pytest>=8.0.0
 ruff==0.17.6
-
-# Memory reporting (core/app_retrieval.py)
-psutil>=5.9

@@ -55,10 +55,14 @@ def init_reranker() -> bool:
     model_name = settings.RERANKER_MODEL
 
     try:
-        from sentence_transformers import CrossEncoder
-
-        logger.info("Loading reranker model: %s ...", model_name)
-        _reranker_model = CrossEncoder(model_name)
+        logger.info("Loading reranker model: %s (%s) ...", model_name, settings.MODEL_BACKEND)
+        if settings.MODEL_BACKEND == "onnx":
+            from core.onnx_models import OnnxCrossEncoder
+            _reranker_model = OnnxCrossEncoder.from_dir(f"{settings.ONNX_DIR}/reranker", int8=settings.ONNX_INT8,
+                                                       threads=settings.ONNX_THREADS)
+        else:
+            from sentence_transformers import CrossEncoder
+            _reranker_model = CrossEncoder(model_name)
         _reranker_ready = True
         logger.info("Reranker loaded successfully: %s", model_name)
         return True
