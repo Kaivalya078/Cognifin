@@ -1,5 +1,5 @@
 """
-FinSight AI - Prompt Builder
+Cognifin - Prompt Builder
 ==============================
 Builds the prompt for the OpenAI API from retrieved evidence.
 
@@ -8,7 +8,6 @@ This module handles:
 - Assembling the system prompt with grounding rules
 - Extracting citations from the model's response
 
-Author: FinSight AI Team
 Phase: 2 (Generation Layer)
 """
 

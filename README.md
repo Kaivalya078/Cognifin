@@ -1,131 +1,130 @@
-# Cognifin (FinSight AI)
+# Cognifin
 
-RAG-based question answering over Indian financial documents (NIFTY 100 annual reports and quarterly results, SEBI DRHP/RHP). Ask a natural-language question, get an LLM answer grounded in cited evidence from the source PDFs.
+**Ask questions about India's 100 largest listed companies. Every answer cites the page it came from.**
+
+[![CI](https://github.com/Kaivalya078/Cognifin/actions/workflows/ci.yml/badge.svg)](https://github.com/Kaivalya078/Cognifin/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+
+**Live:** [cognifin-eight.vercel.app](https://cognifin-eight.vercel.app) · **Eval results:** [/engineering](https://cognifin-eight.vercel.app/engineering)
+
+![Cognifin answering a question with page citations](docs/screenshot-chat.png)
+
+Cognifin is a retrieval-augmented QA app over the NIFTY 100: FY2025 and FY2026 annual reports plus seven quarters of results. Ask in plain English ("What was Hindustan Unilever's profit after tax in FY2025?"). The answer comes back streamed, with page chips that open the source PDF at the cited page. Headline figures come from a table of results checked against the filings, not from the model's memory.
+
+## Results
+
+Measured on a 119-question golden set across 64 companies (`backend/tests/golden_set.json`), with the production setup (ONNX int8 models, `gpt-4o-mini`):
+
+| Metric | Score |
+|---|---|
+| Faithfulness (claims supported by retrieved context) | **1.00** |
+| Correctness (judged against the answer key) | **0.91** |
+| Citation validity (cited page actually holds the claim) | **1.00** |
+| Answers with at least one citation | **1.00** |
+| Refuses when the filings don't hold the answer | **1.00** |
+| Retrieval hit@3 / hit@8 | 0.76 / 0.93 |
+| Latency p50 / p95 (end to end, incl. LLM) | 4.7 s / 9.3 s |
+
+Full history and method: [`backend/tests/eval_reports/README.md`](backend/tests/eval_reports/README.md). Verified financial figures: 100% precision on a 36-case answer key, enforced in CI.
+
+## How it works
+
+```mermaid
+flowchart LR
+    Q[Question] --> U[Rule-based query understanding<br/>company · year · metric · intent]
+    U --> R{Numeric<br/>question?}
+    R -- yes --> F[(Financials table<br/>DuckDB, verified rows)]
+    R -- no / also --> H[Hybrid search<br/>LanceDB vector + full-text]
+    H --> X[Cross-encoder rerank]
+    F --> P[Prompt with cited<br/>context blocks]
+    X --> P
+    P --> L[LLM, streamed over SSE]
+    L --> C[Citation check + fill<br/>number check]
+    C --> A[Answer with page chips]
+```
+
+- **Query understanding** is deterministic: company aliases, fiscal-year and quarter parsing, intent (lookup, compare, trend…). Retrieval is scoped to the companies and years asked about.
+- **Financials table.** Revenue, profit, EPS and bank/insurer ratios are extracted from NSE iXBRL filings and results PDFs (rules first, LLM fallback, OCR for scanned pages), cross-checked, and stored in DuckDB. Numeric questions get these rows as a verified context block, and a post-check flags any number in the answer that matches no row.
+- **Retrieval.** `bge-base-en-v1.5` embeddings plus full-text search in LanceDB, fused with RRF, reranked by `ms-marco-MiniLM-L-6-v2`. Both models run as ONNX int8 without PyTorch, so the API fits in a 1 GB VM.
+- **Generation.** The model must cite chunk ids. Citations are verified, filled only on exact figure matches, and mapped to PDF pages. If the filings don't hold the answer, it says so and offers to read an uploaded report.
+- **Uploads.** Any PDF can be uploaded for the session and is searched alongside the corpus.
 
 ## Stack
 
-- **Backend:** FastAPI, PyMuPDF, sentence-transformers, FAISS, OpenAI
-- **Frontend:** React + Vite
+| | |
+|---|---|
+| Backend | Python 3.13, FastAPI, LanceDB, DuckDB, ONNX Runtime, PyMuPDF, OpenAI API |
+| Frontend | React + Vite, pdf.js, Recharts, GSAP |
+| Data | MongoDB Atlas (users, chats), Hugging Face datasets (index, PDFs) |
+| Hosting | Vercel (frontend), Azure VM + Docker + Caddy (API) |
+| Quality | pytest (441 tests), ruff, ESLint, offline eval gates in GitHub Actions |
 
-## Structure
+## Repository layout
 
 ```
-backend/   FastAPI API, ingestion, retrieval pipeline, query understanding
-frontend/  React UI (question box, answer, evidence list)
+backend/
+  main.py           FastAPI app: /chat, /chat/stream, /upload, auth
+  core/             chunking, LanceDB store, retrieval, reranker, ONNX models
+  query/            query understanding, planning, context assembly
+  financials/       iXBRL/PDF extraction, checks, DuckDB store, numeric router
+  generation/       prompts, OpenAI client, streaming, citation fill
+  ingestion/        corpus ingest, ONNX export, coverage check
+  routers/          conversations, Google OAuth
+  tests/            unit tests, golden sets, eval harnesses, eval_reports/
+frontend/           React app: landing, chat, engineering, auth pages
+docs/               deploy guide, design specs and implementation plans
+docker-compose.yml  API + Caddy for the VM
 ```
 
-## Setup
+## Run it locally
 
-### Backend
+**Backend** (Python 3.13):
 
 ```bash
 cd backend
 python -m venv venv
-venv\Scripts\activate          # Mac/Linux: source venv/bin/activate
+venv\Scripts\activate              # macOS/Linux: source venv/bin/activate
 pip install -r requirements.txt
-cp .env.example .env           # then set JWT_SECRET, OPENAI_API_KEY, MONGO_URI
-uvicorn main:app --reload      # http://localhost:8000/docs
+cp .env.example .env               # set JWT_SECRET, OPENAI_API_KEY, MONGO_URI
+uvicorn main:app --reload          # http://localhost:8000/docs
 ```
 
-### Ingest documents
-
-PDFs are not committed. Place them at `backend/data/<SYMBOL>/<YEAR>.pdf`, then:
-
-```bash
-python ingestion/batch_ingest_annual_reports.py
-```
-
-The FAISS index is cached in `backend/index_cache/` (git-ignored). You can also upload a PDF at runtime via `POST /upload`.
-
-**Re-indexing on a local GPU.** Embedding the full corpus with `bge-base-en-v1.5` is hours on CPU and minutes on an NVIDIA GPU. `requirements.txt` stays CPU-only (the server has no GPU), so install the CUDA build of PyTorch into your local venv only:
-
-```bash
-pip install --force-reinstall --no-deps torch==2.10.0 --index-url https://download.pytorch.org/whl/cu128
-python -c "import torch; print(torch.cuda.is_available())"   # True
-```
-
-The batch script then embeds in fp16 on the GPU automatically. Start from an empty `backend/index_cache/`; changing the chunker, `EMBEDDING_MODEL` or `QUERY_INSTRUCTION` always needs a full re-index.
-
-### Frontend
+**Frontend** (Node 22):
 
 ```bash
 cd frontend
 npm install
-npm run dev                    # http://localhost:5173
+npm run dev                        # http://localhost:5173, talks to localhost:8000
 ```
 
-The frontend calls the API at `http://localhost:8000` (see `frontend/src/api.js`).
-
-## API
-
-| Method | Path        | Purpose                        |
-|--------|-------------|--------------------------------|
-| GET    | `/health`   | Health check                   |
-| POST   | `/upload`   | Ingest an uploaded PDF         |
-| POST   | `/retrieve` | Retrieve evidence only         |
-| POST   | `/chat`     | Retrieve + generate answer     |
-
-## Configuration
-
-Every setting is a field in `backend/config.py`, documented in `backend/.env.example`. The API refuses to start without a real `JWT_SECRET`, and rejects `.env` keys it doesn't know. Never commit `.env`.
-
-## Tests
+**Corpus.** PDFs are not in the repo. Put annual reports at `backend/data/<SYMBOL>/<YEAR>.pdf` and build the index and the financials table:
 
 ```bash
 cd backend
-python -m pytest
+python -m ingestion.batch_ingest_annual_reports    # -> index_cache/lancedb
+python -m financials.build                         # -> index_cache/financials.duckdb
 ```
+
+Embedding the full corpus takes hours on CPU and minutes on an NVIDIA GPU. For a local GPU, install the CUDA build of PyTorch into your venv only (`pip install --force-reinstall --no-deps torch --index-url https://download.pytorch.org/whl/cu128`). Changing the chunker, `EMBEDDING_MODEL` or `QUERY_INSTRUCTION` needs a full re-index.
+
+Every setting lives in `backend/config.py` and is documented in `backend/.env.example`. The API refuses to start without a real `JWT_SECRET` and rejects unknown `.env` keys.
+
+## Tests and evals
+
+```bash
+cd backend
+python -m pytest tests/test_*.py -q            # unit tests
+python -m tests.eval_financials                # financials precision/coverage (offline)
+python tests/eval_router.py --strict           # numeric router (offline)
+python -m tests.eval_answers --label NAME     # full answer eval (paid, ~$0.17 per run)
+```
+
+CI runs lint, unit tests and the two offline eval gates on every PR. The paid answer eval runs locally and publishes `frontend/public/metrics.json`, which feeds the `/engineering` page.
 
 ## Deploy
 
-Frontend on Vercel; API on one small Linux VM (Azure for Students: `Standard_B2ats_v2`, 2 vCPU / 1 GiB) behind Caddy, which handles HTTPS. MongoDB Atlas M0 for users and chats, Hugging Face datasets for the index and the PDFs.
+See [docs/deploy.md](docs/deploy.md): Hugging Face datasets for the index and PDFs, a 1 GB Azure VM with Docker and Caddy, MongoDB Atlas, Google sign-in and Vercel.
 
-**1. Publish the index (private dataset).** From a machine that has `backend/index_cache/`:
+## License
 
-```bash
-cd backend/index_cache && tar czf ../index_cache.tar.gz lancedb document_registry.json financials.duckdb
-hf repo create <user>/cognifin-index --repo-type dataset --private
-hf upload <user>/cognifin-index ../index_cache.tar.gz index_cache.tar.gz --repo-type dataset
-```
-
-`HF_CACHE_URL` is `https://huggingface.co/datasets/<user>/cognifin-index/resolve/main/index_cache.tar.gz`, and `HF_TOKEN` a fine-grained token with read access to that one dataset. The API downloads it into a Docker volume on first boot (~3 GB, a few minutes).
-
-**2. PDFs (public dataset).** Answers link to the PDFs from the browser, which cannot send a token, so this dataset is public (they are published annual reports anyway). Keep the `SYMBOL/YEAR.pdf` layout:
-
-```bash
-hf repo create <user>/cognifin-pdfs --repo-type dataset
-hf upload-large-folder <user>/cognifin-pdfs backend/data --repo-type dataset --include "*/*.pdf"
-```
-
-`HF_PDF_BASE_URL` is `https://huggingface.co/datasets/<user>/cognifin-pdfs/resolve/main`. Hugging Face already serves byte ranges with CORS, so the PDF viewer needs no bucket policy.
-
-**3. MongoDB Atlas.** Create an M0 cluster and allow the server's IP under Network Access, then **delete the `0.0.0.0/0` (allow from anywhere) entry** used during development, so only the server can connect. The connection string is `MONGO_URI`.
-
-**4. The API box.** Open ports 80 and 443 and give the VM a hostname: your own DNS A record, or Azure's free label (`az network public-ip update -g <rg> -n <vm>PublicIP --dns-name <label>` gives `<label>.<region>.cloudapp.azure.com`). Azure for Students only allows a few regions (`az policy assignment list` shows them). On the VM, add a 2 GB swap file and install `docker.io docker-compose-v2 docker-buildx`. Two Azure gotchas:
-
-- Containers can't finish TLS handshakes at MTU 1500 there (pip and downloads hang). Set `{"mtu": 1400, "default-network-opts": {"bridge": {"com.docker.network.driver.mtu": "1400"}}}` in `/etc/docker/daemon.json` and restart Docker.
-- The image's first stage exports the models to ONNX with PyTorch, which needs ~2 GB RAM and thrashes a 1 GiB VM. Export on any bigger machine (`python -m ingestion.export_onnx --out models_onnx`), copy `models_onnx/*/{model_int8.onnx,tokenizer.json}` to the VM under `~/onnx_ctx/models_onnx/`, and build only the runtime with that folder standing in for the stage: `docker buildx build --load --build-context export=$HOME/onnx_ctx -t cognifin-api ./backend`, then `docker compose up -d --no-build`.
-
-Otherwise:
-
-```bash
-git clone <this repo> && cd Cognifin
-cp backend/.env.example backend/.env   # fill in the values below
-echo "API_DOMAIN=api.example.com" > .env
-docker compose up -d --build
-docker compose logs -f api             # first boot downloads + loads the index
-```
-
-Production values in `backend/.env` (compose sets `ASSET_MODE` and `INDEX_CACHE_DIR` itself):
-
-| Key | Value |
-|---|---|
-| `JWT_SECRET` | a fresh `python -c "import secrets; print(secrets.token_urlsafe(48))"` |
-| `OPENAI_API_KEY`, `MONGO_URI` | from steps 3 and your provider |
-| `HF_CACHE_URL`, `HF_TOKEN`, `HF_PDF_BASE_URL` | from steps 1 and 2 |
-| `ALLOWED_ORIGINS`, `FRONTEND_URL` | `https://YOUR-APP.vercel.app` |
-| `GOOGLE_REDIRECT_URI` | `https://api.example.com/auth/callback` (also add it in Google Cloud Console) |
-
-**5. Vercel.** Import the repo with root directory `frontend` and set `VITE_API_BASE=https://api.example.com` and `VITE_SITE_URL=https://YOUR-APP.vercel.app`. The build fails on purpose if `VITE_API_BASE` isn't an https URL.
-
-**6. Check it.** `curl https://api.example.com/health` should report `"indexed": true`. On the site, a suggested question answers instantly (pre-warmed at boot). Logged out, the 6th question returns the sign-in prompt. A citation's PDF opens from the Hugging Face dataset.
+[MIT](LICENSE). Annual reports and filings belong to their companies. Cognifin is not financial advice.

@@ -1,5 +1,5 @@
 """
-FinSight AI — Result Merger (Phase 3: Recall Improvement)
+Cognifin — Result Merger (Phase 3: Recall Improvement)
 ==========================================================
 Merges results from multiple queries and search systems using
 Reciprocal Rank Fusion (RRF).
@@ -16,7 +16,6 @@ Formula:
 Chunks appearing in MULTIPLE result lists get higher RRF scores,
 naturally promoting results that are relevant from multiple angles.
 
-Author: FinSight AI Team
 Phase: 3 (Recall Improvement Layer)
 """
 

@@ -315,7 +315,7 @@ async def lifespan(app: FastAPI):
     global pipeline, llm_client, corpus_manager, corpus_router
 
     print("\n" + "="*60)
-    print("🚀 FinSight AI - Starting Up (Read-Only Mode)")
+    print("🚀 Cognifin - Starting Up (Read-Only Mode)")
     print("="*60)
 
     start_time = time.time()
@@ -362,7 +362,7 @@ async def lifespan(app: FastAPI):
     yield
 
     # Shutdown
-    print("\n👋 Shutting down FinSight AI...")
+    print("\n👋 Shutting down Cognifin...")
 
 
 # =============================================================================
@@ -370,7 +370,7 @@ async def lifespan(app: FastAPI):
 # =============================================================================
 
 app = FastAPI(
-    title="FinSight AI",
+    title="Cognifin",
     description="""
 ## 🔍 Indian Financial Document Analyzer
 
@@ -683,7 +683,7 @@ def retrieve(request: Request, body: RetrieveRequest,
     """
     Main retrieval endpoint.
 
-    This is the core of FinSight AI Phase 1:
+    This is the core of Cognifin Phase 1:
     1. Takes a natural language query
     2. Embeds it using the same model as the document
     3. Finds the top-K most similar chunks
@@ -1216,7 +1216,7 @@ def root():
     Root endpoint - provides a friendly welcome message.
     """
     return {
-        "message": "Welcome to FinSight AI!",
+        "message": "Welcome to Cognifin!",
         "docs": "Visit /docs for the interactive API documentation",
         "health": "Visit /health to check service status",
     }

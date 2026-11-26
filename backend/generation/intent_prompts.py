@@ -1,5 +1,5 @@
 """
-FinSight AI — Intent-Aware Prompt Builder (Phase 4)
+Cognifin — Intent-Aware Prompt Builder (Phase 4)
 =====================================================
 Generates intent-specific LLM prompts for structured responses.
 
@@ -9,7 +9,6 @@ bullet points, etc.)
 
 Falls back to the generic Phase 2 prompt if intent is unknown.
 
-Author: FinSight AI Team
 Phase: 4 (Intelligent Query Understanding)
 """
 

@@ -1,10 +1,9 @@
 """
-FinSight AI - Authentication Utilities
+Cognifin - Authentication Utilities
 ========================================
 Password hashing (bcrypt), JWT token management, and FastAPI dependency
 for extracting the current user from the Authorization header.
 
-Author: FinSight AI Team
 """
 
 from datetime import datetime, timedelta, timezone

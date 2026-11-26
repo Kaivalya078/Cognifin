@@ -1,5 +1,5 @@
 """
-FinSight AI — Intelligent Query Parser (Phase 4)
+Cognifin — Intelligent Query Parser (Phase 4)
 ==================================================
 LLM-based query parsing using GPT-4o-mini with JSON mode.
 
@@ -12,7 +12,6 @@ Replaces rule-based parsing with deep understanding:
 Fallback: On ANY failure, wraps Phase 3 parse_query() result
 in an IntelligentQuery object — zero downtime risk.
 
-Author: FinSight AI Team
 Phase: 4 (Intelligent Query Understanding)
 """
 

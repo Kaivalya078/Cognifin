@@ -1,5 +1,5 @@
 """
-FinSight AI — Context Assembler (Phase 4)
+Cognifin — Context Assembler (Phase 4)
 ==========================================
 Combines multi-step retrieval results into a structured context
 string for the LLM.
@@ -7,7 +7,6 @@ string for the LLM.
 Uses labeled sections (Option A) for comparison/trend queries
 to help the LLM produce structured responses.
 
-Author: FinSight AI Team
 Phase: 4 (Intelligent Query Understanding)
 """
 

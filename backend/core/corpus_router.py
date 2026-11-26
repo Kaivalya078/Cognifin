@@ -1,5 +1,5 @@
 """
-FinSight AI — Corpus Router (Stage 8B)
+Cognifin — Corpus Router (Stage 8B)
 =======================================
 Routes retrieval plans across global and session-scoped corpora.
 

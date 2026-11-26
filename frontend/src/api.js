@@ -1,5 +1,5 @@
 /**
- * FinSight AI - API Client
+ * Cognifin - API Client
  * ========================
  * Handles communication with the FastAPI backend.
  * All protected requests include the JWT Authorization header.

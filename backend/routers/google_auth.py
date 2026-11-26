@@ -1,12 +1,11 @@
 """
-FinSight AI - Google OAuth Router
+Cognifin - Google OAuth Router
 ===================================
 Handles Google OAuth 2.0 login flow with two endpoints:
 
   GET /auth/login    → Redirects to Google consent screen
   GET /auth/callback → Handles Google redirect, upserts user, issues JWT
 
-Author: FinSight AI Team
 """
 
 import base64

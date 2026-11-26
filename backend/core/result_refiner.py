@@ -1,5 +1,5 @@
 """
-FinSight AI — Result Refiner (Phase 2: Retrieval Precision)
+Cognifin — Result Refiner (Phase 2: Retrieval Precision)
 =============================================================
 Post-reranking result refinement: metadata boosting, deduplication,
 and context enrichment.
@@ -7,7 +7,6 @@ and context enrichment.
 All functions are pure (no state, no I/O, no model inference).
 They operate on List[RetrievalResult] and return refined lists.
 
-Author: FinSight AI Team
 Phase: 2 (Retrieval Precision Layer)
 """
 

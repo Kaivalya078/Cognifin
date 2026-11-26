@@ -1,5 +1,5 @@
 """
-FinSight AI — Multi-Query Generator (Phase 3: Recall Improvement)
+Cognifin — Multi-Query Generator (Phase 3: Recall Improvement)
 ==================================================================
 Generates semantically diverse query variants using GPT-4o-mini.
 
@@ -18,7 +18,6 @@ Example:
 
 Feature Flag: MULTI_QUERY_ENABLED — set to 'false' for Phase 2 behavior.
 
-Author: FinSight AI Team
 Phase: 3 (Recall Improvement Layer)
 """
 

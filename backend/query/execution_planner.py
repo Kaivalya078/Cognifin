@@ -1,5 +1,5 @@
 """
-FinSight AI — Execution Planner (Phase 4)
+Cognifin — Execution Planner (Phase 4)
 ==========================================
 Converts IntelligentQuery → list of RetrievalStep objects.
 
@@ -11,7 +11,6 @@ Performance constraints:
 - Multi-step queries use MULTI_STEP_RETRIEVAL_K (default: 10)
 - Single queries use full RETRIEVAL_K (default: 20)
 
-Author: FinSight AI Team
 Phase: 4 (Intelligent Query Understanding)
 """
 

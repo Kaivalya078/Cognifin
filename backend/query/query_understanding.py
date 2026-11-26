@@ -1,7 +1,7 @@
 """
 query_understanding.py
 ----------------------
-Deterministic, rule-based query parser for FinSight AI.
+Deterministic, rule-based query parser for Cognifin.
 
 Layer  : Above SearchPlanBuilder (future), below API
 Stage  : 4

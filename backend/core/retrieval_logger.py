@@ -1,5 +1,5 @@
 """
-FinSight AI — Retrieval Logger (Phase 1: Observability)
+Cognifin — Retrieval Logger (Phase 1: Observability)
 ========================================================
 Structured logging for retrieval diagnostics.
 
@@ -13,7 +13,6 @@ Integration points:
     - Called from CorpusManager.search() after score filtering
     - Called from main.py /chat and /retrieve endpoints for request metadata
 
-Author: FinSight AI Team
 Phase: 1 (Core Retrieval Fixes — Observability)
 """
 
