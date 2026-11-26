@@ -7,7 +7,7 @@
 
 import { createContext, useContext, useEffect, useRef, useState } from 'react';
 import ReactMarkdown from 'react-markdown';
-import remarkGfm from 'remark-gfm';
+import { MD_PROPS } from '../../utils/markdown';
 import { Copy, Check, ChevronDown, ChevronUp } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
@@ -95,7 +95,7 @@ function Answer({ message, onFollowUp, onRequestUpload, isLoading, onOpenSource,
         <article className="cx-a">
             <div className="cx-prose">
                 <CiteContext.Provider value={{ activeSourceId, open: openCite }}>
-                    <ReactMarkdown remarkPlugins={[remarkGfm]} components={MD_COMPONENTS}>
+                    <ReactMarkdown {...MD_PROPS} components={MD_COMPONENTS}>
                         {linkCitations(message.content, evidence)}
                     </ReactMarkdown>
                 </CiteContext.Provider>

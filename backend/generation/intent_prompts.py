@@ -15,7 +15,7 @@ Phase: 4 (Intelligent Query Understanding)
 
 from typing import Tuple
 
-from generation.prompt_builder import CITE_REMINDER, CITE_RULE
+from generation.prompt_builder import CITE_REMINDER, CITE_RULE, fence_context
 
 # =============================================================================
 # SHARED FORMATTING RULES (appended to every intent prompt)
@@ -195,5 +195,5 @@ def build_intent_prompt(
         Tuple of (system_prompt, user_message)
     """
     template = _INTENT_PROMPTS.get(intent, _FALLBACK_PROMPT)
-    system_prompt = template.format(context=context, cite_rule=CITE_RULE)
+    system_prompt = template.format(context=fence_context(context), cite_rule=CITE_RULE)
     return system_prompt, f"{query}\n\n{CITE_REMINDER}"

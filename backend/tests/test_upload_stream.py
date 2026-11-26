@@ -46,7 +46,7 @@ def ingest(monkeypatch):
     monkeypatch.setattr(main, "RetrieverPipeline", lambda: None)
     monkeypatch.setattr(main, "discard", lambda c: seen["discarded"].append(c))
     monkeypatch.setattr(main, "corpus_router", SimpleNamespace(
-        register_session=lambda sid, c: seen["registered"].append(sid)))
+        register_session=lambda sid, c, owner=None: seen["registered"].append(sid)))
     main.limiter.reset()
     return main, make, seen
 
@@ -121,7 +121,7 @@ def test_upload_failure_after_ingest_still_ends_the_stream(ingest):
     main, make, seen = ingest
     corpus = make()
 
-    def boom(sid, c):
+    def boom(sid, c, owner=None):
         raise RuntimeError("router full")
     main.corpus_router.register_session = boom
     tmp_dir = tempfile.mkdtemp(prefix="finsight_upload_")

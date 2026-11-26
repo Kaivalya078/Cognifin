@@ -137,6 +137,7 @@ class RetrieveRequest(BaseModel):
         ...,  # ... means required
         description="The question to search for in the document",
         min_length=3,  # At least 3 characters
+        max_length=1000,  # caps prompt cost and search work per request
         examples=["What are the risk factors?"]
     )
     top_k: Optional[int] = Field(
@@ -224,6 +225,7 @@ class ChatRequest(BaseModel):
         ...,
         description="The question to ask about the document",
         min_length=3,
+        max_length=1000,  # caps prompt cost and search work per request
         examples=["What are the risk factors?"]
     )
     top_k: Optional[int] = Field(
@@ -420,6 +422,16 @@ def _rate_key(request: Request) -> str:
     return "ip:" + get_remote_address(request)
 
 
+def _require_session_owner(session_id: Optional[str], user: Optional[dict]) -> None:
+    """An upload session answers only its uploader. Same 404 whether it never existed,
+    expired or belongs to someone else, so ids can't be probed."""
+    if session_id is None:
+        return
+    if not user or corpus_router is None or corpus_router.owner(session_id) != user["user_id"]:
+        raise HTTPException(status_code=404,
+                            detail="Upload session not found or expired. Upload the PDF again.")
+
+
 def _chat_limit(key: str) -> str:
     if key.startswith("ip:"):
         return f"{settings.ANON_FREE_QUESTIONS}/day"
@@ -569,7 +581,8 @@ def upload_document(
         # the router deletes the store when the session is evicted.
         session_corpus = new_session_corpus(RetrieverPipeline())
         q, abandoned, _ = _start_ingest(session_corpus, tmp_dir, tmp_path,
-                                        company_name, year, document_type)
+                                        company_name, year, document_type,
+                                        owner=current_user["user_id"])
         tmp_dir = None  # the worker owns the temp dir from here
         return StreamingResponse(_ingest_stream(q, abandoned),
                                  media_type="text/event-stream", headers=SSE_HEADERS)
@@ -588,7 +601,7 @@ def upload_document(
 
 
 def _start_ingest(session_corpus, tmp_dir: str, tmp_path: str,
-                  company_name: str, year: str, document_type: str):
+                  company_name: str, year: str, document_type: str, owner: Optional[str] = None):
     """Ingest an uploaded PDF on a worker thread that owns all cleanup.
 
     Returns (queue, abandoned, thread). The queue receives ("stage", info)
@@ -624,7 +637,7 @@ def _start_ingest(session_corpus, tmp_dir: str, tmp_path: str,
                 session_id=session_id, chunks=n, company=company_name,
                 year=year, document_type=document_type,
             ).model_dump()
-            corpus_router.register_session(session_id, session_corpus)
+            corpus_router.register_session(session_id, session_corpus, owner=owner)
             registered = True
             q.put(("final", final))
         except BaseException as e:
@@ -665,7 +678,8 @@ def _ingest_stream(q: queue.Queue, abandoned: threading.Event):
     description="Find the most relevant chunks for a given query."
 )
 @limiter.limit("30/minute")
-def retrieve(request: Request, body: RetrieveRequest):
+def retrieve(request: Request, body: RetrieveRequest,
+             current_user: Optional[dict] = Depends(get_optional_user)):
     """
     Main retrieval endpoint.
 
@@ -694,6 +708,8 @@ def retrieve(request: Request, body: RetrieveRequest):
             status_code=503,
             detail="No document indexed. Please ensure PDF_PATH is set correctly and restart the server."
         )
+
+    _require_session_owner(body.session_id, current_user)
 
     # Get top_k (use request value or default from env)
     top_k = body.top_k if body.top_k is not None else settings.TOP_K
@@ -1076,6 +1092,7 @@ def chat(request: Request, body: ChatRequest,
          current_user: Optional[dict] = Depends(get_optional_user)):
     """Answer (fresh or cached), then persist to the caller's conversation."""
     _require_chat_ready()
+    _require_session_owner(body.session_id, current_user)
 
     try:
         payload = answer_question(body.question, body.session_id, body.top_k)
@@ -1101,6 +1118,7 @@ def chat(request: Request, body: ChatRequest,
 def chat_stream(request: Request, body: ChatRequest,
                 current_user: Optional[dict] = Depends(get_optional_user)):
     _require_chat_ready()
+    _require_session_owner(body.session_id, current_user)
 
     def gen():
         try:
