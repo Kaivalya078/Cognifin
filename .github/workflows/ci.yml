@@ -51,7 +51,7 @@ jobs:
         run: |
           set -o pipefail
           { echo '### Financials eval'; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
-          python -m tests.eval_financials --label ci --min-precision 100 --min-coverage 93.1 \
+          python -m tests.eval_financials --label ci --min-precision 100 --min-coverage 93.9 \
             | tee -a "$GITHUB_STEP_SUMMARY"
           echo '```' >> "$GITHUB_STEP_SUMMARY"
 

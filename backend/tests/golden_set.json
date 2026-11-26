@@ -1,8 +1,9 @@
 {
- "version": 2,
+ "version": 3,
  "changelog": [
   "2026-11-16 recheck: mm-2025-tractors answer_pages [25] -> [15,25,48,77,81] (figure also stated on pages 15, 48, 77, 81).",
-  "2026-11-24 v2: +60 cases (27 previously uncovered companies, FY2026, numeric kind = financials-table figures with no answer page, refusal kind = key is the refusal sentence). v1's 40 cases unchanged."
+  "2026-11-24 v2: +60 cases (27 previously uncovered companies, FY2026, numeric kind = financials-table figures with no answer page, refusal kind = key is the refusal sentence). v1's 40 cases unchanged.",
+  "2026-11-26 v3: +19 NIFTY Next 50 cases (8 table incl. HINDZINC FY2024 from the FY2025 report's prior-year column, 6 narrative, 3 numeric, 2 refusal; near-duplicate names BAJAJHLDNG, ADANIGREEN, TATAPOWER, ENRIN, SIEMENS). v2's 100 cases unchanged; user spot-checked 10."
  ],
  "cases": [
   {
@@ -2011,6 +2012,387 @@
    "question": "How many cars did Maruti Suzuki sell in the United States in FY2024-25?",
    "company": "MARUTI",
    "year": "2025",
+   "answer_pages": [],
+   "answer": "Not available in the provided documents.",
+   "kind": "refusal",
+   "checked_by": [
+    "claude",
+    "claude-recheck"
+   ]
+  },
+  {
+   "id": "eternal-2026-revenue",
+   "question": "What was Eternal's consolidated revenue from operations in FY2026?",
+   "company": "ETERNAL",
+   "year": "2026",
+   "answer_pages": [
+    5,
+    48,
+    49,
+    52,
+    55,
+    202,
+    247,
+    277
+   ],
+   "answer": "₹54,364 crore (up 169% from ₹20,243 crore in FY2025)",
+   "kind": "table",
+   "checked_by": [
+    "claude",
+    "user",
+    "claude-recheck"
+   ]
+  },
+  {
+   "id": "hal-2026-revenue",
+   "question": "What was Hindustan Aeronautics' standalone revenue from operations in FY2026?",
+   "company": "HAL",
+   "year": "2026",
+   "answer_pages": [
+    36,
+    92,
+    183,
+    227
+   ],
+   "answer": "₹33,08,979 lakh (about ₹33,090 crore)",
+   "kind": "table",
+   "checked_by": [
+    "claude",
+    "user",
+    "claude-recheck"
+   ]
+  },
+  {
+   "id": "tatapower-2026-revenue",
+   "question": "What was Tata Power's consolidated revenue from operations in FY2026?",
+   "company": "TATAPOWER",
+   "year": "2026",
+   "answer_pages": [
+    246,
+    297,
+    299,
+    322
+   ],
+   "answer": "₹62,428.59 crore",
+   "kind": "table",
+   "checked_by": [
+    "claude",
+    "claude-recheck"
+   ]
+  },
+  {
+   "id": "bajajhldng-2025-pat",
+   "question": "What was Bajaj Holdings & Investment's consolidated profit after tax in FY2025?",
+   "company": "BAJAJHLDNG",
+   "year": "2025",
+   "answer_pages": [
+    199,
+    202
+   ],
+   "answer": "₹6,625.70 crore",
+   "kind": "table",
+   "checked_by": [
+    "claude",
+    "user",
+    "claude-recheck"
+   ]
+  },
+  {
+   "id": "adanigreen-2025-revenue",
+   "question": "What was Adani Green Energy's consolidated revenue from operations in FY2025?",
+   "company": "ADANIGREEN",
+   "year": "2025",
+   "answer_pages": [
+    38,
+    83,
+    159,
+    366,
+    447,
+    577,
+    581
+   ],
+   "answer": "₹11,212 crore",
+   "kind": "table",
+   "checked_by": [
+    "claude",
+    "claude-recheck"
+   ]
+  },
+  {
+   "id": "hindzinc-2024-revenue",
+   "question": "What was Hindustan Zinc's consolidated revenue from operations in FY2024?",
+   "company": "HINDZINC",
+   "year": "2025",
+   "answer_pages": [
+    50,
+    120,
+    237
+   ],
+   "answer": "₹28,932 crore (prior-year figure in the FY2025 report)",
+   "kind": "table",
+   "checked_by": [
+    "claude",
+    "user",
+    "claude-recheck"
+   ]
+  },
+  {
+   "id": "bankbaroda-2026-netprofit",
+   "question": "What was Bank of Baroda's standalone net profit in FY2026?",
+   "company": "BANKBARODA",
+   "year": "2026",
+   "answer_pages": [
+    16,
+    17,
+    20,
+    21,
+    24,
+    25,
+    29,
+    76,
+    77,
+    81,
+    318
+   ],
+   "answer": "₹20,021 crore (₹19,581 crore in FY2025)",
+   "kind": "table",
+   "checked_by": [
+    "claude",
+    "user",
+    "claude-recheck"
+   ]
+  },
+  {
+   "id": "vbl-2025-revenue",
+   "question": "What was Varun Beverages' consolidated revenue from operations for the year ended December 2025?",
+   "company": "VBL",
+   "year": "2025",
+   "answer_pages": [
+    176,
+    265,
+    312
+   ],
+   "answer": "₹222,255.84 million (about ₹22,226 crore)",
+   "kind": "table",
+   "checked_by": [
+    "claude",
+    "claude-recheck"
+   ]
+  },
+  {
+   "id": "dmart-2026-stores",
+   "question": "How many stores did DMart operate at the end of FY2026?",
+   "company": "DMART",
+   "year": "2026",
+   "answer_pages": [
+    4,
+    8,
+    9,
+    14,
+    42,
+    44,
+    121
+   ],
+   "answer": "500 stores (415 at the end of FY2025)",
+   "kind": "narrative",
+   "checked_by": [
+    "claude",
+    "user",
+    "claude-recheck"
+   ]
+  },
+  {
+   "id": "enrin-2025-listing",
+   "question": "When were Siemens Energy India's shares listed on the stock exchanges?",
+   "company": "ENRIN",
+   "year": "2025",
+   "answer_pages": [
+    7,
+    23,
+    35,
+    46,
+    62,
+    70,
+    71,
+    72,
+    81,
+    83,
+    183
+   ],
+   "answer": "19 June 2025, on BSE and NSE",
+   "kind": "narrative",
+   "checked_by": [
+    "claude",
+    "user",
+    "claude-recheck"
+   ]
+  },
+  {
+   "id": "ltm-2026-former-name",
+   "question": "What was LTM Limited's name before it was renamed?",
+   "company": "LTM",
+   "year": "2026",
+   "answer_pages": [
+    10,
+    80,
+    81,
+    82,
+    108,
+    139,
+    169,
+    171,
+    172,
+    174,
+    175,
+    176,
+    178,
+    180,
+    187,
+    219,
+    222,
+    226,
+    263,
+    266,
+    267,
+    270,
+    275
+   ],
+   "answer": "LTIMindtree Limited",
+   "kind": "narrative",
+   "checked_by": [
+    "claude",
+    "claude-recheck"
+   ]
+  },
+  {
+   "id": "irfc-2026-lease",
+   "question": "What kind of lease agreements does IRFC have with the Ministry of Railways?",
+   "company": "IRFC",
+   "year": "2026",
+   "answer_pages": [
+    17,
+    20,
+    27,
+    112,
+    302,
+    316
+   ],
+   "answer": "Cost-plus standard lease agreements",
+   "kind": "narrative",
+   "checked_by": [
+    "claude",
+    "claude-recheck"
+   ]
+  },
+  {
+   "id": "hyundai-2026-new-plant",
+   "question": "Where is Hyundai Motor India's new manufacturing plant?",
+   "company": "HYUNDAI",
+   "year": "2026",
+   "answer_pages": [
+    5,
+    43,
+    53,
+    59,
+    65,
+    78,
+    94,
+    101,
+    118
+   ],
+   "answer": "Talegaon, Pune (Maharashtra)",
+   "kind": "narrative",
+   "checked_by": [
+    "claude",
+    "claude-recheck"
+   ]
+  },
+  {
+   "id": "siemens-2026-fy-change",
+   "question": "Why does Siemens Limited's latest annual report cover 18 months?",
+   "company": "SIEMENS",
+   "year": "2026",
+   "answer_pages": [
+    23,
+    25,
+    37,
+    51,
+    58,
+    69,
+    76,
+    112,
+    139,
+    227,
+    247,
+    336
+   ],
+   "answer": "The Board (8 Aug 2025) moved the financial year from October-September to April-March, with a one-time transition period from 1 Oct 2024 to 31 Mar 2026",
+   "kind": "narrative",
+   "checked_by": [
+    "claude",
+    "user",
+    "claude-recheck"
+   ]
+  },
+  {
+   "id": "gail-q1fy26-netprofit",
+   "question": "What was GAIL's consolidated net profit for the quarter ended June 2025?",
+   "company": "GAIL",
+   "year": "2026",
+   "answer_pages": [],
+   "answer": "₹2,382.24 crore",
+   "kind": "numeric",
+   "checked_by": [
+    "claude",
+    "user",
+    "claude-recheck"
+   ]
+  },
+  {
+   "id": "tvsmotor-q2fy26-revenue",
+   "question": "What was TVS Motor's standalone revenue from operations for the quarter ended September 2025?",
+   "company": "TVSMOTOR",
+   "year": "2026",
+   "answer_pages": [],
+   "answer": "₹11,905.43 crore",
+   "kind": "numeric",
+   "checked_by": [
+    "claude",
+    "claude-recheck"
+   ]
+  },
+  {
+   "id": "hyundai-q2fy26-revenue",
+   "question": "What was Hyundai Motor India's consolidated revenue from operations for the quarter ended September 2025?",
+   "company": "HYUNDAI",
+   "year": "2026",
+   "answer_pages": [],
+   "answer": "₹17,460.82 crore",
+   "kind": "numeric",
+   "checked_by": [
+    "claude",
+    "claude-recheck"
+   ]
+  },
+  {
+   "id": "vbl-2025-refusal-crypto",
+   "question": "How much cryptocurrency did Varun Beverages hold at the end of 2025?",
+   "company": "VBL",
+   "year": "2025",
+   "answer_pages": [],
+   "answer": "Not available in the provided documents.",
+   "kind": "refusal",
+   "checked_by": [
+    "claude",
+    "user",
+    "claude-recheck"
+   ]
+  },
+  {
+   "id": "bpcl-2026-refusal-satellites",
+   "question": "How many satellites did Bharat Petroleum launch in FY2026?",
+   "company": "BPCL",
+   "year": "2026",
    "answer_pages": [],
    "answer": "Not available in the provided documents.",
    "kind": "refusal",
