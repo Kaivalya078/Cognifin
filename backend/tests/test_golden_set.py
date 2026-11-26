@@ -14,7 +14,7 @@ NEW = CASES[len(V1_IDS):]
 
 
 def test_schema():
-    assert GOLDEN["version"] == 2 and isinstance(GOLDEN["changelog"], list)
+    assert GOLDEN["version"] == 3 and isinstance(GOLDEN["changelog"], list)
     for c in CASES:
         assert set(c) == set(FIELDS), c["id"]
         for k, t in FIELDS.items():
@@ -46,8 +46,8 @@ def test_pages_exist():
 
 
 def test_coverage():
-    assert 95 <= len(CASES) <= 105
-    assert len({c["company"] for c in CASES}) >= 45
+    assert 115 <= len(CASES) <= 125
+    assert len({c["company"] for c in CASES}) >= 60
     assert {"2023", "2024", "2025", "2026"} <= {c["year"] for c in CASES}
     assert sum(c["year"] == "2026" for c in CASES) >= 12
     assert sum(c["kind"] == "numeric" for c in CASES) >= 6

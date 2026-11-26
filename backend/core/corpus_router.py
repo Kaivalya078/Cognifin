@@ -56,17 +56,20 @@ class CorpusRouter:
         # longer than SESSION_TTL_SECONDS (checked lazily on every access).
         self.session_corpora: "OrderedDict[str, CorpusManager]" = OrderedDict()
         self._last_used: Dict[str, float] = {}
+        self._owners: Dict[str, Optional[str]] = {}   # session -> uploader user_id
 
     # =========================================================================
     # SESSION LIFECYCLE
     # =========================================================================
 
-    def register_session(self, session_id: str, corpus: CorpusManager) -> None:
-        """Register an in-memory session corpus, evicting to stay under the cap."""
+    def register_session(self, session_id: str, corpus: CorpusManager, owner: Optional[str] = None) -> None:
+        """Register an in-memory session corpus, evicting to stay under the cap. Only `owner`
+        may query it through the API (a session with no owner is usable by no one there)."""
         self._evict_idle()
         while len(self.session_corpora) >= settings.SESSION_MAX:
             self.remove_session(next(iter(self.session_corpora)))
         self.session_corpora[session_id] = corpus
+        self._owners[session_id] = owner
         self._last_used[session_id] = time.monotonic()
         logger.info(
             "Session registered: %s (%d vectors)",
@@ -78,7 +81,13 @@ class CorpusRouter:
         if session_id in self.session_corpora:
             discard(self.session_corpora.pop(session_id))
             del self._last_used[session_id]
+            self._owners.pop(session_id, None)
             logger.info("Session removed: %s", session_id)
+
+    def owner(self, session_id: str) -> Optional[str]:
+        """The user who uploaded this session's PDF, or None if unknown/expired."""
+        self._evict_idle()
+        return self._owners.get(session_id)
 
     def has_session(self, session_id: str) -> bool:
         """Check if a session exists (and mark it as used)."""

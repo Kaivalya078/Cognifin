@@ -57,6 +57,7 @@ index_cache_step1/
 
 # Source PDFs (too large for Git — document setup in README)
 data/*
+!data/nifty100.csv
 !data/quarterly/
 data/quarterly/*
 !data/quarterly/sources.csv

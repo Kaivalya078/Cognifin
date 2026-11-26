@@ -103,3 +103,22 @@ def retrieve_global(question: str, pipeline, corpus_manager, top_k: int, final_k
         final_k=final_k,
     )
     return candidates, final, parsed
+
+
+def held_years(corpus_manager) -> dict:
+    """{company: {report years}} in the global corpus."""
+    held: dict = {}
+    for d in corpus_manager.documents.values():
+        held.setdefault(d.metadata.company, set()).add(str(d.metadata.year))
+    return held
+
+
+def outside_coverage(companies: list, years: list, held: dict) -> bool:
+    """True when the question names companies and years and every asked year is older than
+    each company's earliest report: answering would mean reading a later report's prior-year
+    column (v4 eval: HINDZINC FY2024 from the FY2025 report, wrong). The chat then replies
+    with the refusal, which shows the upload card. Future years ("2030 target") and years
+    inside the held range go to the model: current reports talk about them."""
+    def older(c, y) -> bool:
+        return bool(held.get(c)) and str(y).isdigit() and int(y) < min(map(int, held[c]))
+    return bool(companies and years) and all(older(c, y) for c in companies for y in years)

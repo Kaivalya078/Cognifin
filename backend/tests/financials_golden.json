@@ -1,8 +1,9 @@
 {
- "version": 1,
+ "version": 2,
  "changelog": [
   "2026-11-16: solvency_ratio stored as a multiple; hdfclife-2025q3-c-x 180.0 -> 1.8 (printed 180.00%)",
-  "2026-11-16: user spot-checked; claude re-checked all 245 values against source pages (recheck.py), 245/245 found (BAJFINANCE total_expenses printed '13 575.93')"
+  "2026-11-16: user spot-checked; claude re-checked all 245 values against source pages (recheck.py), 245/245 found (BAJFINANCE total_expenses printed '13 575.93')",
+  "2026-11-26: +10 NIFTY Next 50 cases (5 iXBRL incl. a bank, an NBFC and an FY case; 5 PDF incl. Lakhs, million and a negative other income); every value read from its source page; recheck 60/66 exact, 6 on scan-quality text layers (GAIL, HAL) confirmed by eye"
  ],
  "cases": [
   {
@@ -659,6 +660,232 @@
     "net_profit_owners": 85010000000.0,
     "eps_basic": 21.01,
     "eps_diluted": 20.98
+   },
+   "checked_by": [
+    "claude",
+    "user",
+    "claude-recheck"
+   ]
+  },
+  {
+   "id": "adaniensol-2025-12-c-x",
+   "company": "ADANIENSOL",
+   "period_end": "2025-12-31",
+   "period_type": "Q",
+   "basis": "consolidated",
+   "source_file": "ADANIENSOL/2025-12_consolidated.html",
+   "page": null,
+   "values": {
+    "revenue_from_operations": 67296500000.0,
+    "other_income": 2147900000.0,
+    "total_income": 69444400000.0,
+    "total_expenses": 58030500000.0,
+    "net_profit_owners": 5523100000.0,
+    "eps_basic": 6.34,
+    "eps_diluted": 6.34
+   },
+   "checked_by": [
+    "claude",
+    "user",
+    "claude-recheck"
+   ]
+  },
+  {
+   "id": "bankbaroda-2025-12-c-x",
+   "company": "BANKBARODA",
+   "period_end": "2025-12-31",
+   "period_type": "Q",
+   "basis": "consolidated",
+   "source_file": "BANKBARODA/2025-12_consolidated.html",
+   "page": null,
+   "values": {
+    "interest_earned": 335998400000.0,
+    "eps_basic": 10.53,
+    "eps_diluted": 10.53,
+    "cet1_pct": 12.97,
+    "return_on_assets_pct": 1.12
+   },
+   "checked_by": [
+    "claude",
+    "user",
+    "claude-recheck"
+   ]
+  },
+  {
+   "id": "cholafin-2026-03-c-x",
+   "company": "CHOLAFIN",
+   "period_end": "2026-03-31",
+   "period_type": "Q",
+   "basis": "consolidated",
+   "source_file": "CHOLAFIN/2026-03_consolidated.html",
+   "page": null,
+   "values": {
+    "revenue_from_operations": 84167100000.0,
+    "other_income": 1468300000.0,
+    "total_income": 85635400000.0,
+    "total_expenses": 64215600000.0,
+    "net_profit_owners": 16452000000.0,
+    "eps_basic": 19.33,
+    "eps_diluted": 19.28
+   },
+   "checked_by": [
+    "claude",
+    "user",
+    "claude-recheck"
+   ]
+  },
+  {
+   "id": "hyundai-2025-09-c-x",
+   "company": "HYUNDAI",
+   "period_end": "2025-09-30",
+   "period_type": "Q",
+   "basis": "consolidated",
+   "source_file": "HYUNDAI/2025-09_consolidated.html",
+   "page": null,
+   "values": {
+    "revenue_from_operations": 174608220000.0,
+    "other_income": 2312060000.0,
+    "total_income": 176920280000.0,
+    "total_expenses": 155660650000.0,
+    "net_profit_owners": 15722550000.0,
+    "eps_basic": 19.35,
+    "eps_diluted": 19.35
+   },
+   "checked_by": [
+    "claude",
+    "user",
+    "claude-recheck"
+   ]
+  },
+  {
+   "id": "eternal-fy2026-c-x",
+   "company": "ETERNAL",
+   "period_end": "2026-03-31",
+   "period_type": "FY",
+   "basis": "consolidated",
+   "source_file": "ETERNAL/2026-03_consolidated.html",
+   "page": null,
+   "values": {
+    "revenue_from_operations": 543640000000.0,
+    "other_income": 13960000000.0,
+    "total_income": 557600000000.0,
+    "total_expenses": 551450000000.0,
+    "net_profit_owners": 3660000000.0,
+    "eps_basic": 0.4,
+    "eps_diluted": 0.39
+   },
+   "checked_by": [
+    "claude",
+    "user",
+    "claude-recheck"
+   ]
+  },
+  {
+   "id": "gail-2025-06-c",
+   "company": "GAIL",
+   "period_end": "2025-06-30",
+   "period_type": "Q",
+   "basis": "consolidated",
+   "source_file": "GAIL/2025-06.pdf",
+   "page": 13,
+   "values": {
+    "revenue_from_operations": 354288100000.0,
+    "other_income": 1441300000.0,
+    "total_income": 355729400000.0,
+    "total_expenses": 329657100000.0,
+    "profit_before_tax": 30288400000.0,
+    "tax_expense": 6466000000.0,
+    "net_profit": 23822399999.999996,
+    "net_profit_owners": 23692000000.0
+   },
+   "checked_by": [
+    "claude",
+    "user",
+    "claude-recheck"
+   ]
+  },
+  {
+   "id": "tvsmotor-2025-09-s",
+   "company": "TVSMOTOR",
+   "period_end": "2025-09-30",
+   "period_type": "Q",
+   "basis": "standalone",
+   "source_file": "TVSMOTOR/2025-09.pdf",
+   "page": 4,
+   "values": {
+    "revenue_from_operations": 119054300000.0,
+    "other_income": -213299999.99999997,
+    "total_income": 118841000000.0,
+    "total_expenses": 106578000000.0,
+    "profit_before_tax": 12263000000.0,
+    "tax_expense": 3202100000.0,
+    "net_profit": 9060900000.0,
+    "eps_basic": 19.07,
+    "eps_diluted": 19.07
+   },
+   "checked_by": [
+    "claude",
+    "user",
+    "claude-recheck"
+   ]
+  },
+  {
+   "id": "pfc-2025-12-s",
+   "company": "PFC",
+   "period_end": "2025-12-31",
+   "period_type": "Q",
+   "basis": "standalone",
+   "source_file": "PFC/2025-12.pdf",
+   "page": 5,
+   "values": {
+    "revenue_from_operations": 146558400000.0,
+    "other_income": 48600000.0,
+    "total_income": 146607000000.0,
+    "total_expenses": 87033600000.0,
+    "profit_before_tax": 59573400000.0
+   },
+   "checked_by": [
+    "claude",
+    "user",
+    "claude-recheck"
+   ]
+  },
+  {
+   "id": "hal-2026-06-c",
+   "company": "HAL",
+   "period_end": "2026-06-30",
+   "period_type": "Q",
+   "basis": "consolidated",
+   "source_file": "HAL/2026-06.pdf",
+   "page": 4,
+   "values": {
+    "revenue_from_operations": 55151700000.0,
+    "other_income": 9002400000.0,
+    "total_income": 64154100000.0,
+    "total_expenses": 42926900000.0,
+    "profit_before_tax": 21343300000.0,
+    "tax_expense": 5446700000.0
+   },
+   "checked_by": [
+    "claude",
+    "user",
+    "claude-recheck"
+   ]
+  },
+  {
+   "id": "vbl-2026-06-c",
+   "company": "VBL",
+   "period_end": "2026-06-30",
+   "period_type": "Q",
+   "basis": "consolidated",
+   "source_file": "VBL/2026-06.pdf",
+   "page": 2,
+   "values": {
+    "revenue_from_operations": 86505700000.0,
+    "other_income": 1043810000.0,
+    "total_income": 87549510000.0,
+    "total_expenses": 67734910000.0,
+    "profit_before_tax": 19771770000.0
    },
    "checked_by": [
     "claude",

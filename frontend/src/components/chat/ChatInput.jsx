@@ -125,6 +125,7 @@ export default function ChatInput({ onSend, onUpload, isLoading, uploadedFile, o
                         placeholder={uploadedFile ? `Ask about ${uploadedFile} or any covered company` : "Ask about a company's filings"}
                         aria-label="Question"
                         disabled={isLoading}
+                        maxLength={1000}
                         rows={1}
                     />
                     <button type="submit" className="cx-send" disabled={isLoading || !question.trim()} aria-label="Send">

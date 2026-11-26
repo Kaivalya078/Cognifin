@@ -40,7 +40,12 @@ from auth import (
     verify_password,
 )
 from config import settings
-from core.app_retrieval import load_global_corpus, retrieve_global
+from core.app_retrieval import (
+    held_years,
+    load_global_corpus,
+    outside_coverage,
+    retrieve_global,
+)
 from core.citation_verifier import verify_citations
 
 # Phase 5: Confidence + citation verification
@@ -65,9 +70,9 @@ from core.retriever_pipeline import RetrieverPipeline
 
 # Auth + Database
 from db import ensure_indexes, users_collection
-from financials.present import assistant_metadata, finish
+from financials.present import assistant_metadata, finish, reminder
 from financials.present import prepare as prepare_figures
-from generation.citation_fill import fill_figure_citations
+from generation.citation_fill import drop_unknown_ids, fill_figure_citations
 from generation.intent_prompts import build_intent_prompt
 
 # Phase 2: Generation layer
@@ -132,6 +137,7 @@ class RetrieveRequest(BaseModel):
         ...,  # ... means required
         description="The question to search for in the document",
         min_length=3,  # At least 3 characters
+        max_length=1000,  # caps prompt cost and search work per request
         examples=["What are the risk factors?"]
     )
     top_k: Optional[int] = Field(
@@ -219,6 +225,7 @@ class ChatRequest(BaseModel):
         ...,
         description="The question to ask about the document",
         min_length=3,
+        max_length=1000,  # caps prompt cost and search work per request
         examples=["What are the risk factors?"]
     )
     top_k: Optional[int] = Field(
@@ -415,6 +422,16 @@ def _rate_key(request: Request) -> str:
     return "ip:" + get_remote_address(request)
 
 
+def _require_session_owner(session_id: Optional[str], user: Optional[dict]) -> None:
+    """An upload session answers only its uploader. Same 404 whether it never existed,
+    expired or belongs to someone else, so ids can't be probed."""
+    if session_id is None:
+        return
+    if not user or corpus_router is None or corpus_router.owner(session_id) != user["user_id"]:
+        raise HTTPException(status_code=404,
+                            detail="Upload session not found or expired. Upload the PDF again.")
+
+
 def _chat_limit(key: str) -> str:
     if key.startswith("ip:"):
         return f"{settings.ANON_FREE_QUESTIONS}/day"
@@ -564,7 +581,8 @@ def upload_document(
         # the router deletes the store when the session is evicted.
         session_corpus = new_session_corpus(RetrieverPipeline())
         q, abandoned, _ = _start_ingest(session_corpus, tmp_dir, tmp_path,
-                                        company_name, year, document_type)
+                                        company_name, year, document_type,
+                                        owner=current_user["user_id"])
         tmp_dir = None  # the worker owns the temp dir from here
         return StreamingResponse(_ingest_stream(q, abandoned),
                                  media_type="text/event-stream", headers=SSE_HEADERS)
@@ -583,7 +601,7 @@ def upload_document(
 
 
 def _start_ingest(session_corpus, tmp_dir: str, tmp_path: str,
-                  company_name: str, year: str, document_type: str):
+                  company_name: str, year: str, document_type: str, owner: Optional[str] = None):
     """Ingest an uploaded PDF on a worker thread that owns all cleanup.
 
     Returns (queue, abandoned, thread). The queue receives ("stage", info)
@@ -619,7 +637,7 @@ def _start_ingest(session_corpus, tmp_dir: str, tmp_path: str,
                 session_id=session_id, chunks=n, company=company_name,
                 year=year, document_type=document_type,
             ).model_dump()
-            corpus_router.register_session(session_id, session_corpus)
+            corpus_router.register_session(session_id, session_corpus, owner=owner)
             registered = True
             q.put(("final", final))
         except BaseException as e:
@@ -660,7 +678,8 @@ def _ingest_stream(q: queue.Queue, abandoned: threading.Event):
     description="Find the most relevant chunks for a given query."
 )
 @limiter.limit("30/minute")
-def retrieve(request: Request, body: RetrieveRequest):
+def retrieve(request: Request, body: RetrieveRequest,
+             current_user: Optional[dict] = Depends(get_optional_user)):
     """
     Main retrieval endpoint.
 
@@ -689,6 +708,8 @@ def retrieve(request: Request, body: RetrieveRequest):
             status_code=503,
             detail="No document indexed. Please ensure PDF_PATH is set correctly and restart the server."
         )
+
+    _require_session_owner(body.session_id, current_user)
 
     # Get top_k (use request value or default from env)
     top_k = body.top_k if body.top_k is not None else settings.TOP_K
@@ -780,11 +801,18 @@ _STRUCTURED_PROMPTS = {"comparison": "compare", "compare": "compare",
                        "temporal": "trend", "trend": "trend"}
 
 
+def _parsed(parsed, key) -> list:
+    v = parsed.get(key) if isinstance(parsed, dict) else getattr(parsed, key, None)
+    return list(v or [])
+
+
+REFUSAL = "Not available in the provided documents."
+
+
 def _prepare_figures(question: str, parsed):
     """Financials-table rows for this question, or None. Never fails a chat."""
     def get(key):
-        v = parsed.get(key) if isinstance(parsed, dict) else getattr(parsed, key, None)
-        return list(v or [])
+        return _parsed(parsed, key)
     try:
         return prepare_figures(question, get("companies"), [str(y) for y in get("years")])
     except Exception as e:
@@ -903,6 +931,14 @@ def answer_events(question: str, session_id: Optional[str] = None,
     if fin:
         context = fin.block + "\n\n" + context
         chunk_ids = list(chunk_ids) + list(fin.ids)
+    # A year none of the named companies has a report for, with no verified row: refuse
+    # (the frontend shows the upload card) rather than read another year's report.
+    # Uploaded PDFs (session path) are never refused here.
+    asked = _parsed(parsed, "companies"), [str(y) for y in _parsed(parsed, "years")]
+    refuse = (session_id is None and fin is None and all(asked)
+              and outside_coverage(*asked, held_years(corpus_manager)))
+    if refuse:
+        results, chunk_ids = [], []
 
     # Build the prompt and generate. Comparisons and trends get prompts that
     # demand tables over entities/periods; everything else keeps the generic
@@ -912,7 +948,7 @@ def answer_events(question: str, session_id: Optional[str] = None,
         system_prompt, user_message = build_intent_prompt(context, question, prompt_intent)
     else:
         system_prompt, user_message = build_prompt(context, question)
-    print(f"🤖 Generating answer with {llm_client.model}...")
+    user_message += reminder(fin)
     raw = []
 
     def deltas():
@@ -920,8 +956,14 @@ def answer_events(question: str, session_id: Optional[str] = None,
             raw.append(d)
             yield d
 
-    for text in hold_follow_ups(deltas()):
-        yield "token", {"text": text}
+    if refuse:
+        print("🚫 Asked year is outside the corpus for these companies; refusing without the LLM")
+        raw.append(REFUSAL)
+        yield "token", {"text": REFUSAL}
+    else:
+        print(f"🤖 Generating answer with {llm_client.model}...")
+        for text in hold_follow_ups(deltas()):
+            yield "token", {"text": text}
     raw_answer = "".join(raw).strip()
 
     answer, follow_ups = extract_follow_ups(raw_answer)
@@ -930,7 +972,7 @@ def answer_events(question: str, session_id: Optional[str] = None,
     model_answer = answer
     context_items = [(e["chunk_id"], e["snippet"]) for e in (fin.evidence if fin else [])]
     context_items += [(r.chunk_id, r.snippet) for r in results]
-    answer, filled = fill_figure_citations(answer, context_items)
+    answer, filled = fill_figure_citations(drop_unknown_ids(answer, chunk_ids), context_items)
     citations = extract_citations(answer, chunk_ids)
     confidence, conf_label = compute_confidence(results, answer, question, citations)
     citation_check = verify_citations(answer, chunk_ids)
@@ -1050,6 +1092,7 @@ def chat(request: Request, body: ChatRequest,
          current_user: Optional[dict] = Depends(get_optional_user)):
     """Answer (fresh or cached), then persist to the caller's conversation."""
     _require_chat_ready()
+    _require_session_owner(body.session_id, current_user)
 
     try:
         payload = answer_question(body.question, body.session_id, body.top_k)
@@ -1075,6 +1118,7 @@ def chat(request: Request, body: ChatRequest,
 def chat_stream(request: Request, body: ChatRequest,
                 current_user: Optional[dict] = Depends(get_optional_user)):
     _require_chat_ready()
+    _require_session_owner(body.session_id, current_user)
 
     def gen():
         try:

@@ -67,8 +67,13 @@ function Results({ m }) {
           <h2>How it's measured</h2>
           <p>
             {m.golden_set?.cases} questions over {m.golden_set?.companies} companies' annual reports and quarterly
-            filings. Every answer key was checked against the page it comes from, twice, by an LLM; 10 were
+            filings. Every answer key was checked against the page it comes from, twice, by an LLM; 20 were
             also spot-checked by hand.
+          </p>
+          <p>
+            NIFTY Next 50 companies are covered from FY2025 onward. A question about a year with no report
+            for that company gets &ldquo;not available&rdquo; and an offer to upload the report, rather than a
+            figure read from another year&apos;s filing.
           </p>
           <p>
             Each question runs through the same pipeline the chat uses: retrieval, reranking, the numeric

@@ -5,7 +5,7 @@
  */
 
 import ReactMarkdown from 'react-markdown';
-import remarkGfm from 'remark-gfm';
+import { MD_PROPS } from '../../utils/markdown';
 import { linkCitations } from '../../utils/citations';
 import { stageLine } from '../../utils/chatFormat';
 
@@ -17,7 +17,7 @@ export default function LoadingIndicator({ streaming }) {
         <article className="cx-a" aria-busy="true">
             {text ? (
                 <div className="cx-prose">
-                    <ReactMarkdown remarkPlugins={[remarkGfm]} components={INERT}>{linkCitations(text, null)}</ReactMarkdown>
+                    <ReactMarkdown {...MD_PROPS} components={INERT}>{linkCitations(text, null)}</ReactMarkdown>
                     <span className="cx-cursor" aria-hidden="true" />
                 </div>
             ) : (

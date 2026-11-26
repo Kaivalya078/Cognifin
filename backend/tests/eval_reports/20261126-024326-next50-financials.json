@@ -1,0 +1,346 @@
+{
+ "report": {
+  "group:all": {
+   "total": 270,
+   "stored": 255,
+   "correct": 255,
+   "precision": 1.0,
+   "coverage": 0.9444444444444444
+  },
+  "group:bank": {
+   "total": 22,
+   "stored": 20,
+   "correct": 20,
+   "precision": 1.0,
+   "coverage": 0.9090909090909091
+  },
+  "group:insurer": {
+   "total": 19,
+   "stored": 17,
+   "correct": 17,
+   "precision": 1.0,
+   "coverage": 0.8947368421052632
+  },
+  "method:llm": {
+   "total": 36,
+   "stored": 36,
+   "correct": 36,
+   "precision": 1.0,
+   "coverage": 1.0
+  },
+  "method:rule": {
+   "total": 160,
+   "stored": 160,
+   "correct": 160,
+   "precision": 1.0,
+   "coverage": 1.0
+  },
+  "method:xbrl": {
+   "total": 96,
+   "stored": 96,
+   "correct": 96,
+   "precision": 1.0,
+   "coverage": 1.0
+  },
+  "overall": {
+   "total": 311,
+   "stored": 292,
+   "correct": 292,
+   "precision": 1.0,
+   "coverage": 0.9389067524115756
+  },
+  "source:ixbrl": {
+   "total": 96,
+   "stored": 96,
+   "correct": 96,
+   "precision": 1.0,
+   "coverage": 1.0
+  },
+  "source:pdf": {
+   "total": 215,
+   "stored": 196,
+   "correct": 196,
+   "precision": 1.0,
+   "coverage": 0.9116279069767442
+  }
+ },
+ "wrong": [],
+ "missing": [
+  [
+   "adaniports-2025q1-c",
+   "eps_basic"
+  ],
+  [
+   "adaniports-2025q1-c",
+   "eps_diluted"
+  ],
+  [
+   "tmpv-2025q4-c",
+   "eps_diluted"
+  ],
+  [
+   "tmpv-fy2025-c",
+   "eps_basic"
+  ],
+  [
+   "tmpv-fy2025-c",
+   "eps_diluted"
+  ],
+  [
+   "axisbank-2025q3-s",
+   "net_npa_pct"
+  ],
+  [
+   "kotakbank-2026q1-s",
+   "interest_earned"
+  ],
+  [
+   "hdfcbank-2026q2-s",
+   "profit_before_tax"
+  ],
+  [
+   "hdfcbank-2026q2-s",
+   "tax_expense"
+  ],
+  [
+   "hdfcbank-2026q2-s",
+   "net_profit"
+  ],
+  [
+   "sbilife-2026q2-s",
+   "first_year_premium"
+  ],
+  [
+   "sbilife-2026q2-s",
+   "solvency_ratio"
+  ],
+  [
+   "sbilife-2026q2-s",
+   "eps_basic"
+  ],
+  [
+   "sbilife-2026q2-s",
+   "eps_diluted"
+  ],
+  [
+   "bajfinance-2025q2-c",
+   "eps_basic"
+  ],
+  [
+   "lt-2026q2-c",
+   "eps_basic"
+  ],
+  [
+   "lt-2026q2-c",
+   "eps_diluted"
+  ],
+  [
+   "gail-2025-06-c",
+   "revenue_from_operations"
+  ],
+  [
+   "gail-2025-06-c",
+   "net_profit_owners"
+  ]
+ ],
+ "suspects": [
+  [
+   "ADANIGREEN",
+   "standalone",
+   "Q",
+   "2025-12-31",
+   "8,200.00",
+   "net_profit",
+   "xbrl",
+   "profit_before_tax",
+   "xbrl"
+  ],
+  [
+   "BAJAJFINSV",
+   "consolidated",
+   "Q",
+   "2025-09-30",
+   "37,40,293.00",
+   "revenue_from_operations",
+   "xbrl",
+   "total_income",
+   "xbrl"
+  ],
+  [
+   "BAJAJFINSV",
+   "consolidated",
+   "Q",
+   "2025-12-31",
+   "39,70,806.00",
+   "revenue_from_operations",
+   "xbrl",
+   "total_income",
+   "xbrl"
+  ],
+  [
+   "BAJAJFINSV",
+   "consolidated",
+   "Q",
+   "2026-06-30",
+   "42,03,690.00",
+   "revenue_from_operations",
+   "xbrl",
+   "total_income",
+   "xbrl"
+  ],
+  [
+   "IDEA",
+   "standalone",
+   "Q",
+   "2025-03-31",
+   "-72687000000",
+   "net_profit",
+   "xbrl",
+   "profit_before_tax",
+   "xbrl"
+  ],
+  [
+   "IDEA",
+   "standalone",
+   "FY",
+   "2025-03-31",
+   "-274421000000",
+   "net_profit",
+   "xbrl",
+   "profit_before_tax",
+   "xbrl"
+  ],
+  [
+   "IDEA",
+   "standalone",
+   "Q",
+   "2026-03-31",
+   "52,02,200.00",
+   "net_profit",
+   "xbrl",
+   "profit_before_tax",
+   "xbrl"
+  ],
+  [
+   "IDEA",
+   "standalone",
+   "FY",
+   "2026-03-31",
+   "34,48,200.00",
+   "net_profit",
+   "xbrl",
+   "profit_before_tax",
+   "xbrl"
+  ],
+  [
+   "IRFC",
+   "standalone",
+   "Q",
+   "2025-03-31",
+   "16818700000",
+   "net_profit",
+   "xbrl",
+   "profit_before_tax",
+   "xbrl"
+  ],
+  [
+   "IRFC",
+   "standalone",
+   "FY",
+   "2025-03-31",
+   "65020000000",
+   "net_profit",
+   "xbrl",
+   "profit_before_tax",
+   "xbrl"
+  ],
+  [
+   "IRFC",
+   "standalone",
+   "Q",
+   "2025-09-30",
+   "1,77,698.00",
+   "net_profit",
+   "xbrl",
+   "profit_before_tax",
+   "xbrl"
+  ],
+  [
+   "IRFC",
+   "standalone",
+   "Q",
+   "2026-03-31",
+   "1,68,431.00",
+   "net_profit",
+   "xbrl",
+   "profit_before_tax",
+   "xbrl"
+  ],
+  [
+   "IRFC",
+   "standalone",
+   "FY",
+   "2026-03-31",
+   "7,00,917.00",
+   "net_profit",
+   "xbrl",
+   "profit_before_tax",
+   "xbrl"
+  ],
+  [
+   "IRFC",
+   "standalone",
+   "Q",
+   "2026-06-30",
+   "1,92,721.00",
+   "net_profit",
+   "xbrl",
+   "profit_before_tax",
+   "xbrl"
+  ],
+  [
+   "IRFC",
+   "standalone",
+   "Q",
+   "2026-09-30",
+   "1,95,848.00",
+   "net_profit",
+   "xbrl",
+   "profit_before_tax",
+   "xbrl"
+  ],
+  [
+   "JIOFIN",
+   "standalone",
+   "Q",
+   "2025-12-31",
+   "159.19",
+   "revenue_from_operations",
+   "llm",
+   "total_income",
+   "llm"
+  ],
+  [
+   "VAML",
+   "standalone",
+   "Q",
+   "2026-03-31",
+   "(1.30)",
+   "net_profit",
+   "xbrl",
+   "profit_before_tax",
+   "xbrl"
+  ],
+  [
+   "VAML",
+   "standalone",
+   "FY",
+   "2026-03-31",
+   "(3.66)",
+   "net_profit",
+   "xbrl",
+   "profit_before_tax",
+   "xbrl"
+  ]
+ ]
+}

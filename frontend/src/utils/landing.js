@@ -24,7 +24,7 @@ export function proofItems(m) {
   return [
     { value: pct(faith), label: 'of claims backed by the passages shown' },
     { value: pct(correct), label: 'correctness vs the answer key; partial counts ½' },
-    { value: String(companies), label: 'NIFTY 50 companies covered' },
+    { value: String(companies), label: 'NIFTY 100 companies covered' },
     { value: String(filings), label: 'annual reports and results indexed' },
   ];
 }

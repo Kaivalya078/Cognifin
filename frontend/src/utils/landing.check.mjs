@@ -29,8 +29,8 @@ assert.equal(readQuestionParam('?q=%20%20'), null);
 assert.equal(readQuestionParam(''), null);
 assert.equal(readQuestionParam('?q=' + 'a'.repeat(600)).length, 500);
 
-// companies: matches the eval's company count, unique, no KWIL (no reports)
-assert.equal(COMPANIES.length, metrics.golden_set.companies);
+// companies: matches the indexed company count (NIFTY 100), unique, no KWIL (no reports)
+assert.equal(COMPANIES.length, metrics.index.companies);
 assert.equal(new Set(COMPANIES).size, COMPANIES.length);
 assert.ok(!COMPANIES.includes('KWIL'));
 

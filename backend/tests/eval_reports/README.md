@@ -98,6 +98,46 @@ Chart values not equal to the DB: 0 of 50 points. Unmatched answer numbers: 1.
 |---|---|---|---|---|---|---|---|---|---|---|
 | v2-baseline | 0.994 | 0.870 | 1.00 | 0.02 | 1.00 | 1.00 | 0.793 | 0.966 | 9.3 s / 15.0 s | $0.00067 (+ $0.00071 judge) |
 | v3-citations (2026-11-25, `20261125-1504-v3-citations-r2-answers.json`) | 0.995 | 0.870 | 0.995 | 0.95 | 1.00 | 1.00 | 0.793 | 0.966 | 6.0 s / 8.9 s | $0.00071 (+ $0.00074 judge) |
+| **v4-nifty100** (2026-11-26, `20261126-0947-v4-nifty100-answers.json`, golden v3, 119 cases, 289-doc index) | 0.978 | 0.832 | 0.995 | 0.94 | 1.00 | 1.00 | 0.743 | 0.931 | 6.5 s / 8.6 s | $0.00071 (+ $0.00074 judge) |
+
+**v4-nifty100 split** (Next 50: FY2025 onward, with prior-year figures from those reports):
+
+| Cases | n | Faithfulness | Correctness | Cited share | hit@3 | hit@8 |
+|---|---|---|---|---|---|---|
+| v2 cases (gate: correctness ≥ 0.850, hit@3 ≥ 0.773) | 100 | 1.000 | **0.855** pass | 0.95 | **0.793** pass | 0.966 |
+| Next 50 cases | 19 | 0.844 | 0.711 | 0.88 | 0.429 | 0.714 |
+
+- **No cross-company citations:** all 206 cited chunks belong to the question's company, including the near-duplicate names (BAJAJHLDNG, ADANIGREEN, TATAPOWER, ENRIN, SIEMENS). Every Next 50 retrieval miss is on the right company and year; the answer page ranked below 8 (3 of the 4 misses@8 had it in the top 60).
+- **v2 cases:** retrieval identical per case to v3; 3 correctness flips (`tcs-2024-netzero`, `tatasteel-2025-turnover` yes → partial, `shriramfin-2025-aum` partial → no), within the documented judge noise.
+- **Next 50 misses, by cause:**
+  - Judge wrong (answer is right): `hal-2026-revenue` (₹33,089.8 cr = ₹33,08,979 lakh, scored partial), `dmart-2026-stores` (500 stores at FY26 end, judge read the key's FY25 aside as the ask).
+  - Model chose a report figure over the verified financials row it was given: `tatapower-2026-revenue` (₹63,681 cr vs row ₹62,428.59 cr), `bajajhldng-2025-pat` (owners' ₹6,520.67 cr vs total PAT ₹6,625.70 cr).
+  - Refused with the row in context (same open router follow-up as v2's numeric misses): `tvsmotor-q2fy26-revenue`, `hyundai-q2fy26-revenue`.
+  - Wrong figure from the report: `hindzinc-2024-revenue` (₹34,158 cr for FY2024's ₹28,932 cr; no router hit, prior-year question).
+- Spend: one full run, about $0.17; Phase 5.5 total about $0.30 of the $0.60 cap.
+
+### v4 fixes (published)
+
+| Run | Faithfulness | Correctness | Citation validity | Cited share | Refusal acc. | v2 cases correctness | Next 50 correctness |
+|---|---|---|---|---|---|---|---|
+| v4-nifty100 | 0.978 | 0.832 | 0.995 | 0.94 | 1.00 | 0.855 | 0.711 |
+| **v4-nifty100-fixes** (`20261126-1040-v4-nifty100-fixes-answers.json`) | **0.991** | **0.912** | 0.991 | 0.98 | 1.00 | **0.915** | **0.895** |
+
+Retrieval unchanged (hit@3 0.743, v2 cases 0.793). 0 cross-company citations of 191.
+
+- **Quarter refusals** (TVSMOTOR, HYUNDAI, and v2's HCLTECH, KOTAKBANK, BEL, open since 5.3): the verified row said "Q2 FY26" and the question "quarter ended September 2025"; gpt-4o-mini can't map months to Indian fiscal quarters, so March passed and September always refused. Each row now carries its end date ("Q2 FY26 (quarter ended 30 Sep 2025)"). Numeric correctness 0.545 → 0.909.
+- **Report figure over the verified row** (TATAPOWER "operating revenue ₹63,681 cr"; BAJAJHLDNG ₹6,520.67 cr, the owners' share its own highlights call "profit for the year"): the rows sat only at the top of a long system prompt. They are now repeated after the question in the user message. A header sentence alone didn't fix it (subset run).
+- **Segment questions** routed to company totals (ITC "cigarettes segment" got company revenue): the router now declines questions naming a segment, division or vertical.
+- **Mismatch warning hidden**: the "didn't match the verified table" note only rendered inside a chart, so single-figure answers never showed it. It now shows without a chart.
+- **Key wording** (`hal-2026-revenue` in crore, `dmart-2026-stores` without the FY2025 aside): the judge misread both; figures unchanged.
+- **Still wrong, model reading:** `hindzinc-2024-revenue` (takes the FY2025 column of a two-year table). Judge noise this run: `hyundai-q2fy26-revenue` (₹17,460.8 cr for ₹17,460.82 cr marked no; passed in the subset run).
+- Spend: two subset runs (~$0.06) + this full run (~$0.17); Phase 5.5 total about $0.53 of the $0.60 cap.
+
+**Follow-up (after the published run, 17-question subset, ~$0.025; not in the table above):**
+- Verified figures now show the filing's 2 decimals (₹17,460.82 crore, was ₹17,460.8): `hyundai-q2fy26-revenue` passes.
+- Citation ids the model invents (`[chunk_250]`) are dropped before the code fill, so a sentence with a matching figure gets a real id; the UI used to hide the bad id and show the sentence uncited. Citation validity 1.0 on the subset.
+- Tried and reverted: a prompt rule on reading prior-year columns ("(March 31, 2024: ₹X) is FY2024"). HINDZINC still answered the FY2025 figure, and MARUTI/TECHM switched to a sub-line (domestic sales, services revenue). HINDZINC FY2024 needs a verified FY2024 row (Q4 FY24 filings), not a prompt.
+- **Coverage rule (user decision, replaces collecting older filings):** a question naming companies and years where none of those companies has a report for any of those years, and the financials table has no row, gets the refusal sentence without an LLM call, so the upload card shows. Uploaded PDFs are never refused this way. Golden `hindzinc-2024-revenue` is now a refusal case. Dry run over golden v3: it refuses only that case and the 3 existing refusal cases. Limit: a comparison where one company holds the year still goes to the model.
 
 By kind, correctness: narrative 0.939, table 0.837, numeric 0.625, refusal 1.000. Retrieval over the 87 page-scored cases; v1's 40 alone: hit@3 0.775 (same as the 186-doc report from 2026-11-16).
 

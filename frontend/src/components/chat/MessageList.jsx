@@ -7,7 +7,7 @@
 
 import { createContext, useContext, useEffect, useRef, useState } from 'react';
 import ReactMarkdown from 'react-markdown';
-import remarkGfm from 'remark-gfm';
+import { MD_PROPS } from '../../utils/markdown';
 import { Copy, Check, ChevronDown, ChevronUp } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
@@ -95,7 +95,7 @@ function Answer({ message, onFollowUp, onRequestUpload, isLoading, onOpenSource,
         <article className="cx-a">
             <div className="cx-prose">
                 <CiteContext.Provider value={{ activeSourceId, open: openCite }}>
-                    <ReactMarkdown remarkPlugins={[remarkGfm]} components={MD_COMPONENTS}>
+                    <ReactMarkdown {...MD_PROPS} components={MD_COMPONENTS}>
                         {linkCitations(message.content, evidence)}
                     </ReactMarkdown>
                 </CiteContext.Provider>
@@ -119,6 +119,13 @@ function Answer({ message, onFollowUp, onRequestUpload, isLoading, onOpenSource,
             )}
 
             {pipeline.chart && <FinancialChart chart={pipeline.chart} numbersCheck={pipeline.numbers_check} />}
+            {/* Single-figure answers have no chart; the mismatch warning must still show. */}
+            {!pipeline.chart && pipeline.numbers_check?.unmatched?.length > 0 && (
+                <div className="cx-chart-note is-warn">
+                    {pipeline.numbers_check.unmatched.length} number{pipeline.numbers_check.unmatched.length > 1 ? 's' : ''} in
+                    this answer didn&apos;t match the verified table: {pipeline.numbers_check.unmatched.join(', ')}
+                </div>
+            )}
 
             {groups.length > 0 && (
                 <p className="cx-sources">

@@ -1,6 +1,6 @@
 # Cognifin (FinSight AI)
 
-RAG-based question answering over Indian financial documents (NIFTY 50 annual reports, SEBI DRHP/RHP). Ask a natural-language question, get an LLM answer grounded in cited evidence from the source PDFs.
+RAG-based question answering over Indian financial documents (NIFTY 100 annual reports and quarterly results, SEBI DRHP/RHP). Ask a natural-language question, get an LLM answer grounded in cited evidence from the source PDFs.
 
 ## Stack
 
@@ -96,7 +96,7 @@ Upload it anywhere with a public URL (R2, or a Hugging Face dataset). That URL i
   "MaxAgeSeconds": 86400}]
 ```
 
-**3. MongoDB Atlas.** Create an M0 cluster and allow the server's IP under Network Access. The connection string is `MONGO_URI`.
+**3. MongoDB Atlas.** Create an M0 cluster and allow the server's IP under Network Access, then **delete the `0.0.0.0/0` (allow from anywhere) entry** used during development, so only the server can connect. The connection string is `MONGO_URI`.
 
 **4. The API box.** Point a DNS A record (e.g. `api.example.com`) at the server and open ports 80 and 443. On Oracle, open them in the VCN security list *and* in the instance's own iptables, which blocks everything but SSH by default. Then:
 

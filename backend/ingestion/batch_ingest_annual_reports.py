@@ -1,5 +1,5 @@
 """
-FinSight AI - Batch Ingestion: NIFTY 50 Annual Reports
+FinSight AI - Batch Ingestion: NIFTY 100 Annual Reports
 ========================================================
 Deterministic batch ingestion script for annual reports.
 

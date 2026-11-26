@@ -162,3 +162,26 @@ def test_solvency_fraction_and_impossible_values():
     assert normalise(_cand("solvency_ratio", 0.0196, "0.0196")).value == 1.96
     assert check_ratio(normalise(_cand("solvency_ratio", 14500.0, "14,500")))
     assert check_ratio(normalise(_cand("solvency_ratio", 194.0, "194%"))) is None
+
+
+def test_no_fy_rows_for_companies_whose_year_does_not_end_in_march(tmp_path):
+    # A March filing's year-to-date column is a full year only for April-March companies;
+    # for a calendar-year company (VBL) it is one quarter, so it must not become an FY row.
+    root = tmp_path / "q"
+    rows = []
+    for sym in ("HDFCBANK", "VBL"):
+        rel = f"{sym}/2026-03_consolidated.html"
+        dst = root / rel
+        dst.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copyfile(FIX / "banking_q4.html", dst)
+        rows.append([sym, "2026-03-31", "BANKING", "consolidated", rel, f"https://x/{rel}",
+                     hashlib.sha256(dst.read_bytes()).hexdigest()])
+    with open(root / "sources.csv", "w", newline="") as f:
+        w = csv.writer(f)
+        w.writerow(["symbol", "period_end", "kind", "basis", "file", "url", "sha256"])
+        w.writerows(rows)
+    out = tmp_path / "f.duckdb"
+    build(root, out, use_llm=False, cache_dir=tmp_path / "cache")
+    fy = dict(_db(out).execute(
+        "SELECT company, count(*) FROM financials WHERE period_type='FY' GROUP BY company").fetchall())
+    assert fy.get("HDFCBANK", 0) > 0 and "VBL" not in fy

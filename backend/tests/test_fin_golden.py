@@ -10,7 +10,7 @@ NBFC = {"BAJFINANCE", "BAJAJFINSV", "SHRIRAMFIN", "JIOFIN"}
 
 
 def test_schema():
-    assert KEY["version"] == 1 and isinstance(KEY["changelog"], list)
+    assert KEY["version"] == 2 and isinstance(KEY["changelog"], list)
     ids = [c["id"] for c in KEY["cases"]]
     assert len(ids) == len(set(ids))
     for c in KEY["cases"]:
