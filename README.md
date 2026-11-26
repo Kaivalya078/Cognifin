@@ -18,12 +18,12 @@ Measured on a 119-question golden set across 64 companies (`backend/tests/golden
 | Metric | Score |
 |---|---|
 | Faithfulness (claims supported by retrieved context) | **1.00** |
-| Correctness (judged against the answer key) | **0.91** |
+| Correctness (judged against the answer key) | **0.93** |
 | Citation validity (cited page actually holds the claim) | **1.00** |
-| Answers with at least one citation | **1.00** |
+| Answers with at least one citation | **0.99** |
 | Refuses when the filings don't hold the answer | **1.00** |
-| Retrieval hit@3 / hit@8 | 0.76 / 0.93 |
-| Latency p50 / p95 (end to end, incl. LLM) | 4.7 s / 9.3 s |
+| Retrieval hit@3 / hit@8 | 0.75 / 0.94 |
+| Latency p50 / p95 (end to end, incl. LLM) | 4.9 s / 6.9 s |
 
 Full history and method: [`backend/tests/eval_reports/README.md`](backend/tests/eval_reports/README.md). Verified financial figures: 100% precision on a 36-case answer key, enforced in CI.
 

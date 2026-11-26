@@ -95,7 +95,7 @@ class IntelligentQuery:
 # LLM PARSING PROMPT
 # =============================================================================
 
-_PARSE_PROMPT = """You are a financial query parser for FinSight AI. Parse the user query into a structured JSON object.
+_PARSE_PROMPT = """You are a financial query parser for Cognifin. Parse the user query into a structured JSON object.
 
 Available companies in the corpus: {companies}
 
