@@ -247,8 +247,19 @@ def remote_assets(monkeypatch):
 
     monkeypatch.setattr(asset_manager.settings, "ASSET_MODE", "remote")
     monkeypatch.setattr(asset_manager.settings, "HF_CACHE_URL", "https://example.test/idx.tar.gz")
-    monkeypatch.setattr(asset_manager.requests, "get", lambda *a, **k: FakeResponse())
+    def fake_get(*a, **k):
+        served["headers"] = k.get("headers")
+        return FakeResponse()
+    monkeypatch.setattr(asset_manager.requests, "get", fake_get)
     return asset_manager, served
+
+
+def test_private_index_sends_token(remote_assets, tmp_path, monkeypatch):
+    asset_manager, served = remote_assets
+    served["bytes"] = _tarball({"document_registry.json": b"{}"})
+    monkeypatch.setattr(asset_manager.settings, "HF_TOKEN", "hf_x")
+    asset_manager.ensure_index_cache(str(tmp_path / "index_cache"))
+    assert served["headers"] == {"Authorization": "Bearer hf_x"}
 
 
 def test_remote_index_lands_in_configured_dir(remote_assets, tmp_path):
