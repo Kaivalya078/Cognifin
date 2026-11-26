@@ -282,3 +282,11 @@
 @media (max-width: 859px) {
   .cf-nf { padding-top: 56px; padding-bottom: 80px; }
 }
+
+/* Privacy */
+.cf-privacy { max-width: 720px; }
+.cf-privacy h2 { font: 500 18px var(--cf-font-mono); margin: 36px 0 10px; }
+.cf-privacy p, .cf-privacy li { line-height: 1.7; color: var(--cf-sub); }
+.cf-privacy ul { padding-left: 20px; display: grid; gap: 8px; margin: 0 0 14px; }
+.cf-privacy p { margin: 0 0 14px; }
+.cf-privacy .cf-eng-title { margin-bottom: 20px; }
