@@ -9,6 +9,7 @@ export default function Footer() {
                 <Wordmark />
                 <nav className="cf-footer-links" aria-label="Footer">
                     <Link to="/engineering">Engineering</Link>
+                    <Link to="/privacy">Privacy</Link>
                     <a href="https://github.com/Kaivalya078/Cognifin" target="_blank" rel="noreferrer">GitHub</a>
                 </nav>
                 <p className="cf-footer-copy">© {new Date().getFullYear()} Cognifin</p>

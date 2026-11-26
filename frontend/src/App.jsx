@@ -18,6 +18,7 @@ const ChatPage = lazy(() => import('./pages/ChatPage'));
 const AuthCallbackPage = lazy(() => import('./pages/AuthCallbackPage'));
 const EngineeringPage = lazy(() => import('./pages/EngineeringPage'));
 const NotFoundPage = lazy(() => import('./pages/NotFoundPage'));
+const PrivacyPage = lazy(() => import('./pages/PrivacyPage'));
 
 function AnimatedRoutes() {
   const location = useLocation();
@@ -45,6 +46,11 @@ function AnimatedRoutes() {
         <Route path="/engineering" element={
           <PageTransition>
             <EngineeringPage />
+          </PageTransition>
+        } />
+        <Route path="/privacy" element={
+          <PageTransition>
+            <PrivacyPage />
           </PageTransition>
         } />
         <Route path="/auth/callback" element={
