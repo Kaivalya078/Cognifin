@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-11-25T15:04:59",
-  "label": "v3-citations-r2",
+  "generated_at": "2026-11-26T09:47:14",
+  "label": "v4-nifty100",
   "model": "gpt-4o-mini",
   "judge_model": "gpt-4o-mini",
   "settings": {
@@ -10,73 +10,73 @@
     "final_k": 8
   },
   "golden_set": {
-    "version": 2,
-    "cases": 100,
-    "companies": 47,
+    "version": 3,
+    "cases": 119,
+    "companies": 64,
     "kinds": {
-      "table": 46,
-      "narrative": 41,
-      "numeric": 8,
-      "refusal": 5
+      "table": 54,
+      "narrative": 47,
+      "numeric": 11,
+      "refusal": 7
     }
   },
   "answers": {
-    "faithfulness": 0.9945945945945946,
-    "correctness": 0.87,
-    "citation_validity": 0.9947643979057592,
-    "cited_share": 0.9473684210526315,
-    "fill_only_share": 0.2,
-    "filled_marker_share": 0.1821705426356589,
+    "faithfulness": 0.9775784753363229,
+    "correctness": 0.8319327731092437,
+    "citation_validity": 0.9954954954954955,
+    "cited_share": 0.9375,
+    "fill_only_share": 0.20535714285714285,
+    "filled_marker_share": 0.15630252100840336,
     "refusal_accuracy": 1.0,
     "upload_card_rate": 1.0,
     "by_kind": {
       "narrative": {
-        "n": 41,
+        "n": 47,
         "faithfulness": 1.0,
-        "correctness": 0.9512195121951219
+        "correctness": 0.9361702127659575
       },
       "numeric": {
-        "n": 8,
+        "n": 11,
         "faithfulness": 1.0,
-        "correctness": 0.625
+        "correctness": 0.5454545454545454
       },
       "refusal": {
-        "n": 5,
+        "n": 7,
         "faithfulness": null,
         "correctness": 1.0
       },
       "table": {
-        "n": 46,
-        "faithfulness": 0.9868421052631579,
-        "correctness": 0.8260869565217391
+        "n": 54,
+        "faithfulness": 0.9484536082474226,
+        "correctness": 0.7777777777777778
       }
     },
     "errors": 0,
     "judge_errors": 0
   },
   "retrieval": {
-    "hit@3": 0.7931034482758621,
-    "hit@8": 0.9655172413793104,
-    "mrr": 0.6582649151614669,
-    "recall@60": 0.9770114942528736,
+    "hit@3": 0.7425742574257426,
+    "hit@8": 0.9306930693069307,
+    "mrr": 0.6335337105139085,
+    "recall@60": 0.9702970297029703,
     "v1_hit@3": 0.775
   },
   "financials": {
     "precision": 1.0,
-    "coverage": 0.9306122448979591
+    "coverage": 0.9389067524115756
   },
   "latency_ms": {
-    "p50": 5989.5,
-    "p95": 8939.55
+    "p50": 6549,
+    "p95": 8633.0
   },
   "cost_usd": {
-    "per_question": 0.000712,
-    "judge_per_question": 0.000743
+    "per_question": 0.000705,
+    "judge_per_question": 0.000741
   },
   "index": {
-    "chunks": 661560,
-    "documents": 186,
-    "companies": 47,
-    "disk_mb": 2357.6
+    "chunks": 991331,
+    "documents": 289,
+    "companies": 100,
+    "disk_mb": 3576.4
   }
 }
