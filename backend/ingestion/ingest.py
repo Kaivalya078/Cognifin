@@ -144,7 +144,7 @@ def main():
     
     # ── Step 6: Commit (rows are on disk; the registry marks them saved) ──
     corpus.save_registry(cache_dir)
-    corpus.store.build_text_index()
+    corpus.store.build_indexes()
     print("\n✅ Ingestion complete!")
 
     # ── Summary ──────────────────────────────────────────────────────

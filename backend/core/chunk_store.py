@@ -72,8 +72,14 @@ class ChunkStore:
     def count(self) -> int:
         return self.table.count_rows()
 
-    def build_text_index(self) -> None:
+    def build_indexes(self) -> None:
+        """Full-text index plus exact scalar indexes for the columns queries filter on
+        (scope prefilters, neighbour lookups, get by id). Exact: results don't change."""
         self.table.create_fts_index("text", replace=True)
+        for col in ("vector_id", "chunk_seq"):
+            self.table.create_scalar_index(col, index_type="BTREE", replace=True)
+        for col in ("document_label", "company", "year", "document_type", "is_active"):
+            self.table.create_scalar_index(col, index_type="BITMAP", replace=True)
 
     def search_dense(self, vector: np.ndarray, k: int,
                      where: Optional[str]) -> List[Tuple[float, Dict]]:

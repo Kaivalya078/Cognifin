@@ -116,7 +116,7 @@ def main():
             print(f"✅ ({doc_elapsed:.1f}s) | ETA: {remaining_min:.0f}min", flush=True)
 
     print("🔤 Building full-text index...", flush=True)
-    corpus.store.build_text_index()
+    corpus.store.build_indexes()
 
     elapsed = time.time() - batch_start
     print(f"\n✅ Batch ingestion complete: {ingested} ingested, {skipped} skipped in {elapsed/60:.1f}min")
