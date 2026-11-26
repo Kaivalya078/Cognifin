@@ -464,7 +464,7 @@ export default function ChatPage() {
                         />
                     ) : (
                         <div className="cx-welcome">
-                            <h1 className="cx-welcome-title">Ask about any NIFTY 50 company&apos;s filings.</h1>
+                            <h1 className="cx-welcome-title">Ask about any NIFTY 100 company&apos;s filings.</h1>
                             <ul className="cx-suggested" aria-label="Suggested questions">
                                 {SUGGESTED.map((text) => (
                                     <li key={text}>

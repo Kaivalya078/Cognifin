@@ -1,10 +1,17 @@
-// NIFTY 50 companies with indexed filings (from backend/tests/golden_set.json).
-// Update when the corpus is rebuilt (Phase 5.5); landing.check.mjs compares the count with metrics.json.
+// NIFTY 100 companies with indexed filings (symbols from backend/index_cache/document_registry.json).
+// Regenerate when the corpus is rebuilt; landing.check.mjs compares the count with metrics.json index.companies.
 export const COMPANIES = [
-  "ADANIENT", "ADANIPORTS", "APOLLOHOSP", "ASIANPAINT", "AXISBANK", "BAJAJ-AUTO", "BAJAJFINSV", "BAJFINANCE",
-  "BEL", "BHARTIARTL", "CIPLA", "COALINDIA", "DRREDDY", "EICHERMOT", "HCLTECH", "HDFCBANK",
-  "HDFCLIFE", "HINDALCO", "HINDUNILVR", "ICICIBANK", "INDIGO", "INFY", "ITC", "JIOFIN",
-  "JSWSTEEL", "KOTAKBANK", "LT", "M&M", "MARUTI", "MAXHEALTH", "NESTLEIND", "NTPC",
-  "ONGC", "POWERGRID", "RELIANCE", "SBILIFE", "SBIN", "SHRIRAMFIN", "TATACONSUM", "TATASTEEL",
-  "TCS", "TECHM", "TITAN", "TMPV", "TRENT", "ULTRACEMCO", "WIPRO",
+  "ABB", "ADANIENSOL", "ADANIENT", "ADANIGREEN", "ADANIPORTS", "ADANIPOWER", "AMBUJACEM", "APOLLOHOSP",
+  "ASIANPAINT", "AXISBANK", "BAJAJ-AUTO", "BAJAJFINSV", "BAJAJHLDNG", "BAJFINANCE", "BANKBARODA", "BEL",
+  "BHARTIARTL", "BOSCHLTD", "BPCL", "BRITANNIA", "BSE", "CANBK", "CGPOWER", "CHOLAFIN",
+  "CIPLA", "COALINDIA", "CUMMINSIND", "DIVISLAB", "DLF", "DMART", "DRREDDY", "EICHERMOT",
+  "ENRIN", "ETERNAL", "GAIL", "GODREJCP", "GRASIM", "HAL", "HCLTECH", "HDFCAMC",
+  "HDFCBANK", "HDFCLIFE", "HINDALCO", "HINDUNILVR", "HINDZINC", "HYUNDAI", "ICICIBANK", "IDEA",
+  "INDIGO", "INFY", "IOC", "IRFC", "ITC", "JINDALSTEL", "JIOFIN", "JSWSTEEL",
+  "KOTAKBANK", "LT", "LTM", "M&M", "MARUTI", "MAXHEALTH", "MAZDOCK", "MOTHERSON",
+  "MUTHOOTFIN", "NESTLEIND", "NTPC", "ONGC", "PFC", "PIDILITIND", "PNB", "POLYCAB",
+  "POWERGRID", "POWERINDIA", "RELIANCE", "SBILIFE", "SBIN", "SHRIRAMFIN", "SIEMENS", "SOLARINDS",
+  "SUNPHARMA", "TATACAP", "TATACONSUM", "TATAPOWER", "TATASTEEL", "TCS", "TECHM", "TITAN",
+  "TMCV", "TMPV", "TORNTPHARM", "TRENT", "TVSMOTOR", "ULTRACEMCO", "UNIONBANK", "VAML",
+  "VBL", "VEDL", "WIPRO", "ZYDUSLIFE",
 ];

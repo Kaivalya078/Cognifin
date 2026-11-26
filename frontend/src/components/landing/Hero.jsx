@@ -71,7 +71,7 @@ export default function Hero() {
             <div className="cf-hero-copy">
                 <h1 className="cf-h1">Every answer points to its page.</h1>
                 <p className="cf-lead">
-                    Ask about the NIFTY&nbsp;50's largest companies. Cognifin reads the annual reports and quarterly
+                    Ask about India's 100 largest listed companies, the NIFTY&nbsp;100. Cognifin reads the annual reports and quarterly
                     results, answers in plain language, and shows you the exact line it used.
                 </p>
                 <div className="cf-hero-actions">

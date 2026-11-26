@@ -1,6 +1,6 @@
 # Cognifin (FinSight AI)
 
-RAG-based question answering over Indian financial documents (NIFTY 50 annual reports, SEBI DRHP/RHP). Ask a natural-language question, get an LLM answer grounded in cited evidence from the source PDFs.
+RAG-based question answering over Indian financial documents (NIFTY 100 annual reports and quarterly results, SEBI DRHP/RHP). Ask a natural-language question, get an LLM answer grounded in cited evidence from the source PDFs.
 
 ## Stack
 
