@@ -66,6 +66,16 @@ def _cite(unit: str, items: list[tuple[str, list]]) -> tuple[str, list[str]]:
     return f"{body} {marks}{tail}", ids
 
 
+_MARK = re.compile(r"\s*\[((?:chunk|fin)_\d+)\]")
+
+
+def drop_unknown_ids(answer: str, chunk_ids: list[str]) -> str:
+    """Remove [chunk_N]/[fin_N] markers for ids not in the context (the model invents a few),
+    before the fill runs, so a sentence whose figure matches a passage gets a real id instead."""
+    known = {bare_chunk_id(c) for c in chunk_ids}
+    return _MARK.sub(lambda m: m.group(0) if m.group(1) in known else "", answer)
+
+
 def fill_figure_citations(answer: str, context_items: list[tuple[str, str]]) -> tuple[str, list[str]]:
     items = [(bare_chunk_id(cid), _numbers(text, figures_only=False)) for cid, text in context_items]
     added: list[str] = []

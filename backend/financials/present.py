@@ -17,7 +17,7 @@ _DISPLAY = {"INR": ("₹ crore", 1e7), "pct": ("%", 1), "ratio": ("×", 1), "INR
 
 def fmt_value(value: float, unit: str) -> str:
     if unit == "INR":
-        return f"₹{value / 1e7:,.1f} crore"
+        return f"₹{value / 1e7:,.2f} crore"
     if unit == "pct":
         return f"{value:.2f}%"
     if unit == "ratio":

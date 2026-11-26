@@ -2,7 +2,7 @@ from financials.present import build_chart, finish, fmt_value, prepare
 
 
 def test_fmt_value():
-    assert fmt_value(12209900000.0, "INR") == "₹1,221.0 crore"
+    assert fmt_value(12209900000.0, "INR") == "₹1,220.99 crore"   # the filing's 2 decimals (v4: HYUNDAI 17,460.82)
     assert fmt_value(1.234, "pct") == "1.23%" and fmt_value(1.85, "ratio") == "1.85×"
     assert fmt_value(12.3, "INR_per_share") == "₹12.30"
 
