@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-11-26T13:24:24",
-  "label": "v5-nifty100-final",
+  "generated_at": "2026-11-26T15:25:44",
+  "label": "v6-onnx-int8",
   "model": "gpt-4o-mini",
   "judge_model": "gpt-4o-mini",
   "settings": {
@@ -22,18 +22,18 @@
   },
   "answers": {
     "faithfulness": 1.0,
-    "correctness": 0.9243697478991597,
+    "correctness": 0.907563025210084,
     "citation_validity": 1.0,
-    "cited_share": 0.990909090909091,
-    "fill_only_share": 0.2,
-    "filled_marker_share": 0.15949820788530467,
+    "cited_share": 1.0,
+    "fill_only_share": 0.2018348623853211,
+    "filled_marker_share": 0.13321492007104796,
     "refusal_accuracy": 1.0,
     "upload_card_rate": 1.0,
     "by_kind": {
       "narrative": {
         "n": 47,
         "faithfulness": 1.0,
-        "correctness": 0.9680851063829787
+        "correctness": 0.9574468085106383
       },
       "numeric": {
         "n": 11,
@@ -48,35 +48,35 @@
       "table": {
         "n": 53,
         "faithfulness": 1.0,
-        "correctness": 0.8584905660377359
+        "correctness": 0.8301886792452831
       }
     },
     "errors": 0,
-    "judge_errors": 1
+    "judge_errors": 2
   },
   "retrieval": {
-    "hit@3": 0.74,
+    "hit@3": 0.76,
     "hit@8": 0.93,
-    "mrr": 0.6298690476190476,
+    "mrr": 0.621702380952381,
     "recall@60": 0.97,
-    "v1_hit@3": 0.775
+    "v1_hit@3": 0.825
   },
   "financials": {
     "precision": 1.0,
     "coverage": 0.9389067524115756
   },
   "latency_ms": {
-    "p50": 7880,
-    "p95": 10527.0
+    "p50": 4651,
+    "p95": 9252.0
   },
   "cost_usd": {
-    "per_question": 0.000714,
-    "judge_per_question": 0.000741
+    "per_question": 0.000718,
+    "judge_per_question": 0.000756
   },
   "index": {
     "chunks": 991331,
     "documents": 289,
     "companies": 100,
-    "disk_mb": 3576.4
+    "disk_mb": 3905.7
   }
 }
