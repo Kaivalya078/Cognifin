@@ -13,6 +13,7 @@ from typing import Dict, List, Optional, Tuple
 import lancedb
 import numpy as np
 import pyarrow as pa
+from lancedb.index import Bitmap, BTree
 
 from core.lookup_index import RetrievalScope
 from core.metadata_schema import ChunkMetadata
@@ -77,9 +78,9 @@ class ChunkStore:
         (scope prefilters, neighbour lookups, get by id). Exact: results don't change."""
         self.table.create_fts_index("text", replace=True)
         for col in ("vector_id", "chunk_seq"):
-            self.table.create_scalar_index(col, index_type="BTREE", replace=True)
+            self.table.create_index(col, config=BTree(), replace=True)
         for col in ("document_label", "company", "year", "document_type", "is_active"):
-            self.table.create_scalar_index(col, index_type="BITMAP", replace=True)
+            self.table.create_index(col, config=Bitmap(), replace=True)
 
     def search_dense(self, vector: np.ndarray, k: int,
                      where: Optional[str]) -> List[Tuple[float, Dict]]:
