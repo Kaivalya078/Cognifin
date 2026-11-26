@@ -98,6 +98,7 @@ class Settings(BaseSettings):
     # Assets / deployment
     ASSET_MODE: str = "local"
     HF_CACHE_URL: str = ""
+    HF_TOKEN: str = ""          # read token for a private HF_CACHE_URL
     HF_PDF_BASE_URL: str = ""
 
     # Uploads — each session holds its own in-memory index until evicted

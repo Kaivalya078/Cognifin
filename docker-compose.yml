@@ -18,7 +18,7 @@ services:
     healthcheck:
       test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
       interval: 30s
-      start_period: 15m        # first boot downloads + loads the ~650 MB index
+      start_period: 15m        # first boot downloads + extracts the ~3.5 GB index
 
   caddy:
     image: caddy:2

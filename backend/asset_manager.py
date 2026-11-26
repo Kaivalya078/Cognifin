@@ -62,7 +62,9 @@ def ensure_index_cache(cache_dir: str) -> None:
     with tempfile.TemporaryDirectory(dir=parent) as tmp:
         tarball = os.path.join(tmp, "index_cache.tar.gz")
         print(f"Downloading index cache from {settings.HF_CACHE_URL} ...")
-        with requests.get(settings.HF_CACHE_URL, stream=True, timeout=60) as r:
+        # requests drops this header when HF redirects to its CDN (another host).
+        headers = {"Authorization": f"Bearer {settings.HF_TOKEN}"} if settings.HF_TOKEN else {}
+        with requests.get(settings.HF_CACHE_URL, headers=headers, stream=True, timeout=60) as r:
             r.raise_for_status()
             with open(tarball, "wb") as f:
                 for chunk in r.iter_content(chunk_size=1024 * 1024):
