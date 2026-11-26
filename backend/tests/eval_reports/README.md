@@ -133,6 +133,8 @@ Retrieval unchanged (hit@3 0.743, v2 cases 0.793). 0 cross-company citations of 
 - **Still wrong, model reading:** `hindzinc-2024-revenue` (takes the FY2025 column of a two-year table). Judge noise this run: `hyundai-q2fy26-revenue` (₹17,460.8 cr for ₹17,460.82 cr marked no; passed in the subset run).
 - Spend: two subset runs (~$0.06) + this full run (~$0.17); Phase 5.5 total about $0.53 of the $0.60 cap.
 
+**v5-nifty100-final (published, 2026-11-26, `20261126-1324-v5-nifty100-final-answers.json`)**: the merged main after PR #10 (coverage refusal, document fence, off-topic scope, 2-decimal figures, invented-id drop). Correctness **0.924** (v2 cases 0.910, Next 50 1.000), faithfulness **1.000**, citation validity **1.000**, cited share 0.99, refusal 1.00, 0 cross-company citations; hit@3 0.740; p50 7.9 s. Vs v4-fixes: `hindzinc-2024-revenue` now refused as intended, `hyundai-q2fy26-revenue` passes (2 decimals); `techm-2023-revenue` picked the services line again (known flaky); `hindalco-2023-novelis` scored 0 only because the judge returned bad JSON (`judge_error`; the answer is correct). Spend: about $0.17 (cap raised by the user to ~$0.80; total ~$0.76).
+
 **Follow-up (after the published run, 17-question subset, ~$0.025; not in the table above):**
 - Verified figures now show the filing's 2 decimals (₹17,460.82 crore, was ₹17,460.8): `hyundai-q2fy26-revenue` passes.
 - Citation ids the model invents (`[chunk_250]`) are dropped before the code fill, so a sentence with a matching figure gets a real id; the UI used to hide the bad id and show the sentence uncited. Citation validity 1.0 on the subset.

@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-11-26T10:40:32",
-  "label": "v4-nifty100-fixes",
+  "generated_at": "2026-11-26T13:24:24",
+  "label": "v5-nifty100-final",
   "model": "gpt-4o-mini",
   "judge_model": "gpt-4o-mini",
   "settings": {
@@ -14,19 +14,19 @@
     "cases": 119,
     "companies": 64,
     "kinds": {
-      "table": 54,
+      "table": 53,
       "narrative": 47,
       "numeric": 11,
-      "refusal": 7
+      "refusal": 8
     }
   },
   "answers": {
-    "faithfulness": 0.9909502262443439,
-    "correctness": 0.9117647058823529,
-    "citation_validity": 0.9906976744186047,
-    "cited_share": 0.9819819819819819,
-    "fill_only_share": 0.22522522522522523,
-    "filled_marker_share": 0.15807560137457044,
+    "faithfulness": 1.0,
+    "correctness": 0.9243697478991597,
+    "citation_validity": 1.0,
+    "cited_share": 0.990909090909091,
+    "fill_only_share": 0.2,
+    "filled_marker_share": 0.15949820788530467,
     "refusal_accuracy": 1.0,
     "upload_card_rate": 1.0,
     "by_kind": {
@@ -37,28 +37,28 @@
       },
       "numeric": {
         "n": 11,
-        "faithfulness": 0.8571428571428571,
-        "correctness": 0.9090909090909091
+        "faithfulness": 1.0,
+        "correctness": 1.0
       },
       "refusal": {
-        "n": 7,
+        "n": 8,
         "faithfulness": null,
         "correctness": 1.0
       },
       "table": {
-        "n": 54,
+        "n": 53,
         "faithfulness": 1.0,
-        "correctness": 0.8518518518518519
+        "correctness": 0.8584905660377359
       }
     },
     "errors": 0,
     "judge_errors": 1
   },
   "retrieval": {
-    "hit@3": 0.7425742574257426,
-    "hit@8": 0.9306930693069307,
-    "mrr": 0.6335337105139085,
-    "recall@60": 0.9702970297029703,
+    "hit@3": 0.74,
+    "hit@8": 0.93,
+    "mrr": 0.6298690476190476,
+    "recall@60": 0.97,
     "v1_hit@3": 0.775
   },
   "financials": {
@@ -66,12 +66,12 @@
     "coverage": 0.9389067524115756
   },
   "latency_ms": {
-    "p50": 6111,
-    "p95": 8532.0
+    "p50": 7880,
+    "p95": 10527.0
   },
   "cost_usd": {
-    "per_question": 0.000712,
-    "judge_per_question": 0.000745
+    "per_question": 0.000714,
+    "judge_per_question": 0.000741
   },
   "index": {
     "chunks": 991331,
