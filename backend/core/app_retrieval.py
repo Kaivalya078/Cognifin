@@ -103,3 +103,20 @@ def retrieve_global(question: str, pipeline, corpus_manager, top_k: int, final_k
         final_k=final_k,
     )
     return candidates, final, parsed
+
+
+def held_years(corpus_manager) -> dict:
+    """{company: {report years}} in the global corpus."""
+    held: dict = {}
+    for d in corpus_manager.documents.values():
+        held.setdefault(d.metadata.company, set()).add(str(d.metadata.year))
+    return held
+
+
+def outside_coverage(companies: list, years: list, held: dict) -> bool:
+    """True when the question names companies and years and none of those companies has a
+    report for any of those years: answering would mean reading another year's report
+    (v4 eval: HINDZINC FY2024 from the FY2025 prior-year column, wrong). The chat then
+    replies with the refusal, which shows the upload card."""
+    return bool(companies and years) and not any(
+        str(y) in held.get(c, ()) for c in companies for y in years)

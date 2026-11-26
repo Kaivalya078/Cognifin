@@ -40,7 +40,12 @@ from auth import (
     verify_password,
 )
 from config import settings
-from core.app_retrieval import load_global_corpus, retrieve_global
+from core.app_retrieval import (
+    held_years,
+    load_global_corpus,
+    outside_coverage,
+    retrieve_global,
+)
 from core.citation_verifier import verify_citations
 
 # Phase 5: Confidence + citation verification
@@ -780,11 +785,18 @@ _STRUCTURED_PROMPTS = {"comparison": "compare", "compare": "compare",
                        "temporal": "trend", "trend": "trend"}
 
 
+def _parsed(parsed, key) -> list:
+    v = parsed.get(key) if isinstance(parsed, dict) else getattr(parsed, key, None)
+    return list(v or [])
+
+
+REFUSAL = "Not available in the provided documents."
+
+
 def _prepare_figures(question: str, parsed):
     """Financials-table rows for this question, or None. Never fails a chat."""
     def get(key):
-        v = parsed.get(key) if isinstance(parsed, dict) else getattr(parsed, key, None)
-        return list(v or [])
+        return _parsed(parsed, key)
     try:
         return prepare_figures(question, get("companies"), [str(y) for y in get("years")])
     except Exception as e:
@@ -903,6 +915,14 @@ def answer_events(question: str, session_id: Optional[str] = None,
     if fin:
         context = fin.block + "\n\n" + context
         chunk_ids = list(chunk_ids) + list(fin.ids)
+    # A year none of the named companies has a report for, with no verified row: refuse
+    # (the frontend shows the upload card) rather than read another year's report.
+    # Uploaded PDFs (session path) are never refused here.
+    asked = _parsed(parsed, "companies"), [str(y) for y in _parsed(parsed, "years")]
+    refuse = (session_id is None and fin is None and all(asked)
+              and outside_coverage(*asked, held_years(corpus_manager)))
+    if refuse:
+        results, chunk_ids = [], []
 
     # Build the prompt and generate. Comparisons and trends get prompts that
     # demand tables over entities/periods; everything else keeps the generic
@@ -913,7 +933,6 @@ def answer_events(question: str, session_id: Optional[str] = None,
     else:
         system_prompt, user_message = build_prompt(context, question)
     user_message += reminder(fin)
-    print(f"🤖 Generating answer with {llm_client.model}...")
     raw = []
 
     def deltas():
@@ -921,8 +940,14 @@ def answer_events(question: str, session_id: Optional[str] = None,
             raw.append(d)
             yield d
 
-    for text in hold_follow_ups(deltas()):
-        yield "token", {"text": text}
+    if refuse:
+        print("🚫 Asked year is outside the corpus for these companies; refusing without the LLM")
+        raw.append(REFUSAL)
+        yield "token", {"text": REFUSAL}
+    else:
+        print(f"🤖 Generating answer with {llm_client.model}...")
+        for text in hold_follow_ups(deltas()):
+            yield "token", {"text": text}
     raw_answer = "".join(raw).strip()
 
     answer, follow_ups = extract_follow_ups(raw_answer)

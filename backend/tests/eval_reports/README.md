@@ -137,6 +137,7 @@ Retrieval unchanged (hit@3 0.743, v2 cases 0.793). 0 cross-company citations of 
 - Verified figures now show the filing's 2 decimals (₹17,460.82 crore, was ₹17,460.8): `hyundai-q2fy26-revenue` passes.
 - Citation ids the model invents (`[chunk_250]`) are dropped before the code fill, so a sentence with a matching figure gets a real id; the UI used to hide the bad id and show the sentence uncited. Citation validity 1.0 on the subset.
 - Tried and reverted: a prompt rule on reading prior-year columns ("(March 31, 2024: ₹X) is FY2024"). HINDZINC still answered the FY2025 figure, and MARUTI/TECHM switched to a sub-line (domestic sales, services revenue). HINDZINC FY2024 needs a verified FY2024 row (Q4 FY24 filings), not a prompt.
+- **Coverage rule (user decision, replaces collecting older filings):** a question naming companies and years where none of those companies has a report for any of those years, and the financials table has no row, gets the refusal sentence without an LLM call, so the upload card shows. Uploaded PDFs are never refused this way. Golden `hindzinc-2024-revenue` is now a refusal case. Dry run over golden v3: it refuses only that case and the 3 existing refusal cases. Limit: a comparison where one company holds the year still goes to the model.
 
 By kind, correctness: narrative 0.939, table 0.837, numeric 0.625, refusal 1.000. Retrieval over the 87 page-scored cases; v1's 40 alone: hit@3 0.775 (same as the 186-doc report from 2026-11-16).
 

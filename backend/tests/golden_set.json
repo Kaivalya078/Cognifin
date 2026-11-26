@@ -4,7 +4,8 @@
   "2026-11-16 recheck: mm-2025-tractors answer_pages [25] -> [15,25,48,77,81] (figure also stated on pages 15, 48, 77, 81).",
   "2026-11-24 v2: +60 cases (27 previously uncovered companies, FY2026, numeric kind = financials-table figures with no answer page, refusal kind = key is the refusal sentence). v1's 40 cases unchanged.",
   "2026-11-26 v3: +19 NIFTY Next 50 cases (8 table incl. HINDZINC FY2024 from the FY2025 report's prior-year column, 6 narrative, 3 numeric, 2 refusal; near-duplicate names BAJAJHLDNG, ADANIGREEN, TATAPOWER, ENRIN, SIEMENS). v2's 100 cases unchanged; user spot-checked 10.",
-  "2026-11-26 v3 wording: hal-2026-revenue key written in crore (lakh as the printed form) and dmart-2026-stores key drops the FY2025 aside; the v4 judge misread both. Figures unchanged."
+  "2026-11-26 v3 wording: hal-2026-revenue key written in crore (lakh as the printed form) and dmart-2026-stores key drops the FY2025 aside; the v4 judge misread both. Figures unchanged.",
+  "2026-11-26 v3 coverage rule (user decision): a year none of the named companies has a report for, with no verified row, is refused (upload card). hindzinc-2024-revenue table -> refusal; its prior-year figure (₹28,932 crore, FY2025 report pp. 50/120/237) is no longer expected."
  ],
  "cases": [
   {
@@ -2124,13 +2125,9 @@
    "question": "What was Hindustan Zinc's consolidated revenue from operations in FY2024?",
    "company": "HINDZINC",
    "year": "2025",
-   "answer_pages": [
-    50,
-    120,
-    237
-   ],
-   "answer": "₹28,932 crore (prior-year figure in the FY2025 report)",
-   "kind": "table",
+   "answer_pages": [],
+   "answer": "Not available in the provided documents.",
+   "kind": "refusal",
    "checked_by": [
     "claude",
     "user",
