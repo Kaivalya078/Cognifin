@@ -13,13 +13,26 @@ from typing import Dict, List, Optional, Tuple
 import lancedb
 import numpy as np
 import pyarrow as pa
-from lancedb.index import Bitmap, BTree
+from lancedb.index import Bitmap, BTree, IvfPq
 
 from core.lookup_index import RetrievalScope
 from core.metadata_schema import ChunkMetadata
 
 TABLE = "chunks"
 _META_TYPES = {int: pa.int64(), str: pa.string(), bool: pa.bool_(), "Optional[str]": pa.string()}
+
+
+# Vector index for questions that name no company: a flat scan over ~1M vectors was
+# OOM-killed in a 600 MB container. Company-scoped searches bypass it and stay exact
+# (they only read that company's rows through the bitmap index).
+VECTOR_INDEX_PARTITIONS = 1024     # ~sqrt(rows)
+VECTOR_INDEX_SUBVECTORS = 96       # 768 dims / 8
+ANN_NPROBES = 40
+ANN_REFINE = 10                    # re-score 10x k candidates with the full vectors
+
+
+def _company_scoped(where: Optional[str]) -> bool:
+    return bool(where) and "company IN (" in where      # built by scope_to_where
 
 
 def _schema(dim: int) -> pa.Schema:
@@ -81,6 +94,10 @@ class ChunkStore:
             self.table.create_index(col, config=BTree(), replace=True)
         for col in ("document_label", "company", "year", "document_type", "is_active"):
             self.table.create_index(col, config=Bitmap(), replace=True)
+        if self.count() >= 256 * VECTOR_INDEX_PARTITIONS // 8:     # enough rows to train it
+            self.table.create_index("vector", replace=True, config=IvfPq(
+                distance_type="cosine", num_partitions=VECTOR_INDEX_PARTITIONS,
+                num_sub_vectors=VECTOR_INDEX_SUBVECTORS))
 
     def search_dense(self, vector: np.ndarray, k: int,
                      where: Optional[str]) -> List[Tuple[float, Dict]]:
@@ -88,6 +105,7 @@ class ChunkStore:
                               vector_column_name="vector").distance_type("cosine")
         if where:
             q = q.where(where, prefilter=True)
+        q = q.bypass_vector_index() if _company_scoped(where) else q.nprobes(ANN_NPROBES).refine_factor(ANN_REFINE)
         return [(1.0 - r.pop("_distance"), r) for r in q.limit(k).to_list()]
 
     def search_text(self, query: str, k: int,

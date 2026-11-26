@@ -278,3 +278,22 @@ def test_build_indexes_adds_exact_scalar_indexes(store):
         assert f"{col}_idx" in names, (col, names)
     assert [r["chunk_seq"] for r in store.neighbors("TCS_Annual_Report_2024_v1", 1, 1)] == [0, 1, 2]
     assert store.get(4)["company"] == "INFY"
+
+
+def test_company_scoped_search_stays_exact_and_unscoped_uses_the_vector_index(tmp_path, monkeypatch):
+    """1 GB target: an unscoped brute-force scan over ~1M vectors was OOM-killed at 600 MB;
+    company-scoped searches must keep their exact (pre-index) results."""
+    s = ChunkStore(str(tmp_path / "db"), DIM)
+    c, m = _doc("TCS", "2024", [f"tcs {i}" for i in range(300)], 0)
+    s.add(c, m, _vecs(300, 1))
+    c, m = _doc("INFY", "2024", [f"infy {i}" for i in range(300)], 300)
+    s.add(c, m, _vecs(300, 2))
+    q = _vecs(1, 9)[0]
+    exact_scoped = [r["vector_id"] for _, r in s.search_dense(q, 10, "company IN ('TCS')")]
+    exact_all = [r["vector_id"] for _, r in s.search_dense(q, 10, None)]
+    monkeypatch.setattr("core.chunk_store.VECTOR_INDEX_PARTITIONS", 4)
+    monkeypatch.setattr("core.chunk_store.VECTOR_INDEX_SUBVECTORS", 2)
+    s.build_indexes()
+    assert "vector_idx" in {i.name for i in s.table.list_indices()}
+    assert [r["vector_id"] for _, r in s.search_dense(q, 10, "company IN ('TCS')")] == exact_scoped
+    assert len(s.search_dense(q, 10, None)) == 10 and exact_all   # approximate, but answers
