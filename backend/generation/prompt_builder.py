@@ -1,5 +1,5 @@
 """
-FinSight AI - Prompt Builder
+Cognifin - Prompt Builder
 ==============================
 Builds the prompt for the OpenAI API from retrieved evidence.
 
@@ -8,7 +8,6 @@ This module handles:
 - Assembling the system prompt with grounding rules
 - Extracting citations from the model's response
 
-Author: FinSight AI Team
 Phase: 2 (Generation Layer)
 """
 
@@ -46,7 +45,7 @@ CITE_REMINDER = "Cite the context id in square brackets after each fact, e.g. [c
 # SYSTEM PROMPT TEMPLATE
 # =============================================================================
 
-SYSTEM_PROMPT_TEMPLATE = """You are FinSight AI, a professional financial analyst AI specialized in Indian financial documents (DRHP, RHP, Annual Reports). You generate precise, structured, and high-quality responses based strictly on provided context.
+SYSTEM_PROMPT_TEMPLATE = """You are Cognifin, a professional financial analyst AI specialized in Indian financial documents (DRHP, RHP, Annual Reports). You generate precise, structured, and high-quality responses based strictly on provided context.
 
 GROUNDING RULES — YOU MUST FOLLOW THESE:
 1. ONLY answer using the CONTEXT provided below. Do NOT use any external knowledge. Do NOT hallucinate.

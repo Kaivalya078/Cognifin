@@ -1,5 +1,5 @@
 """
-FinSight AI — Query Orchestrator (Stage 6)
+Cognifin — Query Orchestrator (Stage 6)
 ==========================================
 Pure orchestration layer that connects:
     parse_query  →  build_plan  →  CorpusManager.execute_plan

@@ -1,5 +1,5 @@
 """
-FinSight AI — Citation Verifier (Phase 5: Advanced RAG)
+Cognifin — Citation Verifier (Phase 5: Advanced RAG)
 ========================================================
 Verifies that LLM-generated citations are grounded in context.
 
@@ -10,7 +10,6 @@ Checks:
 
 Pure text matching — zero LLM calls, <5ms execution.
 
-Author: FinSight AI Team
 Phase: 5 (Advanced RAG Layer)
 """
 

@@ -1,5 +1,5 @@
 """
-FinSight AI — Retrieval Pipeline v2 (Phase 2: Refinement Orchestrator)
+Cognifin — Retrieval Pipeline v2 (Phase 2: Refinement Orchestrator)
 =======================================================================
 Chains the Phase 2 post-retrieval stages into a single pipeline function.
 
@@ -13,7 +13,6 @@ Separation of concerns:
     - this module:       post-retrieval quality refinement (new)
     - main.py:           endpoint orchestration (calls both)
 
-Author: FinSight AI Team
 Phase: 2 (Retrieval Precision Layer)
 """
 

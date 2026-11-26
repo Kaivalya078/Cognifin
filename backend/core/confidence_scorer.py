@@ -1,5 +1,5 @@
 """
-FinSight AI — Confidence Scorer (Phase 5: Advanced RAG)
+Cognifin — Confidence Scorer (Phase 5: Advanced RAG)
 ========================================================
 Heuristic-based confidence scoring for RAG responses.
 
@@ -8,7 +8,6 @@ Uses retrieval scores, context coverage, and citation density.
 
 Runs in <5ms — pure computation on existing data.
 
-Author: FinSight AI Team
 Phase: 5 (Advanced RAG Layer)
 """
 

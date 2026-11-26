@@ -1,5 +1,5 @@
 /**
- * FinSight AI - Main App
+ * Cognifin - Main App
  * =======================
  * Multi-page application with routing, authentication, and page transitions
  */

@@ -1,5 +1,5 @@
 """
-FinSight AI - Conversations Router
+Cognifin - Conversations Router
 ====================================
 User-scoped conversation CRUD endpoints.
 

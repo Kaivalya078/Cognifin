@@ -1,5 +1,5 @@
 """
-FinSight AI — Response Cache (Phase 6: Performance)
+Cognifin — Response Cache (Phase 6: Performance)
 =====================================================
 In-memory LRU response cache with TTL expiration.
 
@@ -16,7 +16,6 @@ Design:
 - Max entries configurable (default: 500)
 - Zero external dependencies
 
-Author: FinSight AI Team
 Phase: 6 (Performance & Production)
 """
 

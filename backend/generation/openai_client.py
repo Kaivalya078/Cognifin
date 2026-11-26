@@ -1,5 +1,5 @@
 """
-FinSight AI - OpenAI Client
+Cognifin - OpenAI Client
 =============================
 Thin wrapper around the OpenAI API for generating grounded answers.
 
@@ -8,7 +8,6 @@ This module handles:
 - Sending chat completion requests to OpenAI
 - Error handling (auth, rate-limit, timeout)
 
-Author: FinSight AI Team
 Phase: 2 (Generation Layer)
 """
 

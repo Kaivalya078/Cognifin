@@ -1,5 +1,5 @@
 """
-FinSight AI — Query Expander (Phase 3: Recall Improvement)
+Cognifin — Query Expander (Phase 3: Recall Improvement)
 ============================================================
 Financial domain-aware query expansion using synonym dictionaries.
 
@@ -12,7 +12,6 @@ Example:
 This runs BEFORE embedding, modifying the query text itself.
 No API calls, no model inference — pure dictionary lookup.
 
-Author: FinSight AI Team
 Phase: 3 (Recall Improvement Layer)
 """
 

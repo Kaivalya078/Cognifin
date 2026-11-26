@@ -1,5 +1,5 @@
 """
-FinSight AI - MongoDB Connection
+Cognifin - MongoDB Connection
 =================================
 Provides database connection and collection handles.
 
@@ -7,7 +7,6 @@ Collections:
   - users:         User accounts (name, email, password_hash)
   - conversations: Per-user chat history with messages
 
-Author: FinSight AI Team
 """
 
 from datetime import datetime, timezone

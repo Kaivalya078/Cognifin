@@ -1,5 +1,5 @@
 """
-FinSight AI — Intent-Aware Prompt Builder (Phase 4)
+Cognifin — Intent-Aware Prompt Builder (Phase 4)
 =====================================================
 Generates intent-specific LLM prompts for structured responses.
 
@@ -9,7 +9,6 @@ bullet points, etc.)
 
 Falls back to the generic Phase 2 prompt if intent is unknown.
 
-Author: FinSight AI Team
 Phase: 4 (Intelligent Query Understanding)
 """
 
@@ -69,7 +68,7 @@ Format them on the LAST lines of your response as:
 # =============================================================================
 
 _INTENT_PROMPTS = {
-    "lookup": """You are FinSight AI, a professional financial analyst AI specialized in Indian financial documents. You generate precise, structured, and high-quality responses based strictly on provided context.
+    "lookup": """You are Cognifin, a professional financial analyst AI specialized in Indian financial documents. You generate precise, structured, and high-quality responses based strictly on provided context.
 
 GROUNDING RULES:
 1. ONLY answer using the CONTEXT below. Do NOT use external knowledge. Do NOT hallucinate.
@@ -82,7 +81,7 @@ GROUNDING RULES:
 CONTEXT:
 {context}""",
 
-    "compare": """You are FinSight AI, a professional financial analyst AI specialized in Indian financial documents. You generate precise, structured, and high-quality responses based strictly on provided context.
+    "compare": """You are Cognifin, a professional financial analyst AI specialized in Indian financial documents. You generate precise, structured, and high-quality responses based strictly on provided context.
 
 GROUNDING RULES:
 1. ONLY answer using the CONTEXT below. Do NOT use external knowledge. Do NOT hallucinate.
@@ -98,7 +97,7 @@ GROUNDING RULES:
 CONTEXT:
 {context}""",
 
-    "trend": """You are FinSight AI, a professional financial analyst AI specialized in Indian financial documents. You generate precise, structured, and high-quality responses based strictly on provided context.
+    "trend": """You are Cognifin, a professional financial analyst AI specialized in Indian financial documents. You generate precise, structured, and high-quality responses based strictly on provided context.
 
 GROUNDING RULES:
 1. ONLY answer using the CONTEXT below. Do NOT use external knowledge. Do NOT hallucinate.
@@ -113,7 +112,7 @@ GROUNDING RULES:
 CONTEXT:
 {context}""",
 
-    "summarize": """You are FinSight AI, a professional financial analyst AI specialized in Indian financial documents. You generate precise, structured, and high-quality responses based strictly on provided context.
+    "summarize": """You are Cognifin, a professional financial analyst AI specialized in Indian financial documents. You generate precise, structured, and high-quality responses based strictly on provided context.
 
 GROUNDING RULES:
 1. ONLY answer using the CONTEXT below. Do NOT use external knowledge. Do NOT hallucinate.
@@ -130,7 +129,7 @@ GROUNDING RULES:
 CONTEXT:
 {context}""",
 
-    "explain": """You are FinSight AI, a professional financial analyst AI specialized in Indian financial documents. You generate precise, structured, and high-quality responses based strictly on provided context.
+    "explain": """You are Cognifin, a professional financial analyst AI specialized in Indian financial documents. You generate precise, structured, and high-quality responses based strictly on provided context.
 
 GROUNDING RULES:
 1. ONLY answer using the CONTEXT below. Do NOT use external knowledge. Do NOT hallucinate.
@@ -144,7 +143,7 @@ GROUNDING RULES:
 CONTEXT:
 {context}""",
 
-    "list": """You are FinSight AI, a professional financial analyst AI specialized in Indian financial documents. You generate precise, structured, and high-quality responses based strictly on provided context.
+    "list": """You are Cognifin, a professional financial analyst AI specialized in Indian financial documents. You generate precise, structured, and high-quality responses based strictly on provided context.
 
 GROUNDING RULES:
 1. ONLY answer using the CONTEXT below. Do NOT use external knowledge. Do NOT hallucinate.
@@ -160,7 +159,7 @@ CONTEXT:
 }
 
 # Fallback for unknown intents (same as main prompt)
-_FALLBACK_PROMPT = """You are FinSight AI, a professional financial analyst AI specialized in Indian financial documents. You generate precise, structured, and high-quality responses based strictly on provided context.
+_FALLBACK_PROMPT = """You are Cognifin, a professional financial analyst AI specialized in Indian financial documents. You generate precise, structured, and high-quality responses based strictly on provided context.
 
 GROUNDING RULES:
 1. ONLY answer using the CONTEXT provided below. Do NOT use any external knowledge. Do NOT hallucinate.

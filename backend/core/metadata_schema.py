@@ -1,5 +1,5 @@
 """
-FinSight AI - Metadata Schema
+Cognifin - Metadata Schema
 ================================
 Data structures for the corpus-based architecture.
 
@@ -11,7 +11,6 @@ This module defines:
 
 Phase 2.5: All structures exist, defaults produce identical Phase-2 behavior.
 
-Author: FinSight AI Team
 Phase: 2.5 (Corpus Architecture)
 """
 

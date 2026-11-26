@@ -1,5 +1,5 @@
 """
-FinSight AI - Batch Ingestion: NIFTY 100 Annual Reports
+Cognifin - Batch Ingestion: NIFTY 100 Annual Reports
 ========================================================
 Deterministic batch ingestion script for annual reports.
 
@@ -10,7 +10,6 @@ Usage:
     cd backend
     python -m ingestion.batch_ingest_annual_reports
 
-Author: FinSight AI Team
 Stage: 7 (Batch Ingestion)
 Phase 1: Fixed imports, added progress logging
 """

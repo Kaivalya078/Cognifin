@@ -1,5 +1,5 @@
 """
-FinSight AI - Document Ingestion CLI
+Cognifin - Document Ingestion CLI
 =====================================
 Offline tool for adding new documents to the corpus
 without starting the server.
@@ -11,7 +11,6 @@ Chunks are written to the LanceDB store first; saving the registry is the
 commit point. Rows written after the last saved registry (a crash in
 between) are dropped on the next ingest run.
 
-Author: FinSight AI Team
 Stage: 2 (Manual Ingestion)
 """
 
@@ -31,7 +30,7 @@ from core.app_retrieval import open_for_ingest
 def parse_args():
     """Parse CLI arguments for document ingestion."""
     parser = argparse.ArgumentParser(
-        description="FinSight AI — Ingest a document into the vector corpus",
+        description="Cognifin — Ingest a document into the vector corpus",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
@@ -99,7 +98,7 @@ def main():
         print(f"⚠️  Warning: '{pdf_path}' does not have a .pdf extension")
     
     print("=" * 60)
-    print("FinSight AI — Document Ingestion")
+    print("Cognifin — Document Ingestion")
     print("=" * 60)
     print(f"  File:    {pdf_path}")
     print(f"  Company: {company}")

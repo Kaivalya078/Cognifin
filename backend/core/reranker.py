@@ -1,5 +1,5 @@
 """
-FinSight AI — Cross-Encoder Reranker (Phase 2: Retrieval Precision)
+Cognifin — Cross-Encoder Reranker (Phase 2: Retrieval Precision)
 ====================================================================
 Reranks FAISS retrieval candidates using a cross-encoder model for 
 higher precision results.
@@ -16,7 +16,6 @@ Model: BAAI/bge-reranker-base (110M params, ~200ms for 20 pairs on CPU)
 
 Feature Flag: RERANKER_ENABLED (env var) — set to 'false' for Phase 1 fallback.
 
-Author: FinSight AI Team
 Phase: 2 (Retrieval Precision Layer)
 """
 

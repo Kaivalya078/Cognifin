@@ -1,5 +1,5 @@
 """
-FinSight AI — Latency Tracker (Phase 6: Performance)
+Cognifin — Latency Tracker (Phase 6: Performance)
 ======================================================
 Per-request latency breakdown tracking using context managers.
 
@@ -14,7 +14,6 @@ Usage:
 
 Thread-safe via per-instance storage (no globals).
 
-Author: FinSight AI Team
 Phase: 6 (Performance & Production)
 """
 
